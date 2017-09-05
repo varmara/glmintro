@@ -27,6 +27,12 @@ iframe {
   padding: 0;
 }
 
+/* Remove gradient fill from slide background */
+slides > slide.backdrop {
+  background: white;
+}
+
+/* Filled slide*/
 slide.fill {
   background-repeat: no-repeat;
   @include background-size(cover);
@@ -50,25 +56,15 @@ article p, article li, article li.build{
   color: #454545;
 }
 
-slide:not(.segue):not(.prompt) h1{
-  font-size: 1.6em;
-  letter-spacing: -1px;
-  line-height: 1.4em;
-  margin-top: 10px;
-  margin-bottom: 15px;
-/*  color: #193441;*/
-/*  color: #02574D;*/
-  color: #CC2904;
-}
+
+/* title-slide properties*/
 
 slide.title-slide h1 {
   letter-spacing: -1px;
   line-height: 1.5em;
   margin-top: 10px;
   margin-bottom: 15px;
-/*  color: #193441;*/
-/*  color: #02574D;*/
-  color: #CC2904;
+  color: #228B22;
 }
 
 slide.title-slide h2 {
@@ -76,22 +72,24 @@ slide.title-slide h2 {
   letter-spacing: -1px;
   line-height: 1.2em;
   margin-bottom: 15px;
-/*  color: #193441;*/
-/*  color: #02574D;*/
-  color: #CC2904;
+  color: #228B22;
 }
 
 slide.title-slide p {
   font-size: 1.2em;
-  color: #CC2904;
+  color: #228B22;
 }
 
-slide.segue p, slide.segue li{
-  font-family: 'Helvetica', 'Crimson Text', 'Garamond',  'Palatino', sans-serif;
-  text-align: justify;
-  font-size:1em;
-  line-height: 1.1em;
-  color: #e2e2e2;
+
+/* Ordinary slide properties*/
+
+slide:not(.segue):not(.prompt) h1{
+  font-size: 1.6em;
+  letter-spacing: -1px;
+  line-height: 1.4em;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  color: #228B22;
 }
 
 slide:not(.segue):not(.prompt) h2{
@@ -99,9 +97,7 @@ slide:not(.segue):not(.prompt) h2{
   letter-spacing: -1px;
   line-height: 1.1em;
   margin-bottom: 15px;
-/*  color: #193441;*/
-/*  color: #02574D;*/
-  color: #CC2904;
+  color: #228B22;
 }
 
 slide:not(.segue):not(.prompt) h3{
@@ -110,14 +106,22 @@ slide:not(.segue):not(.prompt) h3{
   line-height: 0.9em;
   margin-bottom: 15px;
   font-weight: inherit;
-/*  color: #797979;*/
-  color: #CC2904;
+  color: #228B22;
+}
+
+/* Segue slide */
+slide.segue p, slide.segue li{
+  font-family: 'Helvetica', 'Crimson Text', 'Garamond',  'Palatino', sans-serif;
+  text-align: justify;
+  font-size:1em;
+  line-height: 1.1em;
+  color: #d8d6d6;
 }
 
 /* Format code and body */
 
 body, td {
-   font-size: 1.1em;
+   font-size: 1em;
 }
 
 code.r{
@@ -147,6 +151,8 @@ code {
   text-align:left;
 }
 
+/* Custom font decorations */
+
 em {
   font-style: italic;
 }
@@ -157,6 +163,24 @@ strong {
 
 small {
   font-size: 0.8em;
+}
+
+/* Custom text colors*/
+
+.red {
+  color: #e7298a;
+}
+
+.blue {
+  color: #7570b3;
+}
+
+.orange {
+  color: #d95f02;
+}
+
+.green {
+  color: #1b9e77;
 }
 
 /*</style>*/

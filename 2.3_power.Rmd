@@ -1,0 +1,340 @@
+---
+title: "Анализ мощности"
+author: Марина Варфоломеева
+output:
+  ioslides_presentation:
+    widescreen: true
+    css: assets/my_styles.css
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE, cache = FALSE, purl = FALSE}
+# output options
+options(width = 70, scipen = 6, digits = 3)
+library(knitr)
+# chunk default options
+opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
+```
+
+```{r libs, echo=FALSE}
+library(ggplot2)
+library(grid)
+library(gridExtra) # to rescale legend
+```
+
+## Анализ мощности позволяет рассчитать оптимальный объем выборки
+
+  - Мощность статистического теста
+  - *A priori* анализ мощности, оценка величины эффекта
+  - *Post hoc* анализ мощности
+  - Как влиять на мощность тестов
+
+# Мощность статистического теста
+
+
+```{r power_data, echo = FALSE, cache=TRUE}
+# Power plot using ggplot2
+# reworked after
+# http://rpsychologist.com/creating-a-typical-textbook-illustration-of-statistical-power-using-either-ggplot-or-base-graphics/
+# TODO: needs serious improvements
+
+#### Custom themes ####
+# theme_bw with only x axis
+theme_bw_x <- function (base_size = 12, base_family = "")
+{
+  require(ggplot2)
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(panel.border = element_blank(),
+          axis.line.x = element_line(colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.line.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.title.y = element_blank(),
+          legend.key = element_blank(),
+          legend.key.size = unit(3, "lines"),
+          legend.text = element_text(size = 24, hjust = 0.5))
+}
+
+# theme_bw without axes and with larger legend
+theme_bw_noxy <- function (base_size = 12, base_family = "")
+{
+  require(ggplot2)
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(panel.border = element_blank(), axis.line.x = element_line(colour = "black"),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.line = element_blank(), axis.text = element_blank(),
+          axis.ticks = element_blank(), axis.title = element_blank(),
+          legend.key = element_blank(),
+          legend.key.size = unit(3, "lines"),
+          legend.text = element_text(size = 24, hjust = 0.5))
+}
+
+#### Data for power curves ####
+
+generate_power_data <- function(m1 = 0, sd1 = 7, m2 = 3.5, sd2 = 7, alpha = 0.05, h.type = "equal"){
+  # set length of tails
+  min1 <- m1-sd1*4
+  max1 <- m1+sd1*4
+  min2 <- m2-sd2*4
+  max2 <- m2+sd2*4
+  # create a sequence for x axis including z.crit
+  x <- seq(min(min1,min2), max(max1, max2), .01)
+  # compute critical value
+
+  switch(h.type,
+         greater={
+           z.crit <- qnorm(1-alpha, m1, sd1)
+           z.critm <- m1 - abs(m1 - z.crit)
+         },
+         less={
+           z.crit <- qnorm(1-alpha, m1, sd1)
+           z.critm <- m1 - abs(m1 - z.crit)
+         },
+         equal={
+           z.crit <- qnorm(1-(alpha/2), m1, sd1)
+           z.critm <- m1 - abs(m1 - z.crit)
+         }
+  )
+  x[length(x)+1] <- z.crit
+  x[length(x)+1] <- z.critm
+  x <- sort(x)
+
+  # generate normal distributions
+  y1 <- dnorm(x, m1, sd1)
+  y2 <- dnorm(x, m2, sd2)
+  # combine to data frame
+  df1 <- data.frame(x = x, y = y1)
+  df2 <- data.frame(x = x, y = y2)
+  # compute intervals for polygons
+  outside.l <- x <= z.critm
+  inside <- (x >= z.critm) & (x <= z.crit)
+  outside.r <- x >= z.crit
+
+  switch(h.type,
+         greater={
+           # Alpha polygon
+           if(m1 < m2){
+             alph <- data.frame(x = x[outside.r], y = pmin(y1[outside.r], y2[outside.r]))
+           } else {
+             alph <- data.frame(x = x[outside.r], y = pmax(y1[outside.r], y2[outside.r]))
+           }
+           alph$y[alph$x == z.crit] <- 0
+           # Beta polygon one-tailed
+           bet <- data.frame(x = x[outside.l | inside], y = y2[outside.l | inside])
+           bet$y[bet$x == z.crit] <- 0
+           bet$y[bet$x == z.critm] <- 0
+           # power polygon; 1-beta, one-tailed
+           pwrd <- data.frame(x = x[outside.r], y = y2[outside.r])
+           pwrd$y[pwrd$x == z.crit] <- 0
+           alph$id <- 3
+           bet$id <- 2
+           pwrd$id <- 1
+           alph$obj <- 3
+           bet$obj <- 2
+           pwrd$obj <- 1
+           # combine data frames
+           poly <- rbind(alph, bet, pwrd)
+           poly$id <- factor(poly$id,  labels = c("power","beta","alpha"))
+         },
+         less={
+           # Alpha polygon
+           if(m1 < m2){
+             alph <- data.frame(x = x[outside.l], y = pmax(y1[outside.l], y2[outside.l]))
+           } else{
+             alph <- data.frame(x = x[outside.l], y = pmin(y1[outside.l], y2[outside.l]))
+           }
+           alph$y[alph$x == z.critm] <- 0
+           # Beta polygon one-tailed
+           bet <- data.frame(x = x[outside.r | inside], y = y2[outside.r | inside])
+           bet$y[bet$x == z.crit] <- 0
+           bet$y[bet$x == z.critm] <- 0
+           # power polygon; 1-beta, one-tailed
+           pwrd <- data.frame(x = x[outside.l], y = y2[outside.l])
+           pwrd$y[pwrd$x == z.critm] <- 0
+           alph$id <- 3
+           bet$id <- 2
+           pwrd$id <- 1
+           alph$obj <- 3
+           bet$obj <- 2
+           pwrd$obj <- 1
+           # combine data frames
+           poly <- rbind(alph, bet, pwrd)
+           poly$id <- factor(poly$id,  labels = c("power","beta","alpha"))
+         },
+         equal={
+           # alph polygon
+           if(m1 < m2){
+             alph.r <- data.frame(x = x[outside.r], y = pmin(y1[outside.r], y2[outside.r]))
+             alph.l <- data.frame(x = x[outside.l], y = pmax(y1[outside.l], y2[outside.l]))
+           } else {
+             alph.r <- data.frame(x = x[outside.r], y = pmax(y1[outside.r], y2[outside.r]))
+             alph.l <- data.frame(x = x[outside.l], y = pmin(y1[outside.l], y2[outside.l]))
+           }
+           alph.r$y[alph.r$x == z.crit] <- 0
+           alph.l$y[alph.l$x == z.critm] <- 0
+           # beta polygon, two-tailed
+           bet <- data.frame(x = x[inside], y = y2[inside])
+           bet$y[bet$x == z.crit] <- 0
+           bet$y[bet$x == z.critm] <- 0
+           # two power polygons, two-tailed
+           pwrd.l <- data.frame(x = x[outside.l], y = y2[outside.l])
+           pwrd.l$y[pwrd.l$x == z.critm] <- 0
+           pwrd.r <-data.frame(x = x[outside.r], y = y2[outside.r])
+           pwrd.r$y[pwrd.r$x == z.crit] <- 0
+           alph.l$id <- 3
+           alph.l$obj <- 5
+           alph.r$id <- 3
+           alph.r$obj <- 4
+           bet$id <- 2
+           bet$obj <-3
+           pwrd.l$id <- 1
+           pwrd.l$obj <- 2
+           pwrd.r$id <- 1
+           pwrd.r$obj <- 1
+           # combine data frames
+           poly <- rbind(alph.l, alph.r, bet, pwrd.l, pwrd.r)
+           poly$id <- factor(poly$id,  labels = c("power","beta","alpha"))
+           poly$obj <- factor(poly$obj,  labels = c("powerr","powerl", "beta", "alphar", "alphal"))
+         }
+  )
+  return(list(df1 = df1, df2 = df2, poly = poly, m1 = m1, m2 = m2, h.type = h.type, z.crit = z.crit, z.critm = z.critm))
+}
+
+pwr_plot <- function(pwrd, alph = TRUE, bet = TRUE, power = TRUE, ann = TRUE){
+  require(ggplot2)
+  # initialise filter for the data
+  filter <- vector(length = length(pwrd$poly$id))
+  # possible values for the scale
+  category <- vector()
+  lbls <- vector()
+  if(alph){
+    filter <- pwrd$poly$id == "alpha"
+    category <- c(category, "alpha")
+    lbls <- c(lbls, bquote(alpha))
+  }
+  if(bet){
+    filter <- filter | pwrd$poly$id == "beta"
+    category <- c(category, "beta")
+    lbls <- c(lbls, bquote(beta))
+  }
+  if(power){
+    filter <- filter | pwrd$poly$id == "power"
+    category <- c(category, "power")
+    lbls <- c(lbls, bquote(1 - beta))
+  }
+  # define colours by type of polygon
+  cols <- c("alpha" = "#d95f02", "beta" = "#7570b3", "power" = "#1b9e77")
+  if(any(alph, bet, power)){
+  p <- ggplot() +
+    geom_line(data = pwrd$df1, aes(x, y, linetype = "H0", group = NULL, fill = NULL)) +
+    geom_line(data = pwrd$df2, aes(x, y, linetype = "Ha", group = NULL, fill = NULL)) +
+    geom_polygon(data = pwrd$poly[filter, ], aes(x, y, fill = id, group = obj), alpha = 0.4) +
+    scale_linetype_discrete(name = "Гипотезы") +
+    scale_fill_manual(values = cols, limits = category, name = "Вероятности", labels = lbls)
+  } else {
+    p <- ggplot() +
+      geom_line(data = pwrd$df1, aes(x, y, linetype = "H0", group = NULL, fill = NULL)) +
+      geom_line(data = pwrd$df2, aes(x, y, linetype = "Ha", group = NULL, fill = NULL)) +
+      scale_linetype_discrete(name = "Гипотезы")
+  }
+  return(p)
+}
+
+dat <- generate_power_data(m1 = 0, m2 = 5, sd1 = 10, sd2 = 10, h.type = "equal")
+```
+
+
+## Типы ошибок при проверке гипотез
+
+| 	|H0 == TRUE |	H0 == FALSE |
+|-----|-----|-----|
+| Отклонить H0 	| Ошибка I рода </br> <span class="orange">&alpha;</span> | 	Верно </br> 1 - &alpha; |
+| Сохранить H0 	| Верно </br> | Ошибка II рода </br> <span class= "blue">&beta;</span> |
+
+<br /><br /><br />
+
+```{r power_beta, echo = FALSE, fig.height=2.5}
+pwr_plot(pwrd = dat, alph = T, bet = T, power = F) +
+  guides(fill = guide_legend(title = NULL), linetype = guide_legend(title = NULL)) +
+  theme_bw_noxy()
+```
+
+
+## Мощность статистического теста
+
+| 	|H0 == TRUE |	H0 == FALSE |
+|-----|-----|-----|
+| Отклонить H0 	| Ошибка I рода </br> <span class="orange">&alpha;</span> | 	Верно </br> 1 - &alpha; |
+| Сохранить H0 	| Верно </br> <span class= "green">1 - &beta;</span> | Ошибка II рода </br> <span class= "blue">&beta;</span> |
+
+### Мощность статистического теста --- 
+вероятность найти различия там, где они есть $Power = 1 - \beta$
+
+```{r power_all, echo = FALSE, fig.height=2.5}
+pwr_plot(pwrd = dat, alph = T, bet = T, power = T) +
+  guides(fill = guide_legend(title = NULL), linetype = guide_legend(title = NULL)) +
+  theme_bw_noxy()
+```
+
+## Анализ мощности
+
+- Какой нужен объем выборки, чтобы найти различия?
+- Какой величины различия мы можем найти при определенном объеме выборки?
+
+# Величина эффекта
+
+## Величина эффекта
+
+$$\frac{\bar \mu_1 - \bar \mu_2}{\sigma}$$
+
+$d$ Коэна (Cohen's d) ($\sigma$ --- среднеквадратичное стандартное отклонение)
+
+$d = \frac {|\bar x_1 - \bar x_2|} { \sqrt {\frac {s_1^2 + s_2^2 } {2} }}$
+
+$g$ Хеджа ($\sigma$ --- обобщенное стандартное отклонение
+
+$g = \frac {|\bar x _{1} - \bar x _{2}|} { \sqrt {\frac {(n_{1} - 1) s_1^2 + (n_{2} - 1) s_{2}^2 }  {n_{1} + n_{2} - 2} } }$
+
+## Как оценить ожидаемую величину эффекта?
+
+$$\frac{\bar \mu_1 - \bar \mu_2}{\sigma}$$
+
+Варианты:
+
+- Пилотные исследования
+- Литература
+- Общебиологические знания
+- Технические требования
+
+## Условные уровни величины эффекта 
+
+Сильные, умеренные и слабые эффекты (Cohen, 1982)
+```{r }
+library(pwr)
+cohen.ES(test = "t", size = "large")
+```
+
+## Задача
+
+Рассчитайте величину умеренных и слабых эффектов для t-критерия
+
+```{r eval = FALSE}
+    library()
+    cohen.ES()
+```
+
+Подсказка: обозначения можно посмотреть в файлах справки
+
+```{r eval = FALSE}
+    help(cohen.ES)
+    ?cohen.ES
+    cohen.ES # курсор на слове, нажать F1
+```
+
+# Расчет величины эффекта по данным пилотного исследования
+
+## Величина эффекта по данным пилотного исследования
+
