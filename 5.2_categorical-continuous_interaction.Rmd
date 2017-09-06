@@ -1,0 +1,18 @@
+---
+title: "Выбор моделей"
+author: Марина Варфоломеева, Вадим Хайтов
+output:
+  ioslides_presentation:
+    widescreen: true
+    css: assets/my_styles.css
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE, cache = FALSE, purl = FALSE}
+# output options
+options(width = 70, scipen = 6, digits = 3)
+library(knitr)
+# chunk default options
+opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
+```
