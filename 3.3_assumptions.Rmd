@@ -14,6 +14,50 @@ editor_options:
 options(width = 70, scipen = 6, digits = 3)
 library(knitr)
 # chunk default options
-opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
+opts_chunk$set(fig.align='center', tidy = FALSE, 
+               fig.width = 7, fig.height = 3, 
+               warning = FALSE)
 ```
+
+## Диагностика линейных моделей
+
+- Анализ остатков
+    - Проверка на наличие влиятельных наблюдений
+    - Проверка условий применимости линейных моделей
+    
+## Зачем нужна диагностика модели? Разве тестов было недостаточно?
+
+```
+dat <- read.table('http://www4.stat.ncsu.edu/~stefanski/NSF_Supported/
+Hidden_Images/orly_owl_files/orly_owl_Lin_4p_5_flat.txt'
+```
+
+```{r echo=FALSE}
+dat <- read.table('http://www4.stat.ncsu.edu/~stefanski/NSF_Supported/Hidden_Images/orly_owl_files/orly_owl_Lin_4p_5_flat.txt')
+```
+
+```{r}
+fit <- lm(V1 ~ V2 + V3 + V4 + V5 - 1, data = dat)
+coef(summary(fit))
+```
+
+Все достоверно? Пишем статью?
+
+\pause
+
+Постройте график зависимости остатков от предсказанных значений при помощи этого кода
+
+```{r bird, eval=FALSE, purl=FALSE}
+library(car)
+residualPlot(fit, pch = ".")
+```
+
+## Oh, really?
+
+```{r bird, eval=TRUE, fig.width=3.7, fig.height=4, purl=TRUE, out.height='6cm', fig.align='center'}
+```
+
+\tiny{http://www4.stat.ncsu.edu/~stefanski/NSF\_Supported/Hidden\_Images/stat\_res\_plots.html}
+
+
 
