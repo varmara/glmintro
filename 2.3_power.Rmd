@@ -290,13 +290,13 @@ pwr_plot(pwrd = dat, alph = T, bet = T, power = T) +
 
 $$\frac{\bar \mu_1 - \bar \mu_2}{\sigma}$$
 
-$d$ Коэна (Cohen's d) ($\sigma$ --- среднеквадратичное стандартное отклонение)
+- $\sigma$ --- среднеквадратичное стандартное отклонение
 
 $d = \frac {|\bar x_1 - \bar x_2|} { \sqrt {\frac {s_1^2 + s_2^2 } {2} }}$
 
-$g$ Хеджа ($\sigma$ --- обобщенное стандартное отклонение
+- $\sigma$ --- обобщенное стандартное отклонение
 
-$g = \frac {|\bar x _{1} - \bar x _{2}|} { \sqrt {\frac {(n_{1} - 1) s_1^2 + (n_{2} - 1) s_{2}^2 }  {n_{1} + n_{2} - 2} } }$
+$d = \frac {|\bar x _{1} - \bar x _{2}|} { \sqrt {\frac {(n_{1} - 1) s_1^2 + (n_{2} - 1) s_{2}^2 }  {n_{1} + n_{2} - 2} } }$
 
 ## Как оценить ожидаемую величину эффекта?
 
@@ -312,6 +312,7 @@ $$\frac{\bar \mu_1 - \bar \mu_2}{\sigma}$$
 ## Условные уровни величины эффекта 
 
 Сильные, умеренные и слабые эффекты (Cohen, 1982)
+
 ```{r }
 library(pwr)
 cohen.ES(test = "t", size = "large")
@@ -319,22 +320,489 @@ cohen.ES(test = "t", size = "large")
 
 ## Задача
 
-Рассчитайте величину умеренных и слабых эффектов для t-критерия
+Рассчитайте величину умеренных и слабых эффектов для t-критерия при помощи функции `cohen.ES()`
 
-```{r eval = FALSE}
-    library()
-    cohen.ES()
+## Решение
+
+```{r purl=FALSE}
+# умеренный
+cohen.ES(test = "t", size = "medium")
+# слабый
+cohen.ES(test = "t")
 ```
 
-Подсказка: обозначения можно посмотреть в файлах справки
+## Задача
 
-```{r eval = FALSE}
-    help(cohen.ES)
-    ?cohen.ES
-    cohen.ES # курсор на слове, нажать F1
+Исследователи хотят проверить, что у крыс на богатой жирами диете ген "гормона голода" лептина будет даун-регулироваться в 5 раз.
+
+Т.е. ожидаемая разница логарифмов экспрессии между опытом и контролем будет примерно $log2(1) - log2(5) = -2.32$
+
+Стандартное отклонение этих различий по пилотным данным 1.2
+
+Рассчитайте величину эффекта
+
+Скажите, это будет слабый или сильный эффект?
+
+## Решение
+
+```{r purl=FALSE}
+abs(-2.32) / 1.2
 ```
 
 # Расчет величины эффекта по данным пилотного исследования
 
 ## Величина эффекта по данным пилотного исследования
 
+Представьте себе, что у нас есть результаты пилотного исследования. Мы хотим знать, различается ли уровень клеточной активности у пациентов в зависимости от того, наступила ли ремиссия. (Данные из кн. Freeman 1987).
+
+```{r}
+library(readxl)
+rem <- read_excel(path = "data/remission.xlsx", sheet = 1)
+head(rem)
+```
+
+Это данные о больных раком:
+
+- `LI` --- мера клеточной активности
+- `r` --- индикатор того наступила ли ремиссия (1 --- да, 0 --- нет)
+
+## Убедимся, что данные открылись правильно
+
+```{r}
+str(rem)
+
+rem$r <- factor(rem$r, levels = c(0, 1), labels = c("no", "yes"))
+```
+
+
+
+```{r}
+## Пропущенные значения
+colSums(is.na(rem))
+## Объем выборки
+table(rem$r)
+```
+
+## Задача
+
+Визуализируйте при помощи бокс-плотов различия клеточной активности в двух группах пациентов.
+
+Используйте геом `geom_boxplot()`
+
+Обозначьте группу при помощи заливки.
+
+Подпишите оси при помощи элемента `labs()`
+
+## Решение
+
+```{r gg-cell-boxplot, purl=FALSE}
+library(ggplot2)
+ggplot(rem, aes(x = r, y = LI)) + 
+  geom_boxplot(aes(fill = r)) + 
+  labs(x = "Remission", y = "Cell activity", fill = "Remission")
+```
+
+## Давайте оценим величину эффекта
+
+```{r}
+library(effsize)
+effect <- cohen.d(rem$LI, rem$r)
+effect
+```
+
+## Задача
+
+Посмотрите на структуру объекта `effect`  при помощи функции `str()` и добудьте из него средствами R значение величины эффекта
+
+## Решение
+
+```{r purl=FALSE}
+str(effect)
+effect$estimate
+```
+
+# Анализ мощности в R
+
+
+## Анализ мощности t-критерия в R
+
+Давайте рассчитаем, какой будет нужен объем выборки, чтобы показать различия между группами с вероятностью 0.8 (т.е. чтобы мощность теста была 80%)
+
+```{r}
+library(pwr)
+pwr.t.test(n = NULL, d = effect$estimate, power = 0.8, 
+           sig.level = 0.05, type = "two.sample", 
+           alternative = "two.sided")
+```
+
+## Задача
+
+Экстрагируйте из результатов `pwr.t.test()` величину объема выборки
+
+
+## Решение
+
+```{r purl=FALSE}
+R1 <- pwr.t.test(n = NULL, d = effect$estimate, power = 0.8,
+                 sig.level = 0.05, type = "two.sample", 
+                 alternative = "two.sided")
+str(R1)
+R1$n
+```
+
+Округляем в большую сторону
+
+```{r purl=FALSE}
+ceiling(R1$n)
+```
+
+
+## Задача
+
+А если группы будут разного размера?
+
+Пациентов с ремиссией всего 5.
+
+Сколько нужно обследовать пациентов без ремиссии, чтобы обнаружить различия клеточной активности между группами?
+
+Используйте функцию `pwr.t2n.test`
+
+## Решение
+
+```{r purl=FALSE}
+R2 <- pwr.t2n.test(n1 = 5, n2 = NULL, d = effect$estimate, 
+                   power = 0.8, sig.level = 0.05, 
+                   alternative = "two.sided")
+ceiling(R2$n2)
+```
+
+## Другой пример
+
+Данные анализа мочи. В некоторых пробах обнаружены кристаллы оксалата кальция. (Данные из сборника датасетов Andrews Herzberg 1985)
+
+Представим, что это данные пилотного исследования. 
+
+```{r}
+ur <- read_excel(path = "data/urine.xlsx", sheet = 1)
+head(ur)
+```
+
+- `r` --- индикатор присутствия кристаллов оксалата кальция
+- `calc` --- концентрация кальция
+
+## Убедимся, что данные открылись правильно
+
+```{r}
+str(ur)
+
+ur$r <- factor(ur$r, levels = c(0, 1), 
+               labels = c("absent", "present"))
+```
+
+## 
+
+```{r}
+## Пропущенные значения
+colSums(is.na(ur))
+## Объем выборки
+table(ur$r)
+```
+
+## Задача
+
+Постройте гистограмму распределения концентрации кальция.
+Заливкой обозначьте присутствие кристаллов оксалата кальция в пробе.
+
+## Решение
+
+```{r gg-urine-hist, purl=FALSE}
+ggplot(ur, aes(x = calc, fill = r)) + 
+  geom_histogram(binwidth = 1, position = "dodge") + 
+  labs(x = "Calcium, mmol/l", y = "N", fill = "Crystals of calcium oxalate")
+```
+
+## Задача
+
+Сколько нужно анализов, чтобы показать, что содержание кальция в этих пробах достоверно отличается при уровне значимости $\alpha = 0.001$?
+
+- При равном объеме выборок
+- Если будет только 16 проб с кристаллами оксалата кальция
+
+## Решение
+
+```{r purl=FALSE}
+effect_ur <- cohen.d(ur$calc, ur$r)
+R3 <- pwr.t.test(n = NULL, d = abs(effect_ur$estimate),
+                 power = 0.8, sig.level = 0.001, 
+                 type = "two.sample", alternative = "two.sided")
+ceiling(R3$n)
+R4 <- pwr.t2n.test(n1 = 16, n2 = NULL, d = effect_ur$estimate, 
+                   power = 0.8, sig.level = 0.001, 
+                   alternative = "two.sided")
+ceiling(R4$n2)
+```
+
+# Анализ мощности t-критерия при помощи симуляции
+
+## Анализ мощности t-критерия при помощи симуляции
+
+При помощи простой симуляции можно проверить, будет ли достаточно 24 наблюдений в группе
+
+Сначала готовим данные
+
+```{r}
+# средние значения из пилотного исследования
+mu <- tapply(X = ur$calc, INDEX = ur$r, FUN = mean)
+
+# обобщенное стандартное отклонение sigma в пилотном исследовании
+ns <- table(ur$r)
+var <- tapply(X = ur$calc, INDEX = ur$r, FUN = var)
+sigma <- sqrt(((ns[1] - 1) * var[1] + (ns[2] - 1) * var[2])/(length(ur$r) - 2))
+
+n <- 24 # проверяемое значение объема выборки
+reps <- 1000 # число повторов в симуляции
+```
+
+## ВАРИАНТ 1 - Используем цикл
+
+```{r}
+pvals <- rep(NA, reps) # Место для результата
+set.seed(42) # зерно генератора случайных чисел
+
+# в цикле  многократно симулируем данные 
+for (i in 1:reps){
+  # генерируем две случайные выборки 
+  # из нормального распределения
+  x1 <- rnorm(n, mu[1], sigma)
+  x2 <- rnorm(n, mu[2], sigma)
+  # сравниваем их средние значения t-критерием
+  t_res <- t.test(x = x1, y = x2)
+  # добываем уровень значимости
+  pvals[i] <- t_res$p.value
+}
+# Доля уровней значимости меньше критического уровня
+mean(pvals < 0.001)
+```
+
+## ВАРИАНТ 2 - Используем `replicate()`
+
+```{r}
+# функция, генерирующая одну симуляцию
+my_sim <- function(n) {
+  x1 <- rnorm(n, mu[1], sigma)
+  x2 <- rnorm(n, mu[2], sigma)
+  t_res <- t.test(x = x1, y = x2)
+  return(t_res$p.value)
+}
+# my_sim(24) # пример употребления - одна симуляция
+
+# Повторяем симуляцию 1000 раз
+set.seed(42)
+pvals <- replicate(1000, my_sim(24))
+mean(pvals < 0.001)
+```
+
+## Как проверить несколько возможных объемов выборки?
+
+Вариант 2 легче масштабируется
+
+```{r}
+# функция, возвращающая долю симуляций со значением p меньше критического
+my_sim_range <- function(x){
+  pvals <- replicate(1000, my_sim(x))
+  pw <- mean(pvals < 0.001)
+  return(pw)
+}
+set.seed(42)
+sapply(X = 20:25, FUN = my_sim_range)
+```
+
+## Задание
+
+По итогам предыдущей симуляции постройте кривую зависимости мощности от объема выборки (от 5 до 35)
+
+## Решение
+
+```{r gg-power-urine, purl=FALSE}
+set.seed(42)
+sim <- sapply(X = 5:35, FUN = my_sim_range)
+
+pwr_dat <- data.frame(N = 5:35, Power = sim)
+ggplot(pwr_dat, aes(x = N, y = Power)) + 
+  geom_point(colour = "green3") + 
+  geom_line(aes(group = 1), colour = "green3") +
+  geom_hline(yintercept = 0.8, linetype = "dashed")
+```
+
+
+## Задание
+
+При помощи симуляций проведите анализ мощности для данных о клеточной активности у больных раком
+
+## Решение: подготовка
+
+```{r purl=FALSE}
+# средние значения из пилотного исследования
+mu <- tapply(X = rem$LI, INDEX = rem$r, FUN = mean)
+
+# обобщенное стандартное отклонение sigma в пилотном исследовании
+ns <- table(rem$r)
+var <- tapply(X = rem$LI, INDEX = rem$r, FUN = var)
+sigma <- sqrt(((ns[1] - 1) * var[1] + (ns[2] - 1) * var[2])/(length(ur$r) - 2))
+
+reps <- 1000 # число повторов в симуляции
+```
+
+## Решение: симуляция
+
+```{r purl=FALSE}
+# функция, генерирующая одну симуляцию
+my_sim <- function(n) {
+  x1 <- rnorm(n, mu[1], sigma)
+  x2 <- rnorm(n, mu[2], sigma)
+  t_res <- t.test(x = x1, y = x2)
+  return(t_res$p.value)
+}
+
+# функция, возвращающая долю симуляций со значением p меньше критического
+my_sim_range <- function(x){
+  pvals <- replicate(1000, my_sim(x))
+  fraction <- mean(pvals < 0.001)
+  return(fraction)
+}
+
+set.seed(42)
+sapply(X = 5:15, FUN = my_sim_range)
+
+```
+
+# Как влиять на мощность теста?
+
+## Мощность зависит
+
+
+- от объема выборки
+- от величины эффекта
+- от уровня значимости
+
+## Чем больше объем выборки—тем больше мощность
+
+
+```{r pwr_vs_n, echo = FALSE, cache = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 5}
+# Plots of power vs. sample size etc.
+# Modified after http://imdevsoftware.wordpress.com/2013/01/17/255/
+
+# Need pwr, reshape2, ggplot2 packages
+gen_pwr_vs_n <- function(d = c(0.2, 0.5, 0.8), a = c(0.05, 0.01), n = 150){
+  if(!require(pwr)){install.packages("pwr");library("pwr")}
+  # t-TEST
+  #---------------------------------
+  n <- 1:n
+  t.test.power.effect<-
+    as.data.frame(do.call("cbind", lapply(1:length(d),function(i){
+    sapply(1:length(a),function(k){
+      sapply(1:length(n), function(j){
+        #       paste(d[i], n[j], a[k])
+        power.t.test(n = n[j],d = d[i],sig.level = a[k],power = NULL,
+                     type = "two.sample")$power
+      })
+    })
+  })))
+  t.test.power.effect[is.na(t.test.power.effect)]<-0 # some powers couldn't be calculated, set these to zero
+  # melt the data
+  if(!require(reshape2)){install.packages("reshape2");library("reshape2")}
+  measured <- length(d)*length(a)
+  t.test.power.effect <- melt(t.test.power.effect, measure.vars = 1:measured)
+  # fill the levels of n, a, and d
+  nms <- expand.grid(size = n, sig.level = a, effect = d)
+  t.test.power.effect <- cbind(t.test.power.effect, nms)
+  # do-not need variable column
+  t.test.power.effect <- t.test.power.effect[, -1]
+  return(t.test.power.effect)
+}
+
+dat <-gen_pwr_vs_n(n = 150)
+# factors
+dat$sig.level <- factor(dat$sig.level, levels = c(0.01, 0.05),
+                        labels = c("p = 0.01", "p = 0.05"))
+dat$effect <- factor(dat$effect, levels = c(0.2, 0.3, 0.5, 0.8),
+                     labels = c("d = 0.2", "d = 0.3", "d = 0.5", "d = 0.8"))
+
+# Power increases as the sample size increases
+# plot power vs n at d = 0.5, p = 0.01
+pwr.size <-
+  ggplot(data = dat[(dat$effect == "d = 0.5" & dat$sig.level == "p = 0.05"), ],
+         aes(x = size, y = value, color = sig.level)) +
+  geom_line(size = 1.5) +
+  scale_colour_discrete(name = "Уровень\nзначимости") +
+  labs(x = "Объем выборки", y = "Мощность") +
+  ggtitle("t-тест, d = 0.5") +
+  theme_minimal(base_size = 18) +
+  theme(legend.key = element_blank(),
+        axis.line = element_line(colour = "black"))
+pwr.size
+```
+
+## Чем больше уровень значимости—тем больше мощность
+
+```{r cache = TRUE, dependson='pwr_vs_n', echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 5}
+# Power increases as the signifficance level increases
+#   plot power vs n at d = 0.5, add linetype = sig.level (p = 0.01, p = 0.05)
+pwr_size_apha <- ggplot(data = dat[dat$effect == "d = 0.5", ],
+                        aes(x = size, y = value, color = sig.level)) +
+  geom_line(size = 1.5) +
+  scale_colour_discrete(name = "Уровень\nзначимости",
+                        limits = c("p = 0.05", "p = 0.01")) +
+  labs(x = "Объем выборки", y = "Мощность") +
+  ggtitle("t-тест, d = 0.5") +
+  theme_minimal(base_size = 18) +
+  theme(legend.key = element_blank(),
+        axis.line = element_line(colour = "black"))
+pwr_size_apha
+```
+
+## Чем больше величина различий—тем больше мощность
+
+```{r cache = TRUE, dependson='pwr_vs_n', echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 5}
+# Power increases as effect size increases
+#   plot power vs n at
+# add linetype = sig.level (p = 0.01, p = 0.05)
+# add facets for d = 0.2, d = 0.5, d = 0.8
+pwr_size_alpha_d <- ggplot(data = dat, aes(x = size, y = value, color = sig.level)) +
+    geom_line(size = 1.5) + facet_wrap(~effect) +
+  scale_colour_discrete(name = "Уровень\nзначимости",
+                        limits = c("p = 0.05", "p = 0.01")) +
+  labs(x = "Объем выборки", y = "Мощность") +
+  ggtitle("t-тест") +
+  theme_minimal(base_size = 18) +
+  theme(legend.key = element_blank(),
+        axis.line = element_line(colour = "black"))
+pwr_size_alpha_d
+```
+
+## Скажите
+
+Какие из факторов, влияющих на мощность теста, мы __не можем__ контролировать?
+
+> - Мы не можем контролировать внешние факторы
+    - величину эффекта ($ES$)
+    - фоновую изменчивость ($\sigma^2$)
+
+Каким образом можно повлиять на мощность теста?
+
+> - Мощность теста можно регулировать, если
+    - изменить число повторностей
+    - выбрать другой уровень значимости ($\alpha$)
+    - определиться, какие эффекты действительно важны ($ES$)
+
+## Take home messages
+
+>- Способность выявлять различия зависит
+    - от объема выборки,
+    - от уровня значимости
+    - от величины эффекта
+
+## Дополнительные ресурсы
+
+- Quinn, Keough, 2002, pp. 164-170
+- [OpenIntro Statistics](http://www.openintro.org)

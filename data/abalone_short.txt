@@ -1,0 +1,16 @@
+Random subsample from Abalone dataset (full version can be obtained from UCI machine learning repository)
+1335 cases, 6 variables (1 nominal, 5 continuous).
+
+Task: predict the age of abalone from physical measurements.
+
+Variables:
+
+sex : M, F, I
+length : continuous
+diameter:continuous
+height:continuous
+whole_weight:continuous
+shucked_weight:continuous
+viscera_weight:continuous
+shell_weight:continuous
+rings:continuous
