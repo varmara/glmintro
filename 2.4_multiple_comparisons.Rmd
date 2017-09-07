@@ -1,0 +1,375 @@
+---
+title: "Множественные сравнения"
+author: "Юта Тамберг, Марина Варфоломеева"
+subtitle: ""
+output:
+  ioslides_presentation:
+    css: assets/my_styles.css
+    widescreen: yes
+---
+
+```{r setup, include = FALSE, cache = FALSE, purl = FALSE}
+# output options
+options(width = 70, scipen = 6, digits = 3)
+library(knitr)
+library(ggplot2)
+library(gridExtra)
+library(readxl)
+# chunk default options
+opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
+```
+
+# ЧАСТЬ 1. От одного теста к группе
+
+## Чем опасно?
+
+Когда мы выполняем много статистических тестов, некоторые из них дадут нам статистически значимый результат совершенно случайно. Даже если в действительности никаких различий нет. 
+
+К примеру при $\alpha = 0.05$, из 1000 тестов мы получим примерно 50 результатов, говорящих о достоверных отличиях, даже выборки в действительности не различаются. 
+
+Плохо? Плохо!
+
+# ЧАСТЬ 2. Контролируем ошибки: путь FWER
+
+## Family-Wise Error Rate
+
+Familywise error rate – допустимая частота ошибок I рода для всего семейства тестов.
+
+Обычно задается достаточно жестко: например при тестировании лекарств $FWER \le 0.05$ на всю батарею тестов. То есть вероятность совершить хотя бы одну ошибку I рода составляет  0.05.
+
+Для этого перед сравнением с критическим значением, в результаты каждого отдельного теста вносится поправка.
+
+## Поправка Бонферрони
+
+Исторически первый метод корректировки. Выполняется в один шаг.
+
+Полученные в каждом тесте доверительные вероятности ($p_i$) нужно умножить на общее число тестов (m) и только после этого сравнить с критическим значением:
+
+$p_i * m \le \alpha$
+
+Например:
+
+P-values (sorted): 
+0.005, 0.011, 0.02, 0.04, 0.13
+
+m = 5; Significance level: 0.05
+
+Corrected p-value: 0.005 * 5 = 0.025 < 0.05 Reject
+
+Corrected p-value: 0.011 * 5 = 0.055 Don’t reject
+
+Corrected p-value: 0.02 * 5 = 0.1 Don’t reject 
+
+Corrected p-value: 0.04 * 5 = 0.2 Don’t reject 
+
+Corrected p-value: 0.13 * 5 = 0.65 Don’t reject 
+
+##  Поправка Бонферрони 
+
+Плюс - теперь не так-то просто совершить хотя бы одну ошибку I рода на всю группу тестов.
+
+Минус - выросли шансы совершить ошибку II рода, т.е. "потерять" реально существующие различия.
+
+## Поправка Хольма-Бонферрони
+
+Более щадящий способ это метод Хольма-Бонферрони.
+
+Процедура применения поправки пошаговая. Сначала мы сортируем p-values, полученные в тестах, в порядке возрастания и присваиваем каждой соответствующий ранг j от 1 до m.
+
+Затем применяем поправку $p_i * (m – j + 1)$, после чего сравниваем с уровнем занчимости.
+
+## Поправка Хольма-Бонферрони
+
+Например:
+
+P-values (sorted): 
+0.005, 0.011, 0.02, 0.04, 0.13
+
+m = 5; Significance level: 0.05
+
+j = 1 Corrected p-value: 0.005 * (5 – 1 +1) = 0.025 < 0.05: Reject
+
+j = 2 Corrected p-value: 0.011 * (5 – 2 + 1) = 0.044: Reject
+
+j = 3 Corrected p-value: 0.02 * (5 – 3 + 1) = 0.06: Don’t reject 
+
+
+
+Дальше можно не проверять: все следующие $p_j$ будут больше $\alpha$.
+
+j = 4 Corrected p-value: 0.04 * 2 = 0.008: Don’t reject 
+
+j = 5 Corrected p-value: 0.13 * 1 = 0.13: Don’t reject 
+
+
+# ЧАСТЬ 3.  Контролируем ошибки: путь FED
+
+## False Discovery Rate
+
+Для случаев, когда нам важнее сохранить истинно-положительные результаты, чем недопустить ложно-положительных, можно  регулировать False Discovery Rate.
+
+С помощью FDR мы задаем не количество ошибок первого рода в принципе, а количество ложно-положительных результатов в отношении к истинно-положительным.
+
+Эта цифра обозначается как $\gamma$ и обычно 10% или меньше считается вполне приемлимой величиной.
+
+## Метод Беньямини-Хохберга
+
+Процедура Беньямини-Хохберга прошаговая. Начинаем опять с сортировки и придания рангов доверительным вероятностям.
+
+Затем находим такое значение p-value с наибольшим рангом j чтобы $p_j \le \gamma * (j/m)$
+
+Все тесты с рангами меньше j считаем значимыми.
+
+Например:
+
+P-values (sorted): 
+0.005, 0.011, 0.02, 0.04, 0.13
+
+m = 5; Significance level: 0.05
+
+j=1	0.005	<	0.1*(1/5) = 0.02  	Reject
+
+j=2  	0.011	<	0.1*(2/5) = 0.04	Reject
+
+j=3  	0.02	<	0.1*(3/5) = 0.06	Reject
+
+j=4  	0.04	<	0.1*(4/5) = 0.08	Reject
+
+j=5  	0.13	>	0.1*(5/5) = 0.1	Don't reject
+
+## Метод Беньямини-Хохберга
+
+Как видим, это либеральный метод. Да, здесь могут быть ложноположительные результаты, но мы к этому готовы. Главное – истинно-положительные результаты не пропали.
+
+# Множественные сравнения (t-тесты) в R
+
+## Case study 1: Fake gene expression
+
+Прочитаем таблицу симулированных данных и посмотрим как они устроены:
+
+```{r message=FALSE}
+expr <- read.table("data/fake_expression_samples.csv", header=T, sep = ",")
+head(expr)
+str(expr)
+```
+
+## Case study 1: Fake gene expression
+
+Нам надо сравнить выборки 1 и 2 по каждому из 10 генов. Начнем с первого
+
+```{r}
+t.test(expr$sample1[expr$gene_ID=="1"],
+       expr$sample2[expr$gene_ID=="1"])
+```
+
+## Case study 1: Fake gene expression
+
+Нам понадобятся только доверительная вероятность, поэтому хорошо если мы сможем ее извлечь и записать в новую переменную
+
+```{r}
+t_result <- t.test(expr$sample1[expr$gene_ID=="1"],
+                   expr$sample2[expr$gene_ID=="1"])
+t_result$p.value
+```
+
+Мы можем добиться того же самого и одной командой:
+
+```{r}
+t1 <- t.test(expr$sample1[expr$gene_ID=="1"],
+             expr$sample2[expr$gene_ID=="1"])$p.value
+t1
+```
+
+## Case study 1: Fake gene expression
+
+Теперь надо лишь выполнить эту же операцию для оставшихся девяти сравнений
+
+```{r}
+t2 <- t.test(expr$sample1[expr$gene_ID=="2"],
+             expr$sample2[expr$gene_ID=="2"])$p.value
+t3 <- t.test(expr$sample1[expr$gene_ID=="3"],
+             expr$sample2[expr$gene_ID=="3"])$p.value
+t4 <- t.test(expr$sample1[expr$gene_ID=="4"],
+             expr$sample2[expr$gene_ID=="4"])$p.value
+t5 <- t.test(expr$sample1[expr$gene_ID=="5"],
+             expr$sample2[expr$gene_ID=="5"])$p.value
+t6 <- t.test(expr$sample1[expr$gene_ID=="6"],
+             expr$sample2[expr$gene_ID=="6"])$p.value
+t7 <- t.test(expr$sample1[expr$gene_ID=="7"],
+             expr$sample2[expr$gene_ID=="7"])$p.value
+t8 <- t.test(expr$sample1[expr$gene_ID=="8"],
+             expr$sample2[expr$gene_ID=="8"])$p.value
+t9 <- t.test(expr$sample1[expr$gene_ID=="9"],
+             expr$sample2[expr$gene_ID=="9"])$p.value
+t10 <- t.test(expr$sample1[expr$gene_ID=="10"],
+              expr$sample2[expr$gene_ID=="10"])$p.value
+```
+
+## Case study 1: Fake gene expression
+
+Мы посчитали десять p-values для всех генов. Соберем их в один вектор и присвоим имена.
+
+```{r}
+pvals <- c(t1,t2,t3,t4,t5,t6,t7,t8,t9,t10)
+names(pvals) <- c("t1","t2","t3","t4","t5","t6","t7","t8","t9","t10")
+pvals
+```
+
+Сколько генов, достоверно меняющих экспрессию, мы нашли в "сырых" t-тестах?
+
+```{r}
+sum(pvals <= 0.05)
+```
+
+А теперь внесем поправки.
+
+## Case study 1: Fake gene expression
+
+Поправки к p-values в R можно сделать при помощи функции `p.adjust()`
+Аргумент `method` задает тип поправки.
+
+```{r}
+p_bonf <- p.adjust(pvals, method = "bonferroni")
+```
+
+У скольких генов экспрессия достоверно различается после поправки Бонферрони?
+
+```{r}
+sum(p_bonf <= 0.05, na.rm = TRUE)
+```
+
+После поправки Хольма?
+
+```{r}
+p_holm <- p.adjust(pvals, method = "holm")
+sum(p_holm <= 0.05, na.rm = TRUE)
+```
+
+## Case study 1: Fake gene expression
+
+А сколько --- после применения процедуры Беньямини-Хохберга?
+
+```{r}
+p_bh <- p.adjust(pvals, method = "BH")
+sum(p_bh <= 0.05, na.rm = TRUE)
+```
+
+Так же можем посмотреть результаты каких именно тестов показали значимые различия:
+
+```{r}
+names(p_bh[p_bh <= 0.05])
+```
+
+
+## Case study 2: Экскреция метаболитов и синдром Кушинга. Самостоятельная работа
+
+Синдром Кушинга это сборное название для ряда гормональных заболеваний разной этиологии, которые ведут к перевыработке гормона кортизола. 
+
+Датасет `Cushings` содержит данные по объему выведения с мочой двух метаболитов стероидных гормонов. 
+
+
+```{r results="hide"}
+Cushings <- read_excel("data/Cushings.xlsx", sheet = 1)
+head(Cushings)
+```
+```{r}
+str(Cushings)
+```
+
+## Case study 2: Экскреция метаболитов и синдром Кушинга. 
+
+Как видим, в таблице данных три переменные:
+
+`Tetrahydrocortisone` -- объем (мг в сутки) выведения тетрагидрокортизона
+
+`Pregnanetriol` --  объем (мг в сутки) выведения прегнанетриола
+
+`Type` -- разновидности синдрома: a = adenoma, b = bilateral hyperplasia, c = carcinoma и u = unknown.
+
+## Case study 2: Экскреция метаболитов и синдром Кушинга.
+
+Названия переменных слишком замысловатые, переназовем их покороче.
+
+```{r}
+names(Cushings)[names(Cushings)=="Tetrahydrocortisone"] <- "Tetr"
+names(Cushings)[names(Cushings)=="Pregnanetriol"] <- "Pre"
+```
+
+Ваша задача - выбрать один из метаболитов, и сравнить уровни его экскреции между всеми типами синдромов. Какие типы заболеваний вы стали бы исследовать дальше и почему?
+
+## Решение. Tetrahydrocortisone
+
+```{r purl=FALSE}
+a.b <- t.test(Cushings$Tetr[Cushings$Type=="a"],
+              Cushings$Tetr[Cushings$Type=="b"])$p.value
+a.c <- t.test(Cushings$Tetr[Cushings$Type=="a"],
+              Cushings$Tetr[Cushings$Type=="c"])$p.value
+a.u <- t.test(Cushings$Tetr[Cushings$Type=="a"],
+              Cushings$Tetr[Cushings$Type=="u"])$p.value
+b.c <- t.test(Cushings$Tetr[Cushings$Type=="b"],
+              Cushings$Tetr[Cushings$Type=="c"])$p.value
+b.u <- t.test(Cushings$Tetr[Cushings$Type=="b"],
+              Cushings$Tetr[Cushings$Type=="u"])$p.value
+c.u <- t.test(Cushings$Tetr[Cushings$Type=="c"],
+              Cushings$Tetr[Cushings$Type=="u"])$p.value
+
+Tetr_pvals <- c(a.b, a.c, a.u, b.c, b.u, c.u)
+names(Tetr_pvals) <- c("a.b", "a.c", "a.u", "b.c", "b.u", "c.u")
+```
+
+## Решение. Tetrahydrocortisone
+
+```{r purl=FALSE}
+names(Tetr_pvals[Tetr_pvals <= 0.05])
+
+p_bonf <- p.adjust(Tetr_pvals, method = "bonferroni")
+names(p_bonf[p_bonf <= 0.05])
+
+p_holm <- p.adjust(Tetr_pvals, method = "holm")
+names(p_holm[p_holm <= 0.05])
+
+p_bh <- p.adjust(Tetr_pvals, method = "BH")
+names(p_bh[p_bh <= 0.05])
+```
+
+## Решение. Pregnanetriol
+
+```{r purl=FALSE}
+a_b <- t.test(Cushings$Pre[Cushings$Type=="a"],
+              Cushings$Pre[Cushings$Type=="b"])$p.value
+a_c <- t.test(Cushings$Pre[Cushings$Type=="a"],
+              Cushings$Pre[Cushings$Type=="c"])$p.value
+a_u <- t.test(Cushings$Pre[Cushings$Type=="a"],
+              Cushings$Pre[Cushings$Type=="u"])$p.value
+b_c <- t.test(Cushings$Pre[Cushings$Type=="b"],
+              Cushings$Pre[Cushings$Type=="c"])$p.value
+b_u <- t.test(Cushings$Pre[Cushings$Type=="b"],
+              Cushings$Pre[Cushings$Type=="u"])$p.value
+c_u <- t.test(Cushings$Pre[Cushings$Type=="c"],
+              Cushings$Pre[Cushings$Type=="u"])$p.value
+
+Pre_pvals <- c(a_b, a_c, a_u, b_c, b_u, c_u)
+names(Pre_pvals) <- c("a_b", "a_c", "a_u", "b_c", "b_u", "c_u")
+```
+
+## Решение. Pregnanetriol
+
+```{r purl=FALSE}
+names(Pre_pvals[Pre_pvals <= 0.05])
+
+p_bonf <- p.adjust(Pre_pvals, method = "bonferroni")
+names(p_bonf[p_bonf <= 0.05])
+
+p_holm <- p.adjust(Pre_pvals, method = "holm")
+names(p_holm[p_holm <= 0.05])
+
+p_bh <- p.adjust(Pre_pvals, method = "BH")
+names(p_bh[p_bh <= 0.05])
+```
+
+
+## Take home messages
+
+> Нельзя безнаказанно проводить множество тестов! Число ложно-положительных результатов растет очень быстро.
+> Выбирая поправку, решите что вам важнее, избавиться от ложно-положительных, или сберечь истинно-положительные результаты.
+
