@@ -22,9 +22,9 @@ opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, 
 - Принципы выбора лучшей линейной модели
 - Сравнение линейных моделей
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, purl=FALSE}
 library(ggplot2)
-theme_set(theme_bw(base_size = 14))
+theme_set(theme_bw())
 library(gridExtra)
 ```
 
@@ -50,7 +50,7 @@ Georg E. P. Box
 
 ## Какую модель можно подобрать для описания этой закономерности?
 
-```{r, echo=FALSE, fig.height=4, fig.width=3}
+```{r, echo=FALSE, fig.height=4, fig.width=3, purl=FALSE}
 library(ggplot2)
 n <- 10
 set.seed(384)
@@ -105,7 +105,7 @@ pp
 
 Все ли хорошо с подобранной моделью?
 
-```{r models-lin, echo=FALSE, fig.height=4, fig.width=3}
+```{r models-lin, echo=FALSE, fig.height=4, fig.width=3, purl=FALSE}
 pp_lm <- pp + geom_smooth(method = "lm", se = FALSE)
 pp_lm
 ```
@@ -114,7 +114,7 @@ pp_lm
 
 Какая из этих моделей лучше описывает данные?
 
-```{r models-no-labs, echo=FALSE, fig.height=3.5, fig.width=10}
+```{r models-no-labs, echo=FALSE, fig.height=3.5, fig.width=10, purl=FALSE}
 grid.arrange(under,
              right,
              over,
@@ -124,7 +124,7 @@ grid.arrange(under,
 ## Для этих данных можно подобрать несколько моделей
 
 
-```{r models-labs, echo=FALSE, fig.height=3.5, fig.width=10}
+```{r models-labs, echo=FALSE, fig.height=3.5, fig.width=10, purl=FALSE}
 grid.arrange(under + labs(title = "Высокая погрешность \n(недообучение)"),
              right + labs(title = "Оптимальая \nмодель"),
              over + labs(title = "Высокая дисперсия \n(переобучение)"),
@@ -145,7 +145,7 @@ grid.arrange(under + labs(title = "Высокая погрешность \n(не
 
 ## При постоении моделей важно помнить о трех типах дисперсии
 
-```{r, echo=FALSE, fig.height=5, fig.width=9}
+```{r, echo=FALSE, fig.height=5, fig.width=9, purl=FALSE}
 library(readxl)
 cat <- read_excel("data/catsM.xlsx", sheet = 1)
 
@@ -153,7 +153,7 @@ cat_model <- lm(Hwt ~ Bwt, data = cat)
 cat_predicted <- predict(cat_model, interval="prediction")
 cat_predicted <- data.frame(cat, cat_predicted)
 
-pl_cat <- ggplot(cat, aes(x = Bwt, y = Hwt)) + geom_point() + theme(plot.title = element_text(size = 10), axis.text = element_text(size = 8), axis.title = element_text(size = 8) ) + ggtitle("Model") + geom_smooth(method = "lm", se = F)
+pl_cat <- ggplot(cat, aes(x = Bwt, y = Hwt)) + geom_point() + theme(plot.title = element_text(size = 10), axis.text = element_text(size = 8), axis.title = element_text(size = 8) ) + ggtitle("Model") + geom_smooth(method = "lm", se = F) + labs(x = "X", y = "Y")
 
 pl_exp <- pl_cat + geom_smooth(method="lm", se=F, size=1.3) + geom_abline(aes(intercept=mean(Hwt), slope=0), size=1.3) + geom_text(label="Mean", aes(x=2.2, y=(mean(Hwt)+0.5)), size = 3) + geom_segment(data=cat_predicted, aes(x=Bwt, y=mean(Hwt), xend=Bwt, yend=fit)) + ggtitle("Explained variation") 
  
@@ -162,13 +162,10 @@ pl_res <- pl_cat + geom_smooth(method="lm", se=F, size=1.3) + geom_segment(data=
 
 pl_tot <-pl_cat + geom_abline(aes(intercept=mean(Hwt), slope=0), size=1.3) + geom_text(label="Mean", aes(x=2.2, y=(mean(Hwt)+0.5)), size = 3) + geom_segment(data=cat_predicted, aes(x=Bwt, y=Hwt, xend=Bwt, yend=mean(Hwt))) + ggtitle("Total variation")
 
-
 grid.arrange(pl_cat, pl_exp, pl_res, pl_tot, nrow=1)
-
-
 ```
 
-##При постоении моделей важно помнить о трех типах дисперсии
+## При постоении моделей важно помнить о трех типах дисперсии
 
 
 |**Объясненная дисперсия**  | **Остаточная дисперсия**   | **Полная дисперсия** | 
@@ -225,6 +222,134 @@ _Entia non sunt multiplicanda praeter necessitatem_
 - Хорошая модель должна соответствовать условиям применимости
 
 - Другие соображения: разумность, целесообразность модели, простота, ценность выводов, важность предикторов.
+
+
+# Знакомство с данными для множественной линейной регрессии
+
+## Пример: рак предстательной железы
+
+От каких характеристик зависит концентрация простат-специфического антигена? (Stamey et al. 1989)
+
+Переменных много, мы хотим из них выбрать оптимальный небольшой набор
+
+97 пациентов:
+
+- `lcavol` --- логарифм объема опухоли
+- `lweight` --- логарифм веса
+- `age` --- возраст пациента
+- `lbph` --- логарифм степени доброкачественной гиперплазии
+- `svi` --- поражение семенных пузырьков
+- `lcp` --- логарифм меры поражения капсулы
+- `gleason` --- оценка по шкале Глисона
+- `pgg45` --- доля оценок 4 и 5 по шкале Глисона
+- `lpsa` --- логарифм концентрации простат-специфичного антигена
+
+
+## Что мы знаем про эти данные?
+
+```{r}
+prost <- read_excel("data/Prostate.xlsx")
+str(prost)
+colSums(is.na(prost))
+```
+
+## Есть два дискретных фактора, временно не будем их учитывать (пока не научимся)
+
+```{r fig.width=10, fig.height=5}
+pairs(prost)
+```
+
+## Проверяем на колинеарность предикторов
+
+```{r}
+M1 <- lm(lpsa ~ . - svi - gleason, data = prost)
+library(car)
+vif(M1) # При желании, можно удалить lcp, но мы не будем
+```
+
+## Выбросы, график остатков, квантильный график
+
+```{r fig.width=10, fig.show='hold'}
+set.seed(893247)
+cook_cutoff <- 4 / (nrow(prost) - length(coef(M1) - 2))
+op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
+plot(M1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
+residualPlot(M1)        # График остатков
+qqPlot(M1)              # Квантильный график остатков
+par(op)
+```
+
+>- Нелинейный паттерн в остатках? Возможно, нам нужно подобрать GAM? Или это неучтенные факторы?
+
+## Заготовка графика остатков в ggplot
+
+```{r}
+M1_diag <- data.frame(prost, 
+                      .resid = resid(M1, type = "pearson"),
+                      .fitted = fitted(M1))
+gg_res <- ggplot(M1_diag, aes(x = .fitted, y = .resid)) + 
+  geom_point() + geom_smooth(method = "loess") +
+  geom_hline(yintercept = 0)
+gg_res
+```
+
+>- Выглядит подозрительно нелинейно
+
+
+## Графики остатков от предикторов в модели и нет 
+
+```{r eval=FALSE}
+# Предикторы в модели lcavol, lweight, age, lbph, lcp, pgg45
+gg_res %+% aes(x = lcavol)
+gg_res %+% aes(x = lweight)
+gg_res %+% aes(x = age)  #
+gg_res %+% aes(x = lbph) #
+gg_res %+% aes(x = lcp)
+gg_res %+% aes(x = pgg45 ) # нелинейый паттерн
+```
+
+## Графики остатков от предикторов в модели и нет 
+
+```{r echo=FALSE, fig.height=6, fig.width=10, purl=FALSE}
+library(gridExtra)
+grid.arrange(
+# Предикторы в модели lcavol, lweight, age, lbph, lcp, pgg45
+gg_res %+% aes(x = lcavol),
+gg_res %+% aes(x = lweight),
+gg_res %+% aes(x = age),
+gg_res %+% aes(x = lbph), 
+gg_res %+% aes(x = lcp),
+gg_res %+% aes(x = pgg45 ), # нелинейый паттерн
+ncol = 2)
+```
+
+## Графики остатков от предикторов не в модели 
+
+```{r eval=FALSE}
+# Дискретные предикторы не в модели svi, gleason
+gg_res %+% aes(x = factor(svi)) + geom_boxplot()
+gg_res %+% aes(x = factor(gleason)) + geom_boxplot()
+# Похоже, что есть зависимость
+# Возможно, добавление этих факторов в модель улучшит дело --- в следующий раз
+```
+
+```{r echo=FALSE, purl=FALSE}
+grid.arrange(
+# Дискретные предикторы не в модели svi, gleason
+gg_res %+% aes(x = factor(svi)) + geom_boxplot(),
+gg_res %+% aes(x = factor(gleason)) + geom_boxplot(),
+ncol = 2)
+# Похоже, что есть зависимость
+# Возможно, добавление этих факторов в модель улучшит дело --- в следующий раз
+```
+
+## Влияют ли предикторы?
+
+```{r}
+summary(M1)
+```
+
+Не все предикторы влияют, возможно эту модель можно оптимизировать...
 
 # Сравнение линейных моделей
 
@@ -295,7 +420,7 @@ $y _i = \beta _0 + \epsilon _i$
 
 ### Полная модель 
 
-$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + ... + \beta _p x _{ip} + \epsilon _i$  
+$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + \beta _p x _{ip} + \epsilon _i$  
 $df _{reduced, full} = p$  
 $df _{error, full} = n - p - 1$
 
@@ -315,7 +440,7 @@ $df _{error, reduced} = n - k - 1$
 
 ### Полная модель 
 
-$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + ... + \beta _p x _{ip} + \epsilon _i$  
+$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + \beta _p x _{ip} + \epsilon _i$  
 $df _{reduced, full} = p$  
 $df _{error, full} = n - p - 1$
 
@@ -348,48 +473,11 @@ $$F = \frac {(SS _{error,reduced} - SS _{error,full}) / (df _{reduced, full} - d
 <hr/>
 * --- __Важно!__ Начинать упрощать модель нужно со взаимодействий между предикторами.  Если взаимодействие из модели удалить нельзя, то нельзя удалять и отдельно стоящие предикторы, из которых оно состоит.
 
+# Частный F-критерий в R
 
-## Пример: птицы в лесах Австралии
+## Влияют ли предикторы?
 
-От каких характеристик лесного участка зависит обилие птиц в лесах юго-западной Виктории, Австралия (Loyn, 1987)
-
-Переменных много, мы хотим из них выбрать __оптимальный небольшой__ набор.
-
-
-<div class="columns-2">
-
-![forest in Victoria, Australia](images/vict_m.jpg)
-Mystic Forest - Warburton, Victoria by ¡kuba! on flickr
-
-
-
-56 лесных участков:
-
-- ABUND - обилие птиц
-- AREA - площадь участка
-- YRISOL - год изоляции участка
-- DIST - расстояние до ближайшего леса
-- LDIST - расстояние до ближайшего большого леса
-- GRAZE - пастбищная нагрузка (1-5)
-- ALT - высота над уровнем моря
-
-
-
-## Вспомним, что мы знаем про эту модель с прошлого раза
-
-```{r}
-birds <- read_excel("data/loyn.xlsx")
-M <- lm(ABUND ~ ., data = birds)
-library(car)
-vif(M) # есть колинеарные предикторы
-# GRAZE - избыточный предиктор, удаляем
-M1 <- update(M, .~. - GRAZE)
-vif(M1)
-```
-
-## .
-
-Незначимо влияние AREA, DIST, LDIST
+>- Незначимо влияние age, lbph, lcp, pgg45. Можем попробовать оптимизировать модель
 
 ```{r}
 summary(M1)
@@ -397,12 +485,22 @@ summary(M1)
 
 ## Частный F-критерий, 1 способ: `anova(модель_1, модель_2)`
 
-Вручную выполняем все действия
+Вручную выполняем все действия и выбираем, что можно выкинуть, и так много раз.
 
-```{r}
-M2 <- update(M1, . ~ . - AREA)
+```{r eval=FALSE}
+M2 <- update(M1, . ~ . - age)
 anova(M1, M2)
+M3 <- update(M1, . ~ . - lbph)
+anova(M1, M3)
+M4 <- update(M1, . ~ . - lcp)
+anova(M1, M4)
+M5 <- update(M1, . ~ . - pgg45)
+anova(M1, M5)
+# Удаляем lcp, и потом повторяем все снова...
 ```
+
+Но мы пойдем другим путем
+
 
 ##  Частный F-критерий, 2 способ: `drop1()`
 
@@ -410,31 +508,141 @@ anova(M1, M2)
 
 ```{r}
 drop1(M1, test = "F")
-# Нужно убрать AREA
+# Нужно убрать lcp
 ```
 
 ## .
 
 ```{r}
-# Убрали AREA
-M2 <- update(M1, . ~ . - AREA)
+# Убрали lcp
+M2 <- update(M1, . ~ . - lcp)
 drop1(M2, test = "F")
-# Нужно убрать LDIST
+# Нужно убрать lbph 
 ```
 
 ## .
 
-```{r}
-# Убрали LDIST
-M3 <- update(M2, . ~ . - LDIST)
+```{r purl=FALSE}
+# Убрали lbph 
+M3 <- update(M2, . ~ . - lbph )
 drop1(M3, test = "F")
-# Больше ничего убрать не получается
+# Нужно убрать age
+```
+
+## .
+
+```{r purl=FALSE}
+# Убрали age
+M4 <- update(M3, . ~ . - age)
+drop1(M4, test = "F")
+# Нужно убрать pgg45
+```
+
+## .
+
+```{r purl=FALSE}
+# Убрали pgg45
+M5 <- update(M4, . ~ . - pgg45)
+drop1(M5, test = "F")
+# Больше убрать ничего не получается
 ```
 
 ## Итоговая модель
 
 ```{r}
-summary(M3)
+summary(M5)
+```
+
+## Задание
+
+Проверьте финальную модель на выполнение условий применимости
+
+## Выбросы, график остатков, квантильный график
+
+```{r fig.width=10, fig.show='hold', purl=FALSE}
+set.seed(293234)
+cook_cutoff <- 4 / (nrow(prost) - length(coef(M5) - 2))
+op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
+plot(M5, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
+residualPlot(M5)        # График остатков
+qqPlot(M5)              # Квантильный график остатков
+par(op)
+```
+
+## График остатков --- заготовка
+
+```{r purl=FALSE}
+M_diag <- data.frame(prost, 
+                      .resid = resid(M5, type = "pearson"),
+                      .fitted = fitted(M5))
+gg_res <- ggplot(M_diag, aes(x = .fitted, y = .resid)) + 
+  geom_point() + geom_smooth(method = "loess") +
+  geom_hline(yintercept = 0)
+gg_res
+```
+
+>- Видны нелинейные паттерны. Нужно использовать другую модель! Но мы пока продолжим, чтобы поучиться.
+
+## Графики остатков от предикторов в модели
+
+```{r eval=FALSE, purl=FALSE}
+# Предикторы в модели lcavol, lcp
+gg_res %+% aes(x = lcavol)
+gg_res %+% aes(x = lweight)  # нелинейый паттерн, возможно нужен GAM
+```
+
+```{r echo=FALSE, purl=FALSE}
+grid.arrange(
+# Предикторы в модели lcavol, lcp
+gg_res %+% aes(x = lcavol),
+gg_res %+% aes(x = lweight),  # нелинейый паттерн, возможно нужен GAM
+ncol = 2
+)
+```
+
+## Графики остатков от непрерывных предикторов не в модели
+```{r eval=FALSE, purl=FALSE}
+# Непрерывные предикторы не в модели lweight, age, lbph, pgg45, 
+gg_res %+% aes(x = age)  #
+gg_res %+% aes(x = lbph) #
+gg_res %+% aes(x = lcp)    # нелинейый паттерн
+gg_res %+% aes(x = pgg45 ) # нелинейый паттерн
+```
+
+```{r echo=FALSE, fig.height=4, purl=FALSE}
+grid.arrange(
+# Непрерывные предикторы не в модели lweight, age, lbph, pgg45, 
+gg_res %+% aes(x = age),  #
+gg_res %+% aes(x = lbph), #
+gg_res %+% aes(x = lcp),   # нелинейый паттерн
+gg_res %+% aes(x = pgg45), # нелинейый паттерн
+ncol = 2
+)
+```
+
+
+## Графики остатков от дискретных предикторов не в модели
+
+```{r eval=FALSE, purl=FALSE}
+# Дискретные предикторы не в модели svi, gleason
+gg_res %+% aes(x = factor(svi)) + geom_boxplot()
+gg_res %+% aes(x = factor(gleason)) + geom_boxplot()
+# Есть зависимости. Возможно, добавление этих факторов в модель улучшит дело - в следующий раз
+```
+
+```{r echo=FALSE, purl=FALSE}
+grid.arrange(
+# Дискретные предикторы не в модели svi, gleason
+gg_res %+% aes(x = factor(svi)) + geom_boxplot(),
+gg_res %+% aes(x = factor(gleason)) + geom_boxplot(),
+ncol = 2)
+# Есть зависимости. Возможно, добавление этих факторов в модель улучшит дело - в следующий раз
+```
+
+## Описываем финальную модель
+
+```{r}
+summary(M5)
 ```
 
 # Тесты отношения правдоподобий
@@ -583,28 +791,28 @@ ln L(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) &= &- \frac{n}{2} (ln2
 Чем больше логарифм правдоподобия тем лучше модель
 
 ## Подбор параметров модели методом максимального правдоподобия
-Для подбора параметров методом максимального правдоподобия используют функцию `glm()` и ряд других, более специализированных, функций.
+
+Для подбора параметров методом максимального правдоподобия используют функцию `glm()`
 
 
 ```{r}
-# Создаем симулированные данные
-xy <- data.frame(X = rep(1:10, 3))
-xy$Y <- 10*xy$X + rnorm(30, 0, 10)
+# Симулированные данные
+set.seed(9328)
+dat <- data.frame(X = runif(n = 50, min = 0, max = 10))
+dat$Y <- 3 + 15 * dat$X + rnorm(n = 50, mean = 0, sd = 1)
 
-# Подбираем модель
-Mod <- lm(Y ~ X, data = xy)
-Mod_glm <- glm(Y ~ X, data = xy)
+# Подбор модели двумя способами
+Mod     <-  lm(Y ~ X, data = dat) # МНК
+Mod_glm <- glm(Y ~ X, data = dat) # МЛ
 
+# Одинаковые оценки коэффициентов
 coefficients(Mod)
-```
-
-```{r}
 coefficients(Mod_glm)
 ```
 
 
-
 ## Логарифм правдоподобия
+
 $LogLik$ для модели можно найти с помощью функции `logLic()`
 
 ```{r}
@@ -615,16 +823,16 @@ logLik(Mod_glm)
 
 
 ```{r}
-xy$predicted <- predict(Mod) # Предсказанные моделью значения
-
-SD <- summary(Mod)$sigma # Оценка дисперсии
-
-xy$Prob <- dnorm(xy$Y, mean = xy$predicted, sd = SD) # Вероятности для каждой точки
-
-xy$LogProb <- log(xy$Prob) # Логарифм вероятностей
-
-sum(xy$LogProb) # Логарифм произведения, равный сумме логарифмов
-
+# Предсказанные значения
+dat$predicted <- predict(Mod)
+# Оценка дисперсии
+SD <- summary(Mod)$sigma 
+# Вероятности для каждой точки
+dat$Prob <- dnorm(dat$Y, mean = dat$predicted, sd = SD)
+# Логарифм вероятностей
+dat$LogProb <- log(dat$Prob)
+# Логарифм произведения, равный сумме логарифмов
+sum(dat$LogProb)
 ```
 
 
@@ -633,58 +841,80 @@ sum(xy$LogProb) # Логарифм произведения, равный сум
 
 Тест отношения правдоподобий позволяет определить какая модель более правдоподобна с учетом данных.
 
-$LRT = 2ln(L_1/L_2) = 2(logL_1 - logL_2)$
+$$LRT = 2ln\Big(\frac{L_1}{L_2}\Big) = 2(lnL_1 - lnL_2)$$
 
 - $L_1$, $L_2$ - правдоподобия полной и уменьшеной модели
-- $logL_1$, $logL_2$ - логарифмы правдоподобий
+- $lnL_1$, $lnL_2$ - логарифмы правдоподобий
 
 Разница логарифмов правдоподобий имеет распределение $\chi^2$ с числом степеней свободы $df = df_2 - df_1$
 
-## Делаем тест отношения правдоподобий
+# Тест отношения правдоподобий в R
 
-Переподберем нашу полную модель при помощи метода максимального правдоподобия
+## Задание
+
+Для этой полной модели
 
 ```{r}
-GLM1 <- glm(ABUND ~ . - GRAZE, data = birds)
+GLM1 <- glm(lpsa ~ . - svi - gleason, data = prost)
 ```
+
+Подберите оптимальную модель при помощи тестов отношения правдоподобий
 
 Тест отношения правдоподобий можно сделать с помощью тех же функций, что и частный F-критерий:
 
 - по-одному `anova(mod1, mod2, test = "Chisq")`
 - все сразу `drop1(mod1, test = "Chisq")`
 
-### Задание: Подберите оптимальную модель при помощи тестов отношения правдоподобий
 
 ## Решение (шаг 1)
 
-```{r}
+```{r purl=FALSE}
 drop1(GLM1, test = "Chisq")
-# Нужно убрать AREA
+# Нужно убрать lcp
 ```
 
 ## Решение (шаг 2)
 
-```{r}
-# Убираем AREA
-GLM2 <- update(GLM1, . ~ . - AREA)
+```{r purl=FALSE}
+# Убираем lcp
+GLM2 <- update(GLM1, . ~ . - lcp)
 drop1(GLM2, test = "Chisq")
-# Нужно убрать LDIST
+# Нужно убрать lbph
 ```
 
 ## Решение (шаг 3)
 
-```{r}
-# Убираем LDIST
-GLM3 <- update(GLM2, . ~ . - LDIST)
+```{r purl=FALSE}
+# Убираем lbph
+GLM3 <- update(GLM2, . ~ . - lbph)
 drop1(GLM3, test = "Chisq")
-# Больше ничего убрать не получается
+# Нужно убрать age
 ```
 
 ## Решение (шаг 4)
 
-```{r}
-summary(GLM3)
+```{r purl=FALSE}
+# Убираем age
+GLM4 <- update(GLM3, . ~ . - age)
+drop1(GLM4, test = "Chisq")
+# Нужно убрать pgg45
 ```
+## Решение (шаг 4)
+
+```{r purl=FALSE}
+# Убираем pgg45
+GLM5 <- update(GLM4, . ~ . - pgg45)
+drop1(GLM5, test = "Chisq")
+# Больше ничего убрать не получается
+```
+
+## Решение (шаг 5)
+
+```{r purl=FALSE}
+summary(GLM5)
+```
+
+Финальную модель снова нужно проверить на выполнение условий применимости
 
 # Информационные критерии
 
@@ -697,26 +927,39 @@ $AIC = -2 logLik + 2p$
 
 Чем меньше AIC - тем лучше модель
 
-## Другие информационные критерии
+
+__Важно!__   Информационные критерии можно использовать для сравнения __даже для невложенных моделей__. Но модели должны быть __подобраны с помощью ML__ и __на одинаковых данных__!
+
+## Некоторые другие информационные критерии
 
 |Критерий | Название  | Формула|
 |------ | ------ | ------|
 |AIC | Информационный критерий Акаике | $AIC = -2 logLik + 2p$|
 |BIC | Баесовский информационный критерий | $BIC = -2 logLik + p \cdot ln(n)$|
 |AICc | Информационный критерий Акаике с коррекцией для малых выборок (малых относительно числа параметров: $n/p < 40$, Burnham, Anderson, 2004) | $AIC_c = -2 logLik + 2p + \frac{2p(p + 1)}{n - p - 1}$|
-|QAIC | Информационный критерий Акаике с использованием квазиправдоподобия - для данных со сверхдисперсией (позже) | |
 
 - $logLik$ - логарифм правдоподобия для модели
 - $p$ - число параметров
 - $n$ - число наблюдений
 
+
+# Информационные критерии в R
+
 ## Рассчитаем AIC для наших моделей
 
 ```{r}
-AIC(GLM1, GLM2, GLM3, k=2)
-# По AIC лучшая модель GLM3
+AIC(GLM1, GLM2, GLM3, GLM4, GLM5)
 ```
 
+>- Судя по AIC, лучшая модель GLM4, но значения AIC различаются всего на 1-2 единицы --- такими различиями можно пренебречь и выбрать более простую модель GLM5.
+
+## Рассчитаем BIC для наших моделей
+
+```{r purl=FALSE}
+BIC(GLM1, GLM2, GLM3, GLM4, GLM5)
+```
+
+>- Судя по BIC, нужно выбрать модель GLM5
 
 ## Take-home messages
 
@@ -726,6 +969,8 @@ AIC(GLM1, GLM2, GLM3, k=2)
 
 
 ## Что почитать
+
++ <span style="orange">Must read paper!</span> Zuur, A.F. and Ieno, E.N., 2016. A protocol for conducting and presenting results of regression‐type analyses. Methods in Ecology and Evolution, 7(6), pp.636-645.
 
 + Кабаков Р.И. R в действии. Анализ и визуализация данных на языке R. М.: ДМК Пресс, 2014
 + Zuur, A., Ieno, E.N. and Smith, G.M., 2007. Analyzing ecological data. Springer Science & Business Media.
