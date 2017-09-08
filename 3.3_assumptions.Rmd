@@ -21,9 +21,16 @@ opts_chunk$set(fig.align='center', tidy = FALSE,
 
 ## Диагностика линейных моделей
 
-- Анализ остатков
-    - Проверка на наличие влиятельных наблюдений
-    - Проверка условий применимости линейных моделей
+- Зачем нужен анализ остатков?
+- Влиятельные наблюдения
+- Типы остатков
+- Проверка на влиятельные наблюдения в R
+- Проверка условий применимости линейных моделей
+    1. Линейность связи
+    2. Независимость
+    3. Нормальное распределение
+    4. Постоянство дисперсии
+- Тренинг по анализу остатков
     
 ## Зачем нужна диагностика модели? Разве тестов было недостаточно?
 
@@ -43,7 +50,7 @@ coef(summary(fit))
 
 Все достоверно? Пишем статью?
 
-\pause
+## Задание
 
 Постройте график зависимости остатков от предсказанных значений при помощи этого кода
 
@@ -54,10 +61,742 @@ residualPlot(fit, pch = ".")
 
 ## Oh, really?
 
-```{r bird, eval=TRUE, fig.width=3.7, fig.height=4, purl=TRUE, out.height='6cm', fig.align='center'}
+```{r bird, eval=TRUE, purl=TRUE, fig.width = 4, fig.height=4}
 ```
 
-\tiny{http://www4.stat.ncsu.edu/~stefanski/NSF\_Supported/Hidden\_Images/stat\_res\_plots.html}
+http://www4.stat.ncsu.edu/~stefanski/NSF\_Supported/Hidden\_Images/stat\_res\_plots.html
+
+## Анализ остатков линейных моделей
+
+### 1) Проверка на наличие влиятельных наблюдений
+
+### 2) Проверка условий применимости линейных моделей
+
+1. Линейная связь
+1. Независимость
+1. Нормальное распределение
+1. Гомогенность дисерсий
+1. Отсутствие коллинеарности предикторов (для можественной регрессии)
+
+# Вспомним пример из прошлой лекции
+
+## Размеры сердца у котов
+
+Как зависит размер сердца от размера тела у котов? (Fisher 1947; Venables, Ripley 1994)
+
+97 котов (самцы) весом больше 2 кг
+
+Про каждого кота известно:
+
+- `Sex` --- пол
+- `Bwt` --- вес тела в кг
+- `Hwt` --- вес сердца в г
+
+## Открываем данные
+
+```{r}
+library(readxl)
+cat <- read_excel("data/catsM.xlsx", sheet = 1)
+# все правильно?
+head(cat)
+# str(cat)
+
+```
+
+## 
+
+```{r}
+# Пропущенные значения?
+colSums(is.na(cat))
+
+# Объем выборки
+nrow(cat)
+
+# Разброс значений предиктора и отклика
+range(cat$Bwt)
+range(cat$Hwt)
+```
 
 
+## Задание
 
+Постройте график зависимости веса сердца от веса тела. Сделайте так, чтобы точки были синего цвета ("blue" или "steelblue")
+
+Подберите уравнение линейной регрессии для этой зависимости.
+
+## Решение
+
+```{r purl=FALSE}
+library(ggplot2)
+ggplot(cat, aes(x = Bwt, y = Hwt)) + 
+  geom_point(colour = "steelblue") + 
+  geom_smooth(method = "lm")
+```
+
+## Решение
+
+```{r purl=FALSE}
+cat_model <- lm(Hwt ~ Bwt, data = cat)
+summary(cat_model)
+```
+
+# Влиятельные наблюдения
+
+## Влиятельные наблюдения
+
+Влиятельные наблюдения --- это наблюдения, которые вносят слишком большой вклад в оценку парметров (коэффициентов) модели.
+
+![](images/leverage.png)
+
+<small>Из кн. Quinn, Keugh, 2002</small>
+
+Учет каких из этих точек повлияет на ход регрессии и почему?
+
+>- Точка 1 почти не повлияет, т.к. у нее маленький остаток, хоть и большой $X$
+>- Точка 2 почти не повлияет, т.к. ее $X$ близок к среднему, хоть и большой остаток
+>- Точка 3 повлияет сильно, т.к. у нее не только большой остаток, но и большой $X$
+
+## Воздействие точек $h_{ii}$ (leverage)
+
+показывает силу влияния значений $x_i$ на ход линии регрессии, то есть на $\hat{y_i}$
+
+![](images/leverage.png)
+
+<small>Из кн. Quinn, Keough, 2002</small>
+
+![](images/seasaw-Weighing-Machine-by-neys-fadzil-on-Flickr.jpg)
+
+<small>Weighing Machine by neys fadzil on Flickr</small>
+
+## Воздействие точек $h_{ii}$ (leverage)
+
+![](images/leverage.png)
+
+<small>Из кн. Quinn, Keough, 2002</small>
+
+>- Точки, располагающиеся дальше от $\bar{x}$, оказывают более сильное влияние на $\hat{y_i}$  
+>- Эта величина, в норме, варьирует в промежутке от $1/n$ до 1  
+>- Если  $h_{ii} > 2(p/n)$, то надо внимательно посмотреть на данное значение (p --- число параметров, n --- объем выборки)
+
+## Расстояние Кука (Cook's distance)
+
+описывает, как повлияет на модель удаление данного наблюдения
+
+$$D_i = \frac{\sum{(\hat{y_j}-\hat{y}_{j(i)})^2}}{p \cdot MSE} \large( \frac {h_{ii}} {1 - h_{ii}} \large)$$ 
+
+- $\hat{y_j}$ - значение предсказанное полной моделью
+- $\hat{y}_{j(i)}$ - значение, предказанное моделью, построенной без учета $i$-го значения предиктора
+- $p$ - количество параметров в модели
+- $MSE$ - среднеквадратичная ошибка модели ($\hat\sigma^2$)
+- $h_{ii}$ --- "сила воздействия" отдельных наблюдений (leverage)
+
+>- Зависит одновременно от величины остатков и "силы воздействия" наблюдений.
+
+>- Условное пороговое значение. Наблюдение является выбросом (outlier), если:
+    - $D_i > 1$
+    - $D_i > 4/(N − k − 1)$ (N - объем выборки, k - число предикторов)
+
+## Что делать с наблюдениями-выбросами?
+
+- Удалить?
+
+__Осторожно!__ Только очевидные ошибки в наблюдениях можно удалять. Лучше найти причины.
+
+- Трансформировать?
+
+## Некоторые виды трансформаций
+
+Трансформация  |  Формула  
+------------- | -------------   
+степень -2 | $1/x^2$
+степень -1 | $1/x$
+степень -0.5  | $1/\sqrt{x}$
+степень 0.5 | $\sqrt{x}$
+логарифмирование | $log(x)$  
+
+# Типы остатков
+
+## "Сырые" остатки
+
+$$\varepsilon_i = y_i - \hat{y_i}$$
+
+>- Сложно сравнивать
+
+## Пирсоновские остатки
+
+$$p_i = \frac{\varepsilon_i}{\sqrt{Var(\hat{y_i})}}$$
+
+$\sqrt{Var(\hat{y_i})}$ --- cтандартное отклонение предсказанных значений
+
+>- легко сравнивать (cтандартизованы)
+
+## Стьюдентовские (стьюдентизированные) остатки
+
+$$s_i = \frac{p_i}{\sqrt{1 - h_{ii}}} = \frac{\varepsilon_i}{\sqrt{Var(\hat{y_i})(1-h_{ii})}}$$
+
+$h_{ii}$ --- "сила воздействия" отдельных наблюдений (leverage)
+
+>- легко сравнивать (стандартизованы)
+>- учитывают силу влияния наблюдений
+
+# Проверка на влиятельные наблюдения в R
+
+## Вариант 1. График расстояния Кука.
+
+Проверяем наличие влиятельных наблюдений в `cat_model`.
+
+Значения на графике расстояния Кука приведены в том же порядке, что и в исходных данных.
+
+```{r}
+plot(cat_model, which = 4)
+
+# 4/(N − k − 1)
+cook_cutoff <- 4 / ((nrow(cat) - length(coef(cat_model)) - 2))
+plot(cat_model, which = 4, cook.levels = cook_cutoff)
+```
+
+## Вариант 2. График остатков с расстояниями Кука
+
+Данные для анализа остатков извлечем из модели при помощи функции `fortify()` из пакета `{ggplot2}`
+
+```{r}
+library(ggplot2)
+cat_diag <- fortify(cat_model)
+head(cat_diag, 2)
+```
+
+- `.hat` --- "сила воздействия" данного наблюдения (_leverage_)  
+- `.cooksd` --- расстояние Кука   
+- `.fitted` --- предсказанные значения   
+- `.resid` --- остатки
+- `.stdresid` --- стандартизованные остатки  
+
+## Задание
+
+Используя данные из датафрейма `cat_diag`, постройте график
+зависимости стандартизированных остатков модели `cat_model` 
+от предсказанных значений.
+
+Сделайте так, чтобы размер точек изменялся в зависимости от значения расстояния Кука.
+
+## Решение
+
+```{r purl=FALSE}
+ggplot(data = cat_diag, aes(x = .fitted, y = .stdresid, size = .cooksd)) + 
+  geom_point() + 
+  geom_hline(aes(yintercept = 0))
+```
+
+Что мы видим?
+
+- Большая часть стандартизованных остатков в пределах двух стандартных отклонений
+- Есть одно влиятельное наблюдение, которое нужно проверить, но сила его влияния невелика (расстояние Кука < 1, и даже меньше 4/(n-k-1) = `r round(cook_cutoff, 2)`)
+- Среди остатков нет тренда, но, возможно, есть иной паттерн...
+
+
+## Добавим линию loess-сглаживания на график
+
+```{r purl=FALSE}
+ggplot(data = cat_diag, aes(x = .fitted, y = .stdresid, size = .cooksd)) +
+  geom_point() +  geom_hline(yintercept = 0) + 
+  geom_smooth(method="loess", se=FALSE) 
+```
+
+Здесь никаких "странных" паттернов вроде бы нет
+
+Чем могут быть вызваны "странные" паттерны, если они есть?
+
+>- Неучтенная переменная --- добавляем в модель
+>- Нелинейная зависимость --- используем GAM, нелинейную регрессию и т.д.
+
+# 1. Линейность связи
+
+## Нелинейность связи лучше заметна на графиках остатков
+
+```{r echo=FALSE, purl=FALSE}
+library(gridExtra)
+
+set.seed(39484)
+x <- rnorm(100, 10, 3)
+y <- (x^2.4) + rnorm(100, 0, 100)
+pl_1 <- ggplot(data.frame(x = x, y = y), aes(x = x, y = y)) + geom_point() 
+
+lm1 <- lm(y ~ x)
+
+pl_1res <- ggplot(data.frame(fit = fitted(lm1), res = residuals(lm1)), aes(x = fit, y = res)) + geom_point() + geom_hline(yintercept = 0) + xlab("Fitted") + ylab("Residuals")
+
+
+x2 <- runif(100, 1, 8)
+y2 <- sin(x2) + 2 * x2 + rnorm(100)
+pl_2 <- ggplot(data.frame(x = x2, y = y2), aes(x = x, y = y)) + geom_point() 
+
+lm2 <- lm(y2 ~ x2)
+pl_2res <- ggplot(data.frame(fit = fitted(lm2), res = residuals(lm2)), aes(x = fit, y = res)) + geom_point() + geom_hline(yintercept = 0) + xlab("Fitted") + ylab("Residuals") 
+
+grid.arrange(pl_1, pl_2, pl_1res, pl_2res)
+```
+
+### Проверка на линейность связи
+
+- График зависимости $Y$ от $x$ (для множественной регрессии --- придется от всех $x$)
+- График остатков от предсказанных значений
+
+## Что делать, если связь нелинейна?  
+
+- Добавить неучтенные переменные или взаимодействия
+- Применить линеаризующее преобразование (Осторожно!)
+- Применить обобщенную линейную модель с другой функцией связи (GLM)
+- Построить аддитивную модель, если достаточно наблюдений по $x$
+- Построить нелинейную модель, если известна форма зависимости
+
+## Пример линеаризующего преобразования   
+
+```{r echo=FALSE, purl=FALSE}
+set.seed(475)
+x <- runif(100, 2, 5)
+y <- (3.8^(1*x)) + rnorm(100, 0, 70)
+
+pl_raw <- ggplot(data.frame(x=(x), y=(y)), aes(x=x, y=y)) + geom_point() + geom_smooth(method = "lm", alpha = 0.7) 
+
+pl_log <- ggplot(data.frame(x= (x), y=log(y)), aes(x=x, y=y)) + geom_point() + geom_smooth(method = "lm", alpha = 0.7) + ylab("Log (y)")
+
+grid.arrange(pl_raw, pl_log, ncol=2)
+
+```
+
+__Осторожно!__ Вы рискуете изучить не то, что хотели
+
+# 2. Независимость
+
+## Каждое значение $Y_i$ должно быть независимо от любого другого $Y_j$ 
+
+Это нужно контролировать на этапе планирования сбора материала 
+
+* Наиболее частые источники зависимостей: 
+    + псевдоповторности (повторно измеренные объекты)
+    + неучтенные переменные
+    + временные автокорреляции (если данные - временной ряд)
+    + пространственные автокорреляции (если пробы взяты в разных местах)
+    + и т.п.
+
+## Диагностика нарушений независимости
+
+Взаимозависимости можно заметить на графиках остатков
+
+- остатки vs. предсказанные значения
+- остатки vs. переменные в модели
+- остатки vs. переменные не в модели
+
+## Нарушение условия независимости: Неучтенная переменная
+
+```{r echo=FALSE, purl=FALSE, fig.height=4}
+set.seed(239874)
+x1 <- runif(100, 20, 50)
+x2 <- runif(100, 8, 22)
+y <- 21 + 2*x1 + 0.5*x2 + rnorm(100, 0, 10)
+NewData1 <- data.frame(y = y, x1 = x1, x2 = x2)
+
+mod1 <- lm(y~x1)
+gg_lm1 <- ggplot(NewData1, aes(x=x1, y=y)) + geom_point() + geom_smooth(method = "lm", alpha = 0.7) + xlab("X1") + ggtitle("Y ~ X1")
+gg_res1 <- ggplot(data.frame(fit = fitted(mod1), res = residuals(mod1, type = "pearson")), aes(x = fit, y = res)) + geom_point() + geom_smooth(se = FALSE, method = "loess") + geom_hline(yintercept = 0) + xlab("Fitted") + ylab("Residuals")
+gg_res2 <- ggplot(data.frame(fit = fitted(mod1), res = residuals(mod1, type = "pearson")), aes(x = x2, y = res)) + geom_point() + geom_smooth(se = FALSE, method = "loess") + geom_hline(yintercept = 0) + xlab("X2") + ylab("Residuals")
+
+
+mod2 <- lm(y~x1+x2)
+NewData2 <- data.frame(x1 = seq(min(x1), max(x1), length.out = 10),
+                      x2 = mean(x2))
+NewData2$y <- predict(mod2, newdata = NewData2)
+gg_lm2 <- ggplot(NewData2, aes(x= x1, y = y)) + geom_point(data = NewData1, aes(x = x1, y = y)) + geom_line(colour = "blue", size = 1) + xlab("X1") + ggtitle("Y ~ X1 + X2")
+gg_res3 <- ggplot(data.frame(fit = fitted(mod2), res = residuals(mod2, type = "pearson")), aes(x = fit, y = res)) + geom_point() + geom_smooth(se = FALSE, method = "loess") + geom_hline(yintercept = 0) + xlab("Fitted") + ylab("Residuals")
+gg_res4 <- ggplot(data.frame(fit = fitted(mod2), res = residuals(mod2, type = "pearson")), aes(x = x2, y = res)) + geom_point() + geom_smooth(se = FALSE, method = "loess") + geom_hline(yintercept = 0) + xlab("X2") + ylab("Residuals")
+
+grid.arrange(gg_lm1, gg_lm2, gg_res1, gg_res3, gg_res2, gg_res4, ncol=2)
+```
+
+>- Слева: Если в модели не учтена переменная $X2$, внешне все нормально, но величина остатков зависит от $X2$
+>- Справа: Если $X2$ учесть, то зависимость остатков от $X2$ исчезает
+
+## Нарушение условия независимости: Автокорреляция
+
+В данном случае, наблюдения --- это временной ряд. 
+
+```{r echo=FALSE, purl=FALSE}
+x3 <- seq(1, 100, 1)
+  
+y3 <-  diffinv(rnorm(99)) + rnorm(100, 0, 2)
+
+y3 <- y3[1:100]
+pl_3 <- ggplot(data.frame(x=x3, y=y3), aes(x=x, y=y)) + geom_point() + geom_smooth(method = "lm", alpha = 0.7)
+
+lm3 <- lm(y3 ~ x3)
+
+pl_3res <- ggplot(data.frame(fit=fitted(lm3), res=residuals(lm3)), aes(x=fit, y=res)) + geom_point() + geom_smooth(se = FALSE, method = "loess") + geom_hline(yintercept=0) + xlab("Fitted") + ylab("Residuals")
+
+grid.arrange(pl_3, pl_3res, nrow=2)
+```
+
+>- На графиках остатков четко видно, что остатки не являются независимыми.
+
+## Проверка на автокорреляцию
+
+Проверка на автокорреляцию нужна если данные это временной ряд, или если известны координаты проб.
+
+Способы проверки временной автокорреляции (годятся, если наблюдения в ряду расположены через равные интервалы):
+
+- График автокорреляционной функции остатков (ACF-plot) покажет корреляции с разными лагами.
+- Критерий Дарбина-Уотсона (значимость автокорреляции 1-го порядка).
+
+Для проверки пространственных автокорреляций
+
+- вариограмма
+- I Морана (Moran's I)
+
+## Что делать, если у вас нарушено условие независимости значений?
+
+Выбор зависит от обстоятельств. Вот несколько возможных вариантов.
+
++ псевдоповторности
+    - избавляемся от псевдоповторностей, вычислив среднее
+    - подбираем модель со случайным фактором
++ неучтенные переменные
+    - включаем в модель (если возможно)
++ временные автокорреляции
+    - моделируем автокорреляцию
+    - подбираем модель со случайным фактором
++ пространственные автокорреляции
+    - моделируем пространственную автокорреляцию
+    - делим на пространственные блоки и подбираем модель со случайным фактором
+
+# 3. Нормальное распределение
+
+## 3. Нормальное распределение $Y$ (для каждого уровня значений $X$) 
+
+```{r gg-norm-tunnel, echo=FALSE, fig.height=7, purl=FALSE}
+## Based on code by Arthur Charpentier:
+## http://freakonometrics.hypotheses.org/9593
+## TODO: wrap it into a function and adapt it for use with other distributions
+## as Markus Gesmann has done here
+## http://www.magesblog.com/2015/08/visualising-theoretical-distributions.html
+
+n <- 2
+X <- cat$Bwt 
+Y <- cat$Hwt
+df <- data.frame(X,Y)
+
+# regression
+reggig <- glm(Y ~ X, data = df, family = gaussian(link = "identity"))
+
+# empty plot
+vX <- seq(min(X) - 0.1, max(X) + 0.1, length = n)
+vY <- seq(min(Y) - 10, max(Y) + 10, length = n)
+mat <- persp(x = vX, y = vY, z = matrix(0, n, n), 
+             zlim = c(0, 0.1),
+             theta =  - 30, phi = 20, expand = 0.1,
+             ticktype  = "detailed",  box = FALSE, border = "gray60")
+
+x <- seq(min(X), max(X), length = 501)
+
+# expected values
+C <- trans3d(x, predict(reggig, newdata = data.frame(X = x), type = "response"), rep(0, length(x)), mat)
+lines(C, lwd = 2)
+
+sdgig <- sqrt(summary(reggig)$dispersion)
+
+# 1SD
+y1 <- qnorm(.95, predict(reggig, newdata = data.frame(X = x), type = "response"),  sdgig)
+C <- trans3d(x, y1, rep(0, length(x)), mat)
+lines(C, lty = 2, col = "#d95f02")
+y2 <- qnorm(.05, predict(reggig, newdata = data.frame(X = x), type = "response"),  sdgig)
+C <- trans3d(x, y2, rep(0, length(x)), mat)
+lines(C, lty = 2, col = "#d95f02")
+
+# C <- trans3d(c(x, rev(x)), c(y1, rev(y2)), rep(0, 2 * length(x)), mat)
+# polygon(C, border = NA, col = "yellow")
+
+# data points
+C <- trans3d(X, Y, rep(0, length(X)), mat)
+points(C, pch = 1, col = "black", cex = 0.4)
+
+# density curves
+n <- 6
+vX <- seq(min(X), max(X), length = n)
+
+mgig <- predict(reggig, newdata = data.frame(X = vX))
+
+sdgig <- sqrt(summary(reggig)$dispersion)
+
+for(j in n:1){
+  stp <- 251
+  x <- rep(vX[j], stp)
+  y <- seq(min(min(Y) - 10, 
+               qnorm(.05, 
+                     predict(reggig, 
+                             newdata = data.frame(X = vX[j]), 
+                             type = "response"),  
+                     sdgig)), 
+           max(Y) + 10, 
+           length = stp)
+  z0 <- rep(0, stp)
+  z <- dnorm(y,  mgig[j],  sdgig)
+  C <- trans3d(c(x, x), c(y, rev(y)), c(z, z0), mat)
+  polygon(C, border = NA, col = "light blue", density = 40)
+  C <- trans3d(x, y, z0, mat)
+  lines(C, lty = 2, col = "grey60")
+  C <- trans3d(x, y, z, mat)
+  lines(C, col = "steelblue")
+}
+```
+
+
+## Проверка на нормальность
+
+Это условие невозможно проверить "влоб", т.к. обычно каждому $X$ сообветствует лишь небольшое число $Y$ 
+
+Если $Y$ это нормально распределенная случайная величина
+
+$$Y_i \in N(\mu_{y_i}, \sigma^2)$$
+
+и мы моделируем ее как 
+
+$$Y_i \sim b_0 + b_1x_{1i} + \cdots + \varepsilon_i$$  
+
+то остатки от этой модели --- тоже нормально распределенная случайная величина 
+
+$$\varepsilon_i \in N(\mu_{y_i}, \sigma^2)$$
+
+Т.е. выполнение этого условия можно оценить по поведению случайной части модели.
+
+## Проверка нормальности распределения остатков
+
+Есть формальные тесты, но:
+
+- у формальных тестов тоже есть свои условия применимости
+- при больших выборках формальные тесты покажут, что значимы даже небольшие отклонения от нормального распределения
+- тесты, которые используются в линейной регрессии, устойчивы к небольшим отклонениям от нормального распределения
+
+Лучший способ проверки --- квантильный график остатков.
+
+## Квантильный график остатков
+
+_Квантиль_ --- значение, которое заданная случайная величина не превышает с фиксированной вероятностью
+
+Если точки --- это реализации случайной величины из $N(0, \sigma^2)$, то они должны лечь вдоль прямой $Y=X$. Если это стьюдентизированные остатки --- то используются квантили t-распределения
+
+```{r}
+qqPlot(cat_model) # из пакета car
+```
+
+
+## Что делать, если остатки распределены не нормально?
+
+Зависит от причины
+
+- Нелинейная связь?
+    - Построить аддитивную модель (если достаточно наблюдений по $x$)
+    - Построить нелинейную модель (если известна форма зависимости)
+- Неучтенные переменные?
+    - добавляем в модель
+- Зависимая переменная распределена по-другому?
+    - трансформируем данные (неудобно)
+    - подбираем модель с другим распределением остатков (обобщенную линейную модель)
+
+# 4. Постоянство дисперсии
+
+## 4. Постоянство дисперсии (= гомогенность дисперсии, гомоскедастичность)
+
+Это самое важное условие, поскольку многие тесты чувствительны к гетероскедастичности.
+
+```{r gg-norm-tunnel, echo=FALSE, fig.height=7, purl=FALSE}
+```
+
+## Проверка гомогенности дисперсий
+
+Есть формальные тесты (тест Бройша-Пагана, тест Кокрана), но:
+
+- у формальных тестов тоже есть свои условия применимости, и многие сами неустойчивы к гетероскедастичности
+- при больших выборках формальные тесты покажут, что значима даже небольшая гетероскедастичность
+
+Лучший способ проверки на гомогенность дисперсий --- график остатков.
+
+```{r echo=FALSE, purl=FALSE}
+N <- 300
+b_0 <- 0.5
+b_1 <- 8
+
+set.seed(123456)
+x <- rnorm(N, 10, 3)
+eps_1 <- rnorm(N, 0, 10)
+y_1 <- b_0 + b_1*x + eps_1
+
+# |v|^(2*t), t = 0.7
+h <- function(x) x^(2*0.7) 
+eps_2 <- rnorm(N, 0, h(x))
+y_2 <- b_0 + b_1*x + eps_2
+dat <- data.frame(x, y_1, y_2)
+dat$log_y <- log(y_2)
+
+pl_hom <- ggplot(dat, aes(x = x, y = y_1)) + geom_point(alpha = 0.5) + geom_smooth(method = "lm", alpha = 0.7) + ggtitle("Гомоскедастичность") + ylab("Y")
+pl_heter <- pl_hom + aes(y = y_2) + ggtitle("Гетероскедастичность") + ylab("Y")
+
+dat_diag_1 <- fortify(lm(y_1 ~ x, data = dat))
+dat_diag_2 <- fortify(lm(y_2 ~ x, data = dat))
+
+pl_hom_resid <- ggplot(dat_diag_1, aes(x = .fitted, y = .stdresid)) + geom_point(alpha = 0.5) + geom_smooth(se=FALSE, method = "loess")
+pl_heter_resid <- pl_hom_resid %+% dat_diag_2
+
+grid.arrange (pl_hom, pl_heter, 
+              pl_hom_resid, pl_heter_resid, 
+              ncol=2, heights = c(0.55, 0.45))
+
+```
+
+
+## Проверка на гетероскедастичность
+
+Можем построить график остатков средствами пакета `car`
+
+```{r fig.height = 5}
+residualPlot(cat_model)
+```
+
+>- Гетерогенность дисперсий не выражена.
+
+## Что делать если вы столкнулись с гетероскедастичностью?
+
+
+```{r fig.width=4, fig.height=5, echo=FALSE, purl=FALSE}
+dat_diag2 <- fortify(lm(log_y~x, data=dat))
+pl_heter2 <- ggplot(dat, aes(x=x, y=log_y)) + geom_point() + geom_smooth(method = "lm", alpha = 0.7)
+pl_heter_resid2 <- ggplot(dat_diag2, aes(x = .fitted, y = .stdresid)) + geom_point() + geom_smooth(se = FALSE, method = "loess")
+pl_heter <- pl_heter + ggtitle("No transformation")
+pl_heter2 <- pl_heter2 + ggtitle("Log transformed Y")
+grid.arrange (pl_heter, pl_heter2,  pl_heter_resid, pl_heter_resid2,  nrow=2)
+```
+
+Трансформация может помочь...
+
+## Возможные причины гетероскедостичности
+
+Даже если трансформация может помочь, лучше поискать причину гетерогенности дисперсий
+
+- Неучтенные переменные
+    - добавляем в модель
+- Зависимая переменная распределена по-другому
+    - трансформируем данные (неудобно)
+    - подбираем модель с другим распределением остатков (обобщенную линейную модель)
+- Моделируем гетерогенность дисперсии.
+
+# Тренинг по анализу остатков
+
+## Некоторые частые паттерны на графиках остатков
+
+
+![](images/Residuals.png)
+
+<small>Из кн. Logan, 2010, стр. 174</small>
+
+>- Рис. a --- Условия применимости соблюдаются, модель хорошая
+>- Рис. b --- Клиновидный паттерн. Есть гетероскедастичность. Модель плохая
+>- Рис. c --- Остатки рассеяны равномерно, но нужны дополнительные предикторы
+>- Рис. d --- Нелинейный паттерн. Линейная модель использована некорректно
+
+## Задание
+
+Выполните три блока кода
+
+Какие нарушения условий применимости линейных моделей здесь наблюдаются?
+
+## Задание, блок 1
+
+```{r}
+set.seed(90829)
+x1 <- seq(1, 100, 1)
+y1 <-  diffinv(rnorm(99))  + rnorm(100, 0.2, 4)
+dat1 = data.frame(x1, y1)
+ggplot(dat1, aes(x = x1, y = y1)) + geom_point()+ 
+  geom_smooth(method="lm", alpha = 0.7)
+```
+
+## Решение, блок 1
+
+```{r fig.show='hold', purl=FALSE}
+mod1 <- lm(y1 ~ x1, data = dat1)
+cook_cutoff <- 4 / (length(y1) - length(coef(mod1) - 2))
+op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
+plot(mod1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
+residualPlot(mod1)        # График остатков
+qqPlot(mod1)              # Квантильный график остатков
+par(op)                   # возвращаем старые графические параметры
+```
+
+>- Выбросов нет, зависимость нелинейна (видно только на графике самой регрессии)
+>- Выраженных отклонений от нормального распределения нет
+
+
+## Задание, блок 2
+
+```{r}
+  set.seed(7657674)
+  x2 <- runif(1000, 1, 100)
+  b_0 <- 100;  b_1 <- -20
+  h <- function(x) x^0.5
+  eps <- rnorm(1000, 0, h(x2))
+  y2 <- b_0 + b_1 * x2 + eps
+  dat2 <- data.frame(x2, y2)
+  ggplot(dat2, aes(x = x2, y = y2)) + geom_point() + geom_smooth(method = "lm")
+```
+
+## Решение, блок 2
+
+```{r fig.show='hold', purl=FALSE}
+mod2 <- lm(y2 ~ x2, data = dat2)
+op <- par(mfrow = c(1, 3))
+plot(mod2, which = 4)
+residualPlot(mod2)
+qqPlot(mod2)
+par(op)
+```
+
+>- Выбросов нет
+>- Гетерогенность дисперсий, остатки не подчиняются нормальному распределению
+
+## Задание, блок 3
+
+```{r}
+# set.seed(2309587)
+set.seed(9283)
+x3 <- rnorm(25, 50, 10)
+b_0 <- 20; b_1 <- 20; eps <- rnorm(50, 0, 100)
+y3 <- b_0 + b_1*x3 + eps
+y3[100] <- 1000; x3[100] <- 95; y3[99] <- 1300; x3[99] <- 90; y3[98] <- 1500; x3[98] <- 80
+dat3 <- data.frame(x3, y3)
+ggplot(dat3, aes(x=x3, y=y3)) + geom_point() + geom_smooth(method="lm")
+```
+
+## Решение, блок 3
+
+```{r fig.show='hold', purl=FALSE}
+mod3 <- lm(y3 ~ x3, data = dat3)
+op <- par(mfrow = c(1, 3))
+plot(mod3, which = 4)
+residualPlot(mod3)
+qqPlot(mod3)
+par(op)
+```
+
+>- 100-е наблюдение сильно влияет на ход регрессии
+>- Зависимость нелинейна
+
+## Take-home messages
+
+- У линейных моделей есть условия применимости
+- Если условия применимости нарушены, то такой моделью нельзя пользоваться, даже если анализ показывает достоверную зависимость
+- Анализ остатков дает разностороннюю информацию о валидности моделей
+
+## Что почитать
+
++ Кабаков Р.И. R в действии. Анализ и визуализация данных на языке R. М.: ДМК Пресс, 2014
++ Diez, D.M., Barr, C.D. and Çetinkaya-Rundel, M., 2015. OpenIntro Statistics. OpenIntro.
++ Zuur, A., Ieno, E.N. and Smith, G.M., 2007. Analyzing ecological data. Springer Science & Business Media.
++ Quinn G.P., Keough M.J. 2002. Experimental design and data analysis for biologists
++ Logan M. 2010. Biostatistical Design and Analysis Using R. A Practical Guide
