@@ -97,7 +97,7 @@ j = 3 Corrected p-value: 0.02 * (5 – 3 + 1) = 0.06: Don’t reject
 
 Дальше можно не проверять: все следующие $p_j$ будут больше $\alpha$.
 
-j = 4 Corrected p-value: 0.04 * 2 = 0.008: Don’t reject 
+j = 4 Corrected p-value: 0.04 * 2 = 0.08: Don’t reject 
 
 j = 5 Corrected p-value: 0.13 * 1 = 0.13: Don’t reject 
 
