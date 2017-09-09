@@ -39,6 +39,9 @@ library("lme4")
 data("sleepstudy")
 writeWorksheetToFile("data/sleepstudy.xlsx", data = sleepstudy, sheet = "sleepstudy")
 
+library("lasso2")
+data("Prostate")
+writeWorksheetToFile("data/Prostate.xlsx", data = Prostate, sheet = "Prostate")
 # прогестерон
 # мутации
 # goats
