@@ -16,3 +16,166 @@ library(knitr)
 # chunk default options
 opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
 ```
+
+## Мы рассмотрим
+
++ Линейные модели c непрерывными и дискретными предикторами
++ Взаимодействие дискретных и непрерывных предикторов
+
+
+## Пример: Пуромицин
+
+Пуромицин - антибиотик пуронового ряда, ингибитор синтеза белков. 
+Эти данные --- о том, как меняется активность фермента галактозил трансферазы под воздействием пуромицина (Treloar 1974). Измеряли скорость реакции в зависимости от концентрации субстрата на мембранах аппарата Гольджи из богатых мембранами фракций из печени крыс.
+
+- `conc` --- концентрация пуромицина
+- `rate` --- скорость химичемской реакции
+- `state` --- индикатор того, обработаны ли клетки пуромицином
+
+```{r}
+data("Puromycin") # данные, встроенные в R
+head(Puromycin)
+```
+
+## Знакомимся с данными
+
+```{r}
+sapply(Puromycin, class)
+colSums(is.na(Puromycin))
+nrow(Puromycin)
+table(Puromycin$state)
+```
+
+## Задание
+
+Постройте график зависимости скорости химической реакции от концентрации
+
+## Решение
+
+```{r purl=FALSE}
+library(ggplot2)
+ggplot(Puromycin, aes(x = conc, y = rate, colour = state)) + geom_point()
+```
+
+>- На самом деле, зависимость скорости химической реакции от концентрации нелинейна, но мы попробуем использовать трансформацию
+
+```{r purl=FALSE}
+Puromycin$lc <- log(Puromycin$conc)
+```
+
+## Линейная модель
+
+```{r}
+M1 <- lm(rate ~ lc + state, data = Puromycin)
+summary(M1)
+```
+
+## Проверяем выполнение условий применимости
+
+```{r fig.width=10}
+library(car)
+# есть ли колинеарность
+vif(M1)
+
+# Анализ остатков
+set.seed(293234)
+cook_cutoff <- 4 / (nrow(Puromycin) - length(coef(M1) - 2))
+op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
+plot(M1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
+residualPlot(M1)        # График остатков
+qqPlot(M1)              # Квантильный график остатков
+par(op)
+```
+
+## Рисуем график предсказаний
+
+Что не так с этим графиком?
+
+```{r}
+ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + geom_point() + geom_smooth(method = "lm")
+```
+
+>- А это не тот график! В нем угол наклона разный
+
+## Данные для графика
+
+```{r}
+library(plyr)
+NewData <- ddply(
+  Puromycin, .variables = .(state), summarise, 
+  lc = seq(min(lc), max(lc), length = 100))
+# предсказанные значения
+Predictions <- predict(M1, newdata = NewData, se.fit = TRUE)
+NewData$fit <- Predictions$fit
+# стандартные ошибки
+NewData$SE <- Predictions$se.fit
+# доверительный интервал
+NewData$upr <- NewData$fit + 1.96 * NewData$SE
+NewData$lwr <- NewData$fit - 1.96 * NewData$SE
+```
+
+## Рисуем график предсказаний (Вторая попытка)
+
+Что не так с этим графиком?
+
+```{r}
+ggplot(NewData, aes(x = lc, y = fit)) + 
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
+  geom_line(aes(colour = state))
+```
+
+
+## Рисуем график предсказаний (Третья попытка)
+
+Что не так с этим графиком?
+
+```{r}
+ggplot(NewData, aes(x = lc, y = fit)) + 
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
+  geom_line(aes(colour = state)) +
+  geom_point(data = Puromycin, aes(x = lc, y = rate, colour = state))
+```
+
+## Рисуем график предсказаний (Четвертая попытка)
+
+```{r}
+# Дополняем данные
+NewData$conc <- exp(NewData$lc)
+
+ggplot(NewData, aes(x = conc, y = fit)) + 
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
+  geom_line(aes(colour = state)) +
+  geom_point(data = Puromycin, aes(x = conc, y = rate, colour = state))
+```
+
+## Терминологические проблемы линейных моделей с дискретными и непрерывными предикторами
+
+### Классический анализ ковариаций ANCOVA
+
+$Response \sim Continuous + Categorical$
+
+Требование гомогенности углов наклона (homogeneity of regression slopes) --- одинаковый угол наклона прямых для разных дискретных групп
+
+Если это требование не выполняется --- это не ANCOVA
+
+```{r echo=FALSE, purl=FALSE, fig.height=2, fig.width=3}
+ggplot(NewData, aes(x = lc, y = fit)) + 
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
+  geom_line(aes(colour = state)) +
+  geom_point(data = Puromycin, aes(x = lc, y = rate, colour = state))
+```
+
+
+###  Модель со взаимодействием дискретного предиктора и непрерывной ковариаты
+
+$Response \sim Continuous + Categorical + Continuous : Categorical$
+
+$Response \sim Continuous \times Categorical$
+
+Возможен разный угол наклона прямых для разных групп
+
+```{r echo=FALSE, purl=FALSE, fig.height=2, fig.width=3}
+ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + geom_point() + geom_smooth(method = "lm")
+```
+
+
