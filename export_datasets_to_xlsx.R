@@ -1,4 +1,5 @@
 library(XLConnect)
+library(tidyr)
 
 data("Puromycin")
 writeWorksheetToFile("data/Puromycin.xlsx", data = Puromycin, sheet = "Puromycin")
@@ -15,7 +16,7 @@ writeWorksheetToFile("data/calcium.xlsx", data = calcium, sheet = "calcium")
 data("downs.bc")
 writeWorksheetToFile("data/downs.bc.xlsx", data = downs.bc, sheet = "downs.bc")
 data("nitrofen")
-writeWorksheetToFile("data/nitrofen.xlsx", data = nitrofen, sheet = "nitrofen")
+nitrofen %>% gather(brood, N, -conc, -total) %>%  writeWorksheetToFile("data/nitrofen.xlsx", data = ., sheet = "nitrofen")
 data("dogs")
 writeWorksheetToFile("data/dogs.xlsx", data = dogs, sheet = "dogs")
 

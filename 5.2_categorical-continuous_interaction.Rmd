@@ -22,6 +22,7 @@ opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, 
 + Линейные модели c непрерывными и дискретными предикторами
 + Взаимодействие дискретных и непрерывных предикторов
 
+# ANCOVA на примере данных об активности пуромицина
 
 ## Пример: Пуромицин
 
@@ -52,33 +53,42 @@ table(Puromycin$state)
 
 ## Решение
 
-```{r purl=FALSE}
+
+На самом деле, зависимость скорости химической реакции от концентрации нелинейна, но мы попробуем использовать трансформацию
+
+```{r purl=FALSE, eval=FALSE}
 library(ggplot2)
-ggplot(Puromycin, aes(x = conc, y = rate, colour = state)) + geom_point()
+ggplot(Puromycin, aes(x = conc, y = rate, colour = state)) + 
+  geom_point()
+ggplot(Puromycin, aes(x = log(conc), y = rate, colour = state)) + 
+  geom_point()
 ```
 
->- На самом деле, зависимость скорости химической реакции от концентрации нелинейна, но мы попробуем использовать трансформацию
-
-```{r purl=FALSE}
-Puromycin$lc <- log(Puromycin$conc)
+```{r purl=FALSE, eval=TRUE, fig.width=10, echo=FALSE}
+library(ggplot2)
+library(gridExtra)
+grid.arrange(
+ggplot(Puromycin, aes(x = conc, y = rate, colour = state)) + geom_point(),
+ggplot(Puromycin, aes(x = log(conc), y = rate, colour = state)) + geom_point(),
+ncol = 2)
 ```
+
+# Анализ ковариаций по данным о пуромицине
 
 ## Линейная модель
 
 ```{r}
+Puromycin$lc <- log(Puromycin$conc)
 M1 <- lm(rate ~ lc + state, data = Puromycin)
 summary(M1)
 ```
 
-## Проверяем выполнение условий применимости
+## Проверяем выполнение условий применимости {.smaller}
 
 ```{r fig.width=10}
 library(car)
-# есть ли колинеарность
-vif(M1)
-
-# Анализ остатков
-set.seed(293234)
+vif(M1) # есть ли колинеарность?
+set.seed(7364)
 cook_cutoff <- 4 / (nrow(Puromycin) - length(coef(M1) - 2))
 op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
 plot(M1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
@@ -87,28 +97,39 @@ qqPlot(M1)              # Квантильный график остатков
 par(op)
 ```
 
+# График предсказаний линейной модели
+
 ## Рисуем график предсказаний
 
 Что не так с этим графиком?
 
 ```{r}
-ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + geom_point() + geom_smooth(method = "lm")
+ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
 ```
 
->- А это не тот график! В нем угол наклона разный
+>- Здесь разный угол наклона. У нашей модели график должен быть другой, с одинаковым углом наклона
 
-## Данные для графика
+## Задание
+
+Постройте график предсказаний модели по этим данным
+
+### Данные для графика
 
 ```{r}
 library(plyr)
 NewData <- ddply(
   Puromycin, .variables = .(state), summarise, 
   lc = seq(min(lc), max(lc), length = 100))
+
 # предсказанные значения
 Predictions <- predict(M1, newdata = NewData, se.fit = TRUE)
 NewData$fit <- Predictions$fit
+
 # стандартные ошибки
 NewData$SE <- Predictions$se.fit
+
 # доверительный интервал
 NewData$upr <- NewData$fit + 1.96 * NewData$SE
 NewData$lwr <- NewData$fit - 1.96 * NewData$SE
@@ -118,28 +139,31 @@ NewData$lwr <- NewData$fit - 1.96 * NewData$SE
 
 Что не так с этим графиком?
 
-```{r}
+```{r purl=FALSE}
 ggplot(NewData, aes(x = lc, y = fit)) + 
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
   geom_line(aes(colour = state))
 ```
 
+>- Хорошо бы добавить точки наблюдений
 
 ## Рисуем график предсказаний (Третья попытка)
 
 Что не так с этим графиком?
 
-```{r}
+```{r purl=FALSE}
 ggplot(NewData, aes(x = lc, y = fit)) + 
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
   geom_line(aes(colour = state)) +
   geom_point(data = Puromycin, aes(x = lc, y = rate, colour = state))
 ```
 
+>- Этот график с логарифмической шкалой. Хорошо бы трансформировать предиктор в исходную шкалу
+
 ## Рисуем график предсказаний (Четвертая попытка)
 
-```{r}
-# Дополняем данные
+```{r purl=FALSE}
+# Обратная трансформация предиктора
 NewData$conc <- exp(NewData$lc)
 
 ggplot(NewData, aes(x = conc, y = fit)) + 
@@ -148,34 +172,385 @@ ggplot(NewData, aes(x = conc, y = fit)) +
   geom_point(data = Puromycin, aes(x = conc, y = rate, colour = state))
 ```
 
-## Терминологические проблемы линейных моделей с дискретными и непрерывными предикторами
+# Терминологический вопрос
 
-### Классический анализ ковариаций ANCOVA
+## Классический анализ ковариаций ANCOVA 
 
 $Response \sim Continuous + Categorical$
 
-Требование гомогенности углов наклона (homogeneity of regression slopes) --- одинаковый угол наклона прямых для разных дискретных групп
+Требование гомогенности углов наклона (homogeneity of regression slopes) --- Нужно его протестировать, и если оно не выполняется, то это не ANCOVA
 
-Если это требование не выполняется --- это не ANCOVA
-
-```{r echo=FALSE, purl=FALSE, fig.height=2, fig.width=3}
+```{r echo=FALSE, purl=FALSE}
 ggplot(NewData, aes(x = lc, y = fit)) + 
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
   geom_line(aes(colour = state)) +
   geom_point(data = Puromycin, aes(x = lc, y = rate, colour = state))
 ```
 
+##  Модель со взаимодействием дискретного и непрерывного предикторов
 
-###  Модель со взаимодействием дискретного предиктора и непрерывной ковариаты
+$Response \sim Continuous + Categorical + Continuous : Categorical$ (полная запись)
 
-$Response \sim Continuous + Categorical + Continuous : Categorical$
-
-$Response \sim Continuous \times Categorical$
+$Response \sim Continuous \times Categorical$ (сокращенная запись)
 
 Возможен разный угол наклона прямых для разных групп
 
-```{r echo=FALSE, purl=FALSE, fig.height=2, fig.width=3}
+```{r echo=FALSE, purl=FALSE}
+ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+```
+
+#  Модель со взаимодействием дискретного и непрерывного предикторов
+
+##  Модель со взаимодействием дискретного и непрерывного предикторов {.smaller}
+
+$Response \sim Continuous + Categorical + Continuous : Categorical$
+
+```{r M2-interaction, R.options=list(width = 100)}
+M2 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
+coef(M2)
+```
+
+
+##  Интерпретация коэффициентов <br /> в модели со взаимодействием дискретного и непрерывного предикторов {.smaller}
+
+```{r M2-interaction, R.options=list(width = 100), purl=FALSE}
+```
+
+<br />
+
+$$y_i = \beta_0 + \beta_1x_1 + \big(\beta_2x_2 + ... + \beta_l x_l\big) + \big(\beta_{l+1}x_{l+1} + ... + \beta_m x_m\big) + \epsilon_i$$
+
+В случае, __если у дискретного фактора $k$ градаций__, уравнение полной модели будет включать несколько групп коэффициентов:
+
+- $\beta_0$ --- значение свободного члена для базового уровня дискретного фактора
+- $\beta_1$ --- коэффициент угла наклона для базового уровня дискретного фактора
+- $\beta_2, ..., \beta_l$ --- коррекция свободного члена для других уровней (всего их $p = k - 1$)
+- $\beta_{l+1}, ..., \beta_m$ --- коррекция коэффициентов угла наклона для других уровней (всего их $p = k - 1$)
+
+## Задание {.smaller}
+
+Глядя на коэффициенты линейной модели запишите уравнения:
+
+- общее уравнение линейной модели
+- уравнения для каждого из уровней дискретного фактора
+
+
+```{r M2-coefficients, fig.height=2, R.options=list(width = 100)}
+coef(M2)
 ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + geom_point() + geom_smooth(method = "lm")
 ```
 
+## Решение {.smaller}
+
+```{r echo=FALSE, purl=FALSE}
+lm_equation <- function(fit, strict = TRUE, rnd = 2){
+#   extracting call formula 
+  frml <- as.character(fit$call)[2]
+#   extract signs
+    sign <- ifelse(grepl("-", coef(fit)[-1]), " - ", " + ")
+  # extract coefficients
+  coeffs <- format(round(abs(coef(fit)), rnd), digits = 2, nsmall = rnd, trim = TRUE)
+  if(strict == TRUE){
+    i <- 1:(length(coeffs) - 1)
+    vars <- c("Y", paste0(" X", i))
+    
+  } else {
+# extract vector of variable names
+  vars <- c(all.vars(formula(fit))[1], names(fit$coefficients)[-1])
+# combine everything
+  }
+  start <- ifelse(coef(fit)[1] > 0, paste(vars[1], coeffs[1], sep = " = "), paste(vars[1], coeffs[1], sep = " = - "))
+  end <- paste(sign, coeffs[-1], vars[-1], sep = "", collapse = "")
+  return(paste0(start, end, sep = ""))
+}
+```
+
+- общее уравнение линейной модели
+
+$`r lm_equation(M2, strict = FALSE, rnd = 2)`$
+
+- уравнения для каждого из уровней дискретного фактора
+
+$rate_{treated} = 209.19 + 37.11 lc$
+
+$rate_{untreated} = 164.58 + 26.98 lc$
+
+```{r M2-coefficients, fig.height=2, R.options=list(width = 100), purl=FALSE}
+```
+
+## Тестируем гомогенность углов наклона
+
+Это делается как обычно при выборе моделей: при помощи `anova()` или `drop1()`
+
+```{r}
+M1 <- lm(rate ~ lc + state, data = Puromycin)
+M2 <- M2 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
+
+# anova(M1, M2, test="F")
+drop1(M2, test = "F")
+```
+
+>- Если убрать взаимодействие, то модель становится значительно хуже. Поэтому взаимодействие сохраняем. Это не ANCOVA в традиционном понимании
+
+## Представляем результаты в виде таблицы {.smaller}
+
+### Вариант 1. Последовательное тестирование (SS type I)
+
+Факторы тестируются в порядке включения в модель. Результат тестирования зависит от порядка включения.
+
+```{r}
+anova(M2)
+anova(lm(rate ~ state + lc + state:lc, data = Puromycin))
+```
+
+## Представляем результаты в виде таблицы  {.smaller}
+
+### Вариант 2. Иерархическое тестирование (SS type III)
+
+Каждый из факторов по отношению к модели только без него, но со всеми остальными.
+Нужно, если много факторов и выборки разного размера. Тогда результат не будет зависеть от порядка включения факторов в модель.
+
+```{r}
+# library(car)
+Anova(M2, type = 3) 
+```
+
+# Модель со взаимодействием на примере данных о влиянии глистогонных на рост коз
+
+## Глистогонные и рост коз
+
+Как влияет на прирост массы коз интенсивность профилактики паразитарных заболеваний?
+
+<div class="columns-2">
+
+<img src="images/Goat-by-Jennifer-C.-Flickr.jpg" width="300" height="300">   
+<small> Goat by Jennifer C. [on Flickr](https://flic.kr/p/fjU4J9) </small>  
+
+
+Известно, что у легких животных привес больше, поэтому мы должны учитывать в модели не только способ обработки от глистов, но и влияние начального веса.
+
+
+- `Treatment` - обработка от глистов (стандартная, интенсивная)
+- `Weightgain` - привес, кг
+- `Initial.wt` - начальный вес, кг
+
+
+</div>
+
+<small>
+<div class=.footnote>Пример из библиотеки данных   
+http://www.statlab.uni-heidelberg.de/data/ancova/goats.story.html</div>
+
+</small>
+
+## Читаем данные и знакомимся с ними
+
+```{r}
+library(readxl)
+goat <- read_excel("data/goats.xlsx", sheet = 1)
+head(goat)
+str(goat)
+```
+
+## Читаем данные и знакомимся с ними
+
+```{r}
+colSums(is.na(goat))
+# переименуем переменные для краткости
+colnames(goat) <- c("treat", "wt", "init")
+# объемы выборок
+table(goat$treat)
+# зададим порядок уровней фактора для удобства интерпретации
+goat$treat <- factor(goat$treat, levels = c("standard", "intensive"))
+```
+
+## Есть ли выбросы?
+
+```{r, fig.height=2}
+ggplot(goat, aes(x = wt, y = 1:nrow(goat))) + geom_point()
+ggplot(goat, aes(x = init, y = 1:nrow(goat))) + geom_point()
+```
+
+>- Все ок
+
+## Задание
+
+- Подберите модель, описывающую зависимость между увеличением веса коз и способом прфилактической обработки животных
+- Проверьте условия применимости этой модели
+- Упростите модель, если это возможно
+- Проверьте условия применимости финальной модели
+- Напишите общее уравнение и отдельные уравнения модели для двух способов профилактики
+- Постройте график предсказаний модели
+
+## Решение
+
+### Нет ли колинеарности между начальным весом и тритментом
+
+```{r fig.width=3, purl=FALSE}
+MG <- lm(wt ~ treat + init, data = goat)
+vif(MG)
+ggplot(goat, aes(x = treat, y = init)) + geom_boxplot()
+```
+
+>- Выраженной колинеарности нет
+
+## Решение
+
+### Проверяем, есть ли взаимодействие способа обработки от глистов и начального веса
+
+```{r, purl=FALSE}
+MG1 <- lm(wt ~ treat * init, data = goat)
+```
+
+
+Формула модели со взаимодействием выглядит в сокращенном виде так:
+
+```{r echo=FALSE, results='asis', purl=FALSE}
+formula(MG1)
+```
+
+а в полном виде то же самое выглядит так:
+
+```{r echo=FALSE, results='asis', purl=FALSE}
+full_fact <- function(fit, nways = 2){
+  vars <- all.vars(formula(fit))
+  if(nways > length(vars) - 1 | nways <= 0) {
+    stop("nways should be a positive number less or equal to the number of predictors")
+  } 
+  pred <- vars[-1]
+  for (i in 2:nways) {
+    pred <- c(pred, paste(combn(vars[-1], 1), collapse = ":"))
+  }
+  frm <- paste(vars[1], paste(pred, collapse = " + "), sep = " ~ ")
+  return(frm)
+}
+cat(full_fact(fit = MG1, nways = 2))
+```
+
+## Решение
+
+### График модели со взаимодействием
+
+Похоже, что взаимодействие не будет достоверным. 
+
+```{r, purl=FALSE}
+gg_g <- ggplot(data = goat, aes(y = wt, x = init, colour = treat)) + 
+  geom_point()  +
+  labs(x = "Начальный вес, кг",
+       y = "Привес, кг") +
+  scale_colour_discrete("Способ обработки", 
+                        breaks = c("intensive", "standard"), 
+                        labels = c("Интенсивный", "Стандартный"))
+gg_g + geom_smooth(method = "lm")
+```
+
+## Решение
+
+### Проверяем условия применимости
+
+```{r, fig.show='hold', fig.height=3, fig.width=10, purl=FALSE}
+set.seed(9827)
+cook_cutoff <- 4 / (nrow(goat) - length(coef(MG1) - 2))
+op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
+plot(MG1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
+residualPlot(MG1)        # График остатков
+qqPlot(MG1)              # Квантильный график остатков
+par(op)
+```
+
+>- Все нормально
+
+## Решение
+
+### Выбор оптимальной модели
+
+Пробуем удалить взаимодействие
+
+```{r, purl=FALSE}
+drop1(MG1, test = "F")
+```
+
+>- Можно удалять
+
+## Удаляем взаимодействие и пробуем упростить дальше
+
+```{r, purl=FALSE}
+MG2 <- update(MG1, .~. - treat:init)
+drop1(MG2, test = "F")
+```
+
+Дальше упростить не получится. Вот наша оптимальная модель
+
+## Проверяем условия применимости финальной модели
+
+```{r, fig.show='hold', fig.height=3.5, fig.width=10, purl=FALSE}
+set.seed(849)
+cook_cutoff <- 4 / (nrow(goat) - length(coef(MG2) - 2))
+op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
+plot(MG2, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
+residualPlot(MG2)        # График остатков
+qqPlot(MG2)              # Квантильный график остатков
+par(op)
+```
+
+## Решение
+
+### Заготовка графика остатков в ggplot
+
+```{r, purl=FALSE}
+MG2_diag <- data.frame(goat, .fitted = fitted(MG2), .resid = resid(MG2))
+gg_res <- ggplot(MG2_diag, aes(x = .fitted, y = .resid)) + 
+  geom_point() + geom_smooth(method = "loess") +
+  geom_hline(yintercept = 0)
+gg_res
+```
+
+## Решение
+
+### Графики остатков от предикторов в модели
+
+```{r eval=FALSE, purl=FALSE}
+gg_res %+% aes(x = init)
+gg_res %+% aes(x = treat) + geom_boxplot()
+```
+
+```{r eval=TRUE, echo=FALSE, purl=FALSE, fig.width=10}
+grid.arrange(
+gg_res %+% aes(x = init),
+gg_res %+% aes(x = treat) + geom_boxplot(),
+nrow = 1)
+```
+
+## Проверяем значимость коэффициентов
+
+```{r, purl=FALSE}
+summary(MG2)
+```
+
+## Записываем уравнение модели
+
+```{r, purl=FALSE}
+coef(MG2)
+```
+Уравнение:
+
+$`r lm_equation(MG2, strict = FALSE)`$
+
+Привес коз при интенсивной обработке от глистов на 1.26 кг выше, чем при стандартном методе обработки (t-тест, p < 0.05)
+
+## Take home messages
+
+- У дискретных и непрерывных факторов могут быть взаимодействия, поэтому анализ нужно начинать с более полной модели (чтобы можно было  протестировать и исключить недостоверные взаимодействия)
+- Если вам приходится трансформировать предиктор для анализа, его нужно трансформировать обратно в исходную шкалу для представления результатов на графиках
+
+## Что почитать
+
++ <span style="color:red">Must read paper!</span> Zuur, A.F. and Ieno, E.N., 2016. A protocol for conducting and presenting results of regression‐type analyses. Methods in Ecology and Evolution, 7(6), pp.636-645.
+
++ Кабаков Р.И. R в действии. Анализ и визуализация данных на языке R. М.: ДМК Пресс, 2014
++ Zuur, A., Ieno, E.N. and Smith, G.M., 2007. Analyzing ecological data. Springer Science & Business Media.
++ Quinn G.P., Keough M.J. 2002. Experimental design and data analysis for biologists
++ Logan M. 2010. Biostatistical Design and Analysis Using R. A Practical Guide
 
