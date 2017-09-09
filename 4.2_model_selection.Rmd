@@ -20,7 +20,10 @@ opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, 
 ## Мы рассмотрим
 
 - Принципы выбора лучшей линейной модели
-- Сравнение линейных моделей
+- Сравнение линейных моделей разными способами:
+    - частный F-критерий
+    - тесты отношения правдоподобий
+    - информационные критерии AIC и BIC
 
 ```{r, echo=FALSE, message=FALSE, purl=FALSE}
 library(ggplot2)
@@ -34,6 +37,7 @@ library(gridExtra)
 but some are useful"  
 Georg E. P. Box
 
+
 ## Важно не только тестирование гипотез, но и построение моделей
 
 - Проверка соответствия наблюдаемых данных предполагаемой функциональной связи между зависимой перменной и предикторами:
@@ -45,8 +49,6 @@ Georg E. P. Box
 - __Построение моделей__ для предсказания значений в новых условиях:
     - Выбор оптимальной модели
     - Oценка предсказательной способности модели
-
-# Проблема переобученности моделей (overfitting)
 
 ## Какую модель можно подобрать для описания этой закономерности?
 
@@ -511,7 +513,7 @@ drop1(M1, test = "F")
 # Нужно убрать lcp
 ```
 
-## .
+## Тестируем предикторы (шаг 2)
 
 ```{r}
 # Убрали lcp
@@ -520,7 +522,7 @@ drop1(M2, test = "F")
 # Нужно убрать lbph 
 ```
 
-## .
+## Тестируем предикторы (шаг 3)
 
 ```{r purl=FALSE}
 # Убрали lbph 
@@ -529,7 +531,7 @@ drop1(M3, test = "F")
 # Нужно убрать age
 ```
 
-## .
+## Тестируем предикторы (шаг 4)
 
 ```{r purl=FALSE}
 # Убрали age
@@ -538,7 +540,7 @@ drop1(M4, test = "F")
 # Нужно убрать pgg45
 ```
 
-## .
+## Тестируем предикторы (шаг 5)
 
 ```{r purl=FALSE}
 # Убрали pgg45
@@ -970,7 +972,7 @@ BIC(GLM1, GLM2, GLM3, GLM4, GLM5)
 
 ## Что почитать
 
-+ <span style="orange">Must read paper!</span> Zuur, A.F. and Ieno, E.N., 2016. A protocol for conducting and presenting results of regression‐type analyses. Methods in Ecology and Evolution, 7(6), pp.636-645.
++ <span style="color:red">Must read paper!</span> Zuur, A.F. and Ieno, E.N., 2016. A protocol for conducting and presenting results of regression‐type analyses. Methods in Ecology and Evolution, 7(6), pp.636-645.
 
 + Кабаков Р.И. R в действии. Анализ и визуализация данных на языке R. М.: ДМК Пресс, 2014
 + Zuur, A., Ieno, E.N. and Smith, G.M., 2007. Analyzing ecological data. Springer Science & Business Media.
