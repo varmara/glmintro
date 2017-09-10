@@ -48,11 +48,10 @@ nrow(cat)
 
 # Рисуем dotplot
 
-ggplot(cat, aes(x = 1:nrow(cat), y = Bwt)) +
-  geom_point()
+gg_dot <- ggplot(cat, aes(y = 1:nrow(cat))) + geom_point()
+gg_dot + aes(x = Bwt)
+gg_dot + aes(x = Hwt)
 
-ggplot(cat, aes(x = 1:nrow(cat), y = Hwt)) +
-  geom_point()
 
 #' # Корреляционный анализ
 
