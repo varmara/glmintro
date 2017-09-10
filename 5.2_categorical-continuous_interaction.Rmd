@@ -64,7 +64,7 @@ ggplot(Puromycin, aes(x = log(conc), y = rate, colour = state)) +
   geom_point()
 ```
 
-```{r purl=FALSE, eval=TRUE, fig.width=10, echo=FALSE}
+```{r gg-transformation, purl=FALSE, eval=TRUE, fig.width=10, echo=FALSE}
 library(ggplot2)
 library(gridExtra)
 grid.arrange(
@@ -85,7 +85,7 @@ summary(M1)
 
 ## Проверяем выполнение условий применимости {.smaller}
 
-```{r fig.width=10}
+```{r M1-residuals, fig.width=10}
 library(car)
 vif(M1) # есть ли колинеарность?
 set.seed(7364)
@@ -103,7 +103,7 @@ par(op)
 
 Что не так с этим графиком?
 
-```{r}
+```{r M1-predictions}
 ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + 
   geom_point() + 
   geom_smooth(method = "lm")
@@ -139,19 +139,7 @@ NewData$lwr <- NewData$fit - 1.96 * NewData$SE
 
 Что не так с этим графиком?
 
-```{r purl=FALSE}
-ggplot(NewData, aes(x = lc, y = fit)) + 
-  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
-  geom_line(aes(colour = state))
-```
-
->- Хорошо бы добавить точки наблюдений
-
-## Рисуем график предсказаний (Третья попытка)
-
-Что не так с этим графиком?
-
-```{r purl=FALSE}
+```{r gg-M1-predictions, purl=FALSE}
 ggplot(NewData, aes(x = lc, y = fit)) + 
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
   geom_line(aes(colour = state)) +
@@ -160,9 +148,9 @@ ggplot(NewData, aes(x = lc, y = fit)) +
 
 >- Этот график с логарифмической шкалой. Хорошо бы трансформировать предиктор в исходную шкалу
 
-## Рисуем график предсказаний (Четвертая попытка)
+## Рисуем график предсказаний (Третья попытка)
 
-```{r purl=FALSE}
+```{r gg-M1-predictions-backtrans, purl=FALSE}
 # Обратная трансформация предиктора
 NewData$conc <- exp(NewData$lc)
 
@@ -180,7 +168,7 @@ $Response \sim Continuous + Categorical$
 
 Требование гомогенности углов наклона (homogeneity of regression slopes) --- Нужно его протестировать, и если оно не выполняется, то это не ANCOVA
 
-```{r echo=FALSE, purl=FALSE}
+```{r gg-classic-ancova, echo=FALSE, purl=FALSE}
 ggplot(NewData, aes(x = lc, y = fit)) + 
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
   geom_line(aes(colour = state)) +
@@ -195,7 +183,7 @@ $Response \sim Continuous \times Categorical$ (сокращенная запис
 
 Возможен разный угол наклона прямых для разных групп
 
-```{r echo=FALSE, purl=FALSE}
+```{r gg-not-ancova, echo=FALSE, purl=FALSE}
 ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + 
   geom_point() + 
   geom_smooth(method = "lm")
@@ -368,9 +356,10 @@ goat$treat <- factor(goat$treat, levels = c("standard", "intensive"))
 
 ## Есть ли выбросы?
 
-```{r, fig.height=2}
-ggplot(goat, aes(x = wt, y = 1:nrow(goat))) + geom_point()
-ggplot(goat, aes(x = init, y = 1:nrow(goat))) + geom_point()
+```{r dot-plots, fig.height=2}
+gg_dot <- ggplot(goat, aes(y = 1:nrow(goat))) + geom_point()
+gg_dot + aes(x = wt)
+gg_dot + aes(x = init)
 ```
 
 >- Все ок
@@ -388,7 +377,7 @@ ggplot(goat, aes(x = init, y = 1:nrow(goat))) + geom_point()
 
 ### Нет ли колинеарности между начальным весом и тритментом
 
-```{r fig.width=3, purl=FALSE}
+```{r gg-colinearity, fig.width=3, purl=FALSE}
 MG <- lm(wt ~ treat + init, data = goat)
 vif(MG)
 ggplot(goat, aes(x = treat, y = init)) + geom_boxplot()
@@ -435,7 +424,7 @@ cat(full_fact(fit = MG1, nways = 2))
 
 Похоже, что взаимодействие не будет достоверным. 
 
-```{r, purl=FALSE}
+```{r gg-predictions, purl=FALSE}
 gg_g <- ggplot(data = goat, aes(y = wt, x = init, colour = treat)) + 
   geom_point()  +
   labs(x = "Начальный вес, кг",
@@ -450,7 +439,7 @@ gg_g + geom_smooth(method = "lm")
 
 ### Проверяем условия применимости
 
-```{r, fig.show='hold', fig.height=3, fig.width=10, purl=FALSE}
+```{r MG1-residuals, fig.show='hold', fig.height=3, fig.width=10, purl=FALSE}
 set.seed(9827)
 cook_cutoff <- 4 / (nrow(goat) - length(coef(MG1) - 2))
 op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
@@ -485,7 +474,7 @@ drop1(MG2, test = "F")
 
 ## Проверяем условия применимости финальной модели
 
-```{r, fig.show='hold', fig.height=3.5, fig.width=10, purl=FALSE}
+```{r MG2-residuals, fig.show='hold', fig.height=3.5, fig.width=10, purl=FALSE}
 set.seed(849)
 cook_cutoff <- 4 / (nrow(goat) - length(coef(MG2) - 2))
 op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
@@ -499,7 +488,7 @@ par(op)
 
 ### Заготовка графика остатков в ggplot
 
-```{r, purl=FALSE}
+```{r gg-MG2-residuals, purl=FALSE}
 MG2_diag <- data.frame(goat, .fitted = fitted(MG2), .resid = resid(MG2))
 gg_res <- ggplot(MG2_diag, aes(x = .fitted, y = .resid)) + 
   geom_point() + geom_smooth(method = "loess") +
@@ -516,7 +505,7 @@ gg_res %+% aes(x = init)
 gg_res %+% aes(x = treat) + geom_boxplot()
 ```
 
-```{r eval=TRUE, echo=FALSE, purl=FALSE, fig.width=10}
+```{r gg-MG2-residual-plots, eval=TRUE, echo=FALSE, purl=FALSE, fig.width=10}
 grid.arrange(
 gg_res %+% aes(x = init),
 gg_res %+% aes(x = treat) + geom_boxplot(),
