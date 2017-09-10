@@ -11,7 +11,7 @@ title: Презентации и данные
 ### Знакомство с R
 
 - Презентация [html](1.2_introduction.html)
-- Код [1.2_introduction.R](1.2_introduction.R)
+- Код [1.2_introduction_code.R](1.2_introduction_code.R)
 - Данные [1.2_temperature.csv](data/1.2_temperature.csv)
 
 ### Графики в R
