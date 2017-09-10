@@ -121,7 +121,12 @@ qqPlot(M2)
 # OK
 
 ## Графики остатков от предикторов в модели и нет
-# Нет таких
+M2_diag <- data.frame(calc,
+                      .resid = resid(M2, type = "pearson"))
+gg_res <- ggplot(M2_diag, aes(x = time_l, y = .resid)) +
+  geom_hline(yintercept = 0) +
+  geom_point()
+gg_res
 
 #### Описываем результаты ####
 summary(M2)
@@ -144,7 +149,8 @@ summary(M2)
 # Multiple R-squared:  0.8393,	Adjusted R-squared:  0.8329
 # F-statistic: 130.6 on 1 and 25 DF,  p-value: 2.033e-11
 
-# Поглощение кальция достоверно зависит от времени экспозиции (t-тест, p < 0.001 )
+# Поглощение кальция достоверно зависит от времени
+# экспозиции (t-тест, p < 0.001 )
 
 ## Уравнение модели
 # cal = 0.97 + 1.16time_l
