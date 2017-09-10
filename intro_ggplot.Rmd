@@ -216,7 +216,7 @@ ggplot(data = fev, aes(x = Age, y = FEV)) +
 
 
 
-## Меняем размер точек {.columns-2 .smaller}
+## Меняем размер точек
 
 ###Крупнее
 ```{r}
@@ -229,6 +229,7 @@ ggplot(data = fev, aes(x = Age, y = FEV)) +
 
 
 
+## Меняем размер точек
 
 ###Мельче
 
@@ -259,13 +260,19 @@ ggplot(data = fev, aes(x = Age, y = FEV)) + geom_point(shape = 22, color = "red"
 ```
 
 
-##Сохраняем рисунок в файл {.columns-2}
+##Сохраняем рисунок в файл 
+
+Создаем рисунок 
 
 ```{r}
 ggplot(data = fev, aes(x = Age, y = FEV)) + geom_point(shape = 22, color = "red", fill = "yellow", size = 2) + labs(x = "Возраст", y = "Объем легких", title = "Зависимость между \n возрастом и объемом легких") + theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
+
+##Сохраняем рисунок в файл 
+
+Сохраняем текущий рисунок в файл
 
 ```{r, eval=FALSE}
 
@@ -295,7 +302,7 @@ Plot_1 + labs(x = "Возраст", y = "Объем легких", title = "За
 ```
 
 
----
+## Далее эту переменную можно модифицировать
 
 ```{r, eval=FALSE}
 Plot_2 <- Plot_1 + labs(x = "Возраст", y = "Объем легких", title = "Зависимость между \n возрастом и объемом легких") + theme(plot.title = element_text(hjust = 0.5))
@@ -430,12 +437,19 @@ ggplot(fev, aes(x = FEV)) + geom_histogram()
 ```
 
 
-## Меням ширину класса {.columns-2 .smaller}
+## Меням ширину класса 
+
+Делаем более широкие классовые интервалы
 
 ```{r}
 ggplot(fev, aes(x = FEV)) + geom_histogram(binwidth = 1)
 
 ```
+
+
+## Меням ширину класса 
+
+Делаем более узкие классовые интервалы
 
 ```{r}
 ggplot(fev, aes(x = FEV)) + geom_histogram(binwidth = 0.1)
