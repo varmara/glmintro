@@ -27,6 +27,8 @@ data("cats")
 writeWorksheetToFile("data/cats.xlsx", data = cats, sheet = "cats")
 data("leuk")
 writeWorksheetToFile("data/leuk.xlsx", data = leuk, sheet = "leuk")
+data("GAGurine")
+writeWorksheetToFile("data/GAGurine.xlsx", data = GAGurine, sheet = "leuk")
 
 library("robustbase")
 data("phosphor")
