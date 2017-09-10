@@ -123,6 +123,23 @@ set.seed(293234)
 qqPlot(M1)
 # OK
 
+## Графики остатков от предикторов в модели и нет
+M1_diag <- data.frame(abal1,
+                      .resid = resid(M1, type = "pearson"))
+gg_res <- ggplot(M1_diag, aes(x = diameter, y = .resid)) +
+  geom_hline(yintercept = 0) +
+  geom_point()
+gg_res
+
+gg_res + aes(x = length) + geom_smooth(method = "loess")
+gg_res + aes(x = shell_weight) + geom_smooth(method = "loess")
+gg_res + aes(x = whole_weight) + geom_smooth(method = "loess")
+gg_res + aes(x = sex) + geom_boxplot()
+# Трендов не заметно, но видно, что модель плохо
+# предсказывает возраст моллюсков с тяжелой раковиной
+# видна гетерогенность дисперсий
+#
+
 # Итог: на графике остатков видно, гетерогенность дисперсии
 # необходима трансформация
 
@@ -159,6 +176,15 @@ gg_res <- ggplot(M2_diag, aes(x = diameter, y = .resid)) +
   geom_hline(yintercept = 0) +
   geom_point()
 gg_res
+
+gg_res + aes(x = length) + geom_smooth(method = "loess")
+gg_res + aes(x = shell_weight) + geom_smooth(method = "loess")
+gg_res + aes(x = whole_weight) + geom_smooth(method = "loess")
+gg_res + aes(x = sex) + geom_boxplot()
+# Видно, что модель плохо
+# предсказывает возраст крупных моллюсков
+# видна гетерогенность дисперсий
+#
 
 #### Описываем результаты ####
 summary(M2)
