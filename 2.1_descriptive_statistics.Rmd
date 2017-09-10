@@ -12,6 +12,8 @@ output:
 # output options
 options(width = 70, scipen = 6, digits = 3)
 library(knitr)
+library(ggplot2)
+library(gridExtra)
 # chunk default options
 opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
 ```
@@ -278,9 +280,7 @@ ggplot(data = diatoms2, aes(y = count, x = sp)) + geom_boxplot()
 
 Это непрерывное распределение, получаемое из мерных данных. Однако, многие распределения других типов тоже могут приближаться к нормальному.
 
-Его можно описать формулой с двумя параметрами. Т.е. достаточно знать эти два параметра чтобы восстановить нормальное распределение.
-
-```{r ND.1, echo=FALSE, purl=FALSE, fig.width=4, fig.height = 4, warning=FALSE}
+```{r ND.1, echo=FALSE, purl=FALSE, fig.width=5.5, fig.height = 5, warning=FALSE}
 library (ggplot2)
 theme_set(theme_bw(base_size = 14))
 Mu <- 10
@@ -288,10 +288,40 @@ Sigma <- 2
 x <- seq(from = 0, to = 20, by = 0.1)
 y <- dnorm(x = x, mean = Mu, sd = Sigma)
 Norm <- data.frame(x, y)
-ggplot(data = Norm, aes(x=x, y=y)) + geom_line(color="steelblue", size=2) + geom_vline (xintercept = Mu) + labs(title = "Normal distribution", x = "Values", y = "Probability")
+ND_curve <- ggplot(data = Norm, aes(x=x, y=y)) +
+  geom_line(color="steelblue", size=2) + 
+#  geom_vline (xintercept = Mu) + 
+  labs(x = "Values", y = "Probability")
+ND_hist <- ggplot(data = Norm, aes(x=x, y=y)) +
+  geom_bar(stat = "identity", width = .05) +
+#  geom_vline (xintercept = Mu) + 
+  labs(x = "Values", y = "Relative frequency")
+ND_curve
 ```
 
+## Относительная частота и плотность вероятности
+
+<div class=columns-2>
+
+На оси Y может быть отложена относительная частота значений Х в эмпирическом распределении, или вероятность получить такие значения из теоретического распределения.
+
+На оси Х отложены значения Х в интервале от 0 до 20, в действительности же кривая простирается от $-\infty$ до $+\infty$
+
+Площадь под кривой = 1.  Интегрируя кривую на промежутке $(k,..,l)$, можно узнать вероятность встречи значений $(x_k,...x_l)$.
+
+НО! Нельзя расчитать вероятность одного значения $X = x_k$, так как это точка, и под ней нет площади.
+
+```{r ND.2, echo=FALSE, purl=FALSE, fig.width=4, fig.height = 6, warning=FALSE}
+ND_curve2 <- ND_curve + geom_vline(xintercept = 12, linetype="dotted", color = "red") + geom_vline(xintercept = 14, linetype="dotted", color = "red")
+ND_hist2 <- ND_hist + geom_vline(xintercept = 12, linetype="dotted", color = "red") + geom_vline(xintercept = 14, linetype="dotted", color = "red")
+grid.arrange(ND_hist2, ND_curve2, ncol = 1)
+```
+
+<div/>
+
 ## Условия появления нормально распределенных признаков
+
+<div class=columns-2>
 
 - Множество факторов
 
@@ -301,33 +331,25 @@ ggplot(data = Norm, aes(x=x, y=y)) + geom_line(color="steelblue", size=2) + geom
 
 - Вклад каждого фактора в итоговую изменчиость одинаков
 
-## Условия появления нормально распределенных признаков
-
 Что-то напоминает, не правда ли?
 
 <center>
 ![](images/2.1_polygenic_inheritance.png)
 </center>
+<div/>
 
-## ??? Интегрирование по кумуляте
+## Приятные особенности
 
-density - relative concentration of variates along Y-axis
-described by curve. Area under curve = 1 or n (depending on if relative or absolute frequencies were use)
-probability of outcome is also calculated as area under the curve. i.e. we cannot calculate probability of y=3.4 because 3.4 is a dot, under which there is no area. We can only get probabilities of y being in the interval between say 3.1 and 3.4
+Нормальных кривых бесконечно много, и их описывает заковыристая формула с двумя параметрами. Достаточно знать эти два значения чтобы восстановить или смоделировать любое нормальное распределение.
 
-Cumulative distribution finction is a way of graphically integrating the regular curve. any point on abscissa dives corresponding number on ordinata which is total frquency from negative infinity to given point. We can look at probability of observation being less than certain value of Y
-By subtracting we get probability between two points
+Если:
 
+- данные в выборке распределены нормально
+- мы можем узнать или оценить параметры этого распределения
 
-## ??? Другие приятные особенности
+можно считать что выборка у нас в кармане! Нам больше не нужно знать результаты измерений, чтобы строить предположения о природе данных.
 
-mu +/- 1*sigma contains 	68.27% of items
-
-mu +/- 2*sigma			95.45%
-
-mu +/- 3*sigma			99.73%
-
-И что-то еще
+Так что же это за чудодейственные параметры? Средняя и стандартное отклонение конечно!
 
 # ЧАСТЬ 4. Связка среднее + стандартное отклонение
 
@@ -382,7 +404,7 @@ sum(abs(raw.deviates)) / length(apples)
 
 ## Меры разброса
 
-### Путь 2: сумма квадратов = SS, Sum of Squares.
+### Путь 2: сумма квадратов = SS, Sum of Squares
 
 Избавиться от знака девиаты можно не только с помощью модуля, но и возведя значение в квадрат.
 
@@ -394,7 +416,7 @@ sum((raw.deviates)^2)
 
 ## Меры разброса
 
-### Дисперсия = Variance
+### Дисперсия = MS, Mean Square, Variance
 
 Если мы теперь поделим сумму квадратов на объем выборки, то получим дисперсию.
 
@@ -573,13 +595,15 @@ round(mean(sim.sample))
 round(sd(sim.sample))
 ```
 
-## ????????? Ошибка среднего
+## Ошибка среднего, SEM
 
 Имея дело с выборками и стремясь распространить то, что мы узнали, на всю генеральную совокупность, исследователю к лицу некоторая скромность.
 
-Наша выборка - лишь одна из множества возможных выборок, берущих начало из одной генеральной совокупности. Значения попадают в выборки случайно: в одну по-меньше, в другую - по-больше. Не одинаковыми будут и итоговые выборочные статистики.
+Наша выборка - лишь одна из множества возможных выборок, берущих начало из одной генеральной совокупности. Значения попадают в выборки случайно, апотому не одинаковыми будут и итоговые выборочные статистики.
 
 Каждая из них, хотя и будет описывать популяционный параметр, имеет шанс быть неверной. 
+
+## Модель генеральной совокупности
 
 Давайте для наших экспериментов создадим генеральную совокупность с параметрами $\mu = 50$ и $\sigma = 7$.
 
@@ -596,7 +620,7 @@ gg_population
 ## Возьмем выборку из этой генеральной совокупности
 
 ```{r echo=FALSE, purl=FALSE, warning=FALSE}
-i_1 <- sample(x = 10000, 20)
+i_1 <- sample(x = 10000, 30)
 sample_1 <- X[i_1]
 Mu_1 <- mean(sample_1)
 gg_sample_1 <- ggplot(data = data.frame(X = sample_1), aes(x = X)) + geom_histogram(binwidth = 1, fill = "steelblue", color = "black") + labs(title = "Sample 1") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = Mu_1, colour = "red", size = 1, linetype = "dashed")
@@ -605,20 +629,24 @@ gg_sample_1
 # sd(sample_1)
 ```
 
-
 ## В разных выборках средние значения будут отличаться.
 
 ```{r echo=FALSE, purl=FALSE, fig.height=5.5, warning=FALSE}
-i_2 <- sample(x = 10000, 50)
+i_2 <- sample(x = 10000, 30)
 sample_2 <- X[i_2]
 Mu_2 <- mean(sample_2)
 gg_sample_2 <- ggplot(data = data.frame(X = sample_2), aes(x = X)) + geom_histogram(binwidth = 1, fill = "steelblue", color = "black") + labs(title = "Sample 2") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = Mu_2, colour = "red", size = 1, linetype = "dashed")
 
+i_3 <- sample(x = 10000, 30)
+sample_3 <- X[i_3]
+Mu_3 <- mean(sample_3)
+gg_sample_3 <- ggplot(data = data.frame(X = sample_3), aes(x = X)) + geom_histogram(binwidth = 1, fill = "steelblue", color = "black") + labs(title = "Sample 3") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = Mu_2, colour = "red", size = 1, linetype = "dashed")
+
 library(gridExtra)
-grid.arrange(gg_population, gg_sample_1, gg_sample_2, ncol = 1, heights = c(1, 1, 1))
+grid.arrange(gg_sample_1, gg_sample_2, gg_sample_3, ncol = 1, heights = c(1, 1, 1))
 ```
 
-## А что будет со средними, если взять много-много выборок?
+## Что будет со средними, если взять много выборок?
 
 Давайте возьмем много-много выборок, вычислим для каждой выборочное среднее и построим распределение этих выборочных средних.
 
@@ -663,9 +691,9 @@ gg_means_30 <- ggplot(data = data.frame(means = my_means_30), aes(x = means)) + 
 grid.arrange(gg_population, gg_means, gg_means_30, ncol = 1)
 ```
 
-Cтандартная ошибка среднего (= стандартное отклонение выборочного распределения среднего) будет в N раз меньше, чем дисперсия в генеральной совокупности 
+SEM, Cтандартная ошибка среднего (= стандартное отклонение выборочного распределения среднего) будет в N раз меньше, чем дисперсия в генеральной совокупности 
 
-То есть, чем больше будет объем выборок, тем меньше будет эта стандартная ошибка, и тем точнее мы оценим среднее в генеральной совокупности.
+То есть, чем больше будет объем выборок, тем меньше будет эта стандартная ошибка, и тем точнее мы оценим (параметрическое) среднее в генеральной совокупности.
 
 <div/>
 
