@@ -67,13 +67,15 @@ ggplot(calc, aes(x = log(time), y = cal)) +
 
 M1 <- lm(cal ~ time, data = calc)
 summary(M1)
-# 1) регрессия объясняет довольно много изменчивости
+# регрессия объясняет довольно много изменчивости
 # Adjusted R-squared:  0.741
 
-# 2) Время достоверно влияет на поглощение кальция
+# Время достоверно влияет на поглощение кальция
 # Coefficients:
   #         Estimate Std. Error t value     Pr(>|t|)
   # time        0.2427   0.0279    8.69 0.0000000051 ***
+
+# Но есть ли во всем этом смысл???
 
 #### Проверяем условия применимости ####
 
@@ -182,5 +184,3 @@ ggplot(NewData, aes(x = time, y = fit)) +
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr)) +
   geom_line() +
   geom_point(data = calc, aes(x = time, y = cal))
-
-
