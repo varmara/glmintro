@@ -49,8 +49,9 @@ colSums(is.na(Cushings))
 table(Cushings$Type)
 
 # Есть ли выбросы? Построим дот-плот
-ggplot(Cushings, aes(x = Tetr, y = 1:nrow(Cushings))) + geom_point()
-ggplot(Cushings, aes(x = Pregn, y = 1:nrow(Cushings))) + geom_point()
+gg_dot <- ggplot(Cushings, aes(y = 1:nrow(Cushings))) + geom_point()
+gg_dot + aes(x = Tetr)
+gg_dot + aes(x = Pregn)
 # Один человек с очень большой секрецией тетрагидрокортизона
 # Один человек с необычно большой секрецией прегнатриола
 
