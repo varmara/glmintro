@@ -6,9 +6,19 @@ title: Презентации и данные
 
 ### Планирование экспериментов
 
+- Презентация [pdf](1.1_experimental_design.pdf)
+
 ### Знакомство с R
 
+- Презентация [html](1.2_introduction.html)
+- Код [1.2_introduction.R](1.2_introduction.R)
+- Данные [1.2_temperature.csv](data/1.2_temperature.csv)
+
 ### Графики в R
+
+- Презентация [html](1.3_intro_ggplot.html)
+- Код [1.3_intro_ggplot.R](1.3_intro_ggplot.R)
+- Данные [fev.xls](data/fev.xls)
 
 ## День 2
 
