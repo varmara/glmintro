@@ -303,6 +303,12 @@ ND_curve
 
 <div class=columns-2>
 
+```{r ND.2, echo=FALSE, purl=FALSE, fig.width=4, fig.height = 6, warning=FALSE}
+ND_curve2 <- ND_curve + geom_vline(xintercept = 12, linetype="dotted", color = "red") + geom_vline(xintercept = 14, linetype="dotted", color = "red")
+ND_hist2 <- ND_hist + geom_vline(xintercept = 12, linetype="dotted", color = "red") + geom_vline(xintercept = 14, linetype="dotted", color = "red")
+grid.arrange(ND_hist2, ND_curve2, ncol = 1)
+```
+
 На оси Y может быть отложена относительная частота значений Х в эмпирическом распределении, или вероятность получить такие значения из теоретического распределения.
 
 На оси Х отложены значения Х в интервале от 0 до 20, в действительности же кривая простирается от $-\infty$ до $+\infty$
@@ -311,11 +317,6 @@ ND_curve
 
 НО! Нельзя расчитать вероятность одного значения $X = x_k$, так как это точка, и под ней нет площади.
 
-```{r ND.2, echo=FALSE, purl=FALSE, fig.width=4, fig.height = 6, warning=FALSE}
-ND_curve2 <- ND_curve + geom_vline(xintercept = 12, linetype="dotted", color = "red") + geom_vline(xintercept = 14, linetype="dotted", color = "red")
-ND_hist2 <- ND_hist + geom_vline(xintercept = 12, linetype="dotted", color = "red") + geom_vline(xintercept = 14, linetype="dotted", color = "red")
-grid.arrange(ND_hist2, ND_curve2, ncol = 1)
-```
 
 <div/>
 
