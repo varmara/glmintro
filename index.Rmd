@@ -18,6 +18,48 @@ description: Презентации к курсу
 - [Исходный код в RMarkdown](http://github.com/varmara/glmintro)
 - [Другие ресурсы и книги для изучения R и статистики](resources.html)
 
+## До начала курса
+
+До начала курса нужно установить эти программы:
+
+- R (это сам язык R) с сайта [CRAN](https://cran.r-project.org/)
+- RStudio (это среда разработки для R, в которой мы будем работать) с сайта [RStudio](https://www.rstudio.com/products/RStudio/). Вам нужна Desktop версия.
+
+Когда вы все это установите, запустите RStudio и в окне консоли (Console) выполните комманды, которые приведены ниже, для установки пакетов. Конечно, можно все эти пакеты установить одной общей коммандой, но лучше, если вы сделаете отдельными коммандами, т.к. так будет проще понять, если какой-то пакет вдруг не получится установить.
+
+```{r eval=FALSE}
+# То, что мы будем использовать
+install.packages("ggplot2")
+install.packages("plot3D")
+install.packages("grid")
+install.packages("gridExtra")
+install.packages("scales")
+install.packages("readxl")
+install.packages("plyr")
+install.packages("pwr")
+install.packages("effsize")
+install.packages("car")
+install.packages("MASS")
+install.packages("DAAG")
+install.packages("ISwR")
+# то, что мы не будем непосредственно использовать, но будем упоминать:
+install.packages("knitr")
+install.packages("xtable")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("reshape2")
+install.packages("multcomp")
+```
+
+Еще один пакет можно установить, если вы хотите иметь возможность экспортировать таблицы данных из R в Excel файлы. Он называется XLConnect. Чтобы он установился, нужно чтобы на вашем компьютере была Java Runtime Environment (часто она уже есть). Тогда вы сможете установить в R пакеты rJava и сам XLConnect
+
+```{r eval=FALSE}
+install.packages("rJava")
+install.packages("XLConnect")
+```
+
+
+
 <!--
 
 - [Как и где можно найти помощь с R и статистикой](more_help.html)
