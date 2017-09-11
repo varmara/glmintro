@@ -34,7 +34,7 @@ library(gridExtra) # to rescale legend
 # Мощность статистического теста
 
 
-```{r power_data, echo = FALSE, cache=TRUE}
+```{r power_data, echo = FALSE, cache=TRUE, purl=FALSE}
 # Power plot using ggplot2
 # reworked after
 # http://rpsychologist.com/creating-a-typical-textbook-illustration-of-statistical-power-using-either-ggplot-or-base-graphics/
@@ -257,7 +257,7 @@ dat <- generate_power_data(m1 = 0, m2 = 5, sd1 = 10, sd2 = 10, h.type = "equal")
 
 <br /><br /><br />
 
-```{r power_beta, echo = FALSE, fig.height=2.5}
+```{r power_beta, echo = FALSE, fig.height=2.5, purl=FALSE}
 pwr_plot(pwrd = dat, alph = T, bet = T, power = F) +
   guides(fill = guide_legend(title = NULL), linetype = guide_legend(title = NULL)) +
   theme_bw_noxy()
@@ -274,7 +274,7 @@ pwr_plot(pwrd = dat, alph = T, bet = T, power = F) +
 ### Мощность статистического теста --- 
 вероятность найти различия там, где они есть $Power = 1 - \beta$
 
-```{r power_all, echo = FALSE, fig.height=2.5}
+```{r power_all, echo = FALSE, fig.height=2.5, purl=FALSE}
 pwr_plot(pwrd = dat, alph = T, bet = T, power = T) +
   guides(fill = guide_legend(title = NULL), linetype = guide_legend(title = NULL)) +
   theme_bw_noxy()
@@ -698,7 +698,7 @@ sim <- sapply(X = 5:15, FUN = my_sim_range)
 
 ## Решение: график зависимости мощности от объема выборки
 
-```{r}
+```{r purl=FALSE}
 pwr_dat <- data.frame(N = 5:15, Power = sim)
 ggplot(pwr_dat, aes(x = N, y = Power)) + 
   geom_point(colour = "steelblue") + 
