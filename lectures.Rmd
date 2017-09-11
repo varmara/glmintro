@@ -39,25 +39,28 @@ title: Презентации и данные
 
 ### Описательная статистика
 
-- Презентация [html]<!-- (2.1_descriptive_statistics.html) --->
+- Презентация <!-- [2.1_descriptive_statistics.html](2.1_descriptive_statistics.html) --->
 - Код []
 - Данные []
 
 ### Тестирование гипотез
 
-- Презентация [html]<!-- (2.2_hypothesis_testing.html) --->
+- Презентация <!-- [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html) --->
 - Код []
 - Данные []
 
 ### Анализ мощности
 
-- Презентация [html]<!-- (2.3_power.html) --->
-- Код []
-- Данные []
+- Презентация <!-- [2.3_power.html](2.3_power.html) --->
+- Код [2.3_power_code.R](2.3_power_code.R)
+- Данные:
+    + [remission.xlsx](data/remission.xlsx)
+    + [urine.xlsx](data/urine.xlsx)
+    + [Cushings.xlsx](data/Cushings.xlsx)
 
 ### Множественное тестирование
 
-- Презентация [html]<!-- (2.4_multiple_comparisons.html) --->
+- Презентация <!-- [2.4_multiple_comparisons.html](2.4_multiple_comparisons.html) --->
 - Код []
 - Данные []
 
