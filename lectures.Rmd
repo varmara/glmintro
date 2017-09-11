@@ -53,7 +53,7 @@ title: Презентации и данные
 
 - Презентация <!-- [2.3_power.html](2.3_power.html) --->
 - Код [2.3_power_code.R](2.3_power_code.R)
-- Данные:
+- Данные
     + [remission.xlsx](data/remission.xlsx)
     + [urine.xlsx](data/urine.xlsx)
     + [Cushings.xlsx](data/Cushings.xlsx)
@@ -66,23 +66,54 @@ title: Презентации и данные
 
 ## День 3
 
-### Оценка взаимосвязей
+### Оценка взаимосвязей линейная регрессия
 
-### Простая линейная регрессия
+- Презентация <!-- [3.2_lm.html](3.2_lm.html) --->
+- Код []
+- Данные []
 
 ### Условия применимости линейной регрессии
+
+- Презентация <!-- [3.3_assumptions.html](3.3_assumptions.html) --->
+- Код []
+- Данные
+    + [orly_owl_Lin_4p_5_flat.txt](data/orly_owl_Lin_4p_5_flat.txt)
+    + [catsM.xlsx](data/catsM.xlsx)
+- Упражнения (разбор готового кода)
+    + Код [3.3_assumptions_Ex_calcium.R](3.3_assumptions_Ex_calcium.R) | Данные [calcium.xlsx](data/calcium.xlsx)
+    + Код [3.3_assumptions_Ex_progesteron.R](3.3_assumptions_Ex_progesteron.R) | Данные [progesterone_Brutsaert_et al_2002_lm.xlsx](data/progesterone_Brutsaert_et al_2002_lm.xlsx)
+- Упражнения (написание кода)
+    + Задание [3.3_assumptions_task_GAG.R](3.3_assumptions_task_GAG.R) | Данные [GAGurine.xlsx](data/GAGurine.xlsx)
+    + Задание [3.3_assumptions_task_Mutations.R](3.3_assumptions_task_Mutations.R) | Данные [mutations_Kong_et_al_2012_lm_assumptions.xlsx](data/mutations_Kong_et_al_2012_lm_assumptions.xlsx)
 
 ## День 4
 
 ### Множественная линейная регрессия
 
+- Презентация <!-- [4.1_multiple_lm.html](4.1_multiple_lm.html) --->
+- Код []
+- Данные
+
 ### Выбор моделей
+
+- Презентация <!-- [4.2_model_selection.html](4.2_model_selection.html) --->
+- Код []
+- Данные
+
 
 ## День 5
 
 ### Дискретные предикторы в регрессионных моделях
 
+- Презентация <!-- []() --->
+- Код []
+- Данные
+
 ### Взаимодействие дискретного и непрерывного предикторов
+
+- Презентация <!-- [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html) --->
+- Код []
+- Данные
 
 ## День 6
 
