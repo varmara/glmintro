@@ -28,9 +28,12 @@ title: Презентации и данные
 
 Дополнительные материалы:
 
+- [Cookbook for R](http://www.cookbook-r.com/) --- сайт [книги Winston Chang](http://www.amazon.com/gp/product/0596809158/ref=as_li_tf_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0596809158&linkCode=as2&tag=cooforr09-20)
 - [Руководство по ggplot2](http://ggplot2.tidyverse.org/reference/)
 - [Cheat-sheet по ggplot2](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/ggplot2-cheatsheet-2.1.pdf)
  от [RStudio](https://www.rstudio.com)
+- [ggplot2 Quick Reference: colour and fill](http://sape.inf.usi.ch/quick-reference/ggplot2/colour)
+- [ggplot2 Quick reference: shape](http://sape.inf.usi.ch/quick-reference/ggplot2/shape)
 
 ## День 2
 
