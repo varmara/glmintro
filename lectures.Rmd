@@ -14,11 +14,23 @@ title: Презентации и данные
 - Код [1.2_introduction_code.R](1.2_introduction_code.R)
 - Данные [1.2_temperature.csv](data/1.2_temperature.csv)
 
+Дополнительные материалы:
+
+- [Cheat-sheet по RStudio](https://www.rstudio.com/wp-content/uploads/2016/01/rstudio-IDE-cheatsheet.pdf) от [RStudio](https://www.rstudio.com)
+- [Cheat-sheet по базовому R](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/base-r.pdf) от [Mhairi McNeill](http://mhairihmcneill.com/)
+- [Data import cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/source/pdfs/data-import-cheatsheet.pdf)
+
 ### Графики в R
 
 - Презентация [html](1.3_intro_ggplot.html)
 - Код [1.3_intro_ggplot.R](1.3_intro_ggplot.R)
 - Данные [fev.xls](data/fev.xls)
+
+Дополнительные материалы:
+
+- [Руководство по ggplot2](http://ggplot2.tidyverse.org/reference/)
+- [Cheat-sheet по ggplot2](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/ggplot2-cheatsheet-2.1.pdf)
+ от [RStudio](https://www.rstudio.com)
 
 ## День 2
 
