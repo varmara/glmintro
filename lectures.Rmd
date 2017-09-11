@@ -14,35 +14,53 @@ title: Презентации и данные
 - Код [1.2_introduction_code.R](1.2_introduction_code.R)
 - Данные [1.2_temperature.csv](data/1.2_temperature.csv)
 
+Дополнительные материалы:
+
+- [Cheat-sheet по RStudio](https://www.rstudio.com/wp-content/uploads/2016/01/rstudio-IDE-cheatsheet.pdf) от [RStudio](https://www.rstudio.com)
+- [Cheat-sheet по базовому R](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/base-r.pdf) от [Mhairi McNeill](http://mhairihmcneill.com/)
+- [Data import cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/source/pdfs/data-import-cheatsheet.pdf)
+
 ### Графики в R
 
 - Презентация [html](1.3_intro_ggplot.html)
 - Код [1.3_intro_ggplot.R](1.3_intro_ggplot.R)
 - Данные [fev.xls](data/fev.xls)
 
+Дополнительные материалы:
+
+- [Cookbook for R](http://www.cookbook-r.com/) --- сайт [книги Winston Chang](http://www.amazon.com/gp/product/0596809158/ref=as_li_tf_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0596809158&linkCode=as2&tag=cooforr09-20)
+- [Руководство по ggplot2](http://ggplot2.tidyverse.org/reference/)
+- [Cheat-sheet по ggplot2](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/ggplot2-cheatsheet-2.1.pdf)
+ от [RStudio](https://www.rstudio.com)
+- [ggplot2 Quick Reference: colour and fill](http://sape.inf.usi.ch/quick-reference/ggplot2/colour)
+- [ggplot2 Quick reference: shape](http://sape.inf.usi.ch/quick-reference/ggplot2/shape)
+
 ## День 2
 
 ### Описательная статистика
 
-- Презентация [html]<!-- (2.1_descriptive_statistics.html) --->
+- Презентация <!-- [2.1_descriptive_statistics.html](2.1_descriptive_statistics.html) --->
 - Код []
 - Данные []
 
 ### Тестирование гипотез
 
-- Презентация [html]<!-- (2.2_hypothesis_testing.html) --->
+- Презентация <!-- [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html) --->
 - Код []
 - Данные []
 
 ### Анализ мощности
 
-- Презентация [html]<!-- (2.3_power.html) --->
-- Код []
-- Данные []
+- Презентация <!-- [2.3_power.html](2.3_power.html) --->
+- Код [2.3_power_code.R](2.3_power_code.R)
+- Данные:
+    + [remission.xlsx](data/remission.xlsx)
+    + [urine.xlsx](data/urine.xlsx)
+    + [Cushings.xlsx](data/Cushings.xlsx)
 
 ### Множественное тестирование
 
-- Презентация [html]<!-- (2.4_multiple_comparisons.html) --->
+- Презентация <!-- [2.4_multiple_comparisons.html](2.4_multiple_comparisons.html) --->
 - Код []
 - Данные []
 
