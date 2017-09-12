@@ -34,16 +34,8 @@ opts_chunk$set(fig.align='center', tidy = FALSE,
     
 ## Зачем нужна диагностика модели? Разве тестов было недостаточно?
 
-```
-dat <- read.table('http://www4.stat.ncsu.edu/~stefanski/NSF_Supported/
-Hidden_Images/orly_owl_files/orly_owl_Lin_4p_5_flat.txt'
-```
-
-```{r echo=FALSE}
-dat <- read.table('http://www4.stat.ncsu.edu/~stefanski/NSF_Supported/Hidden_Images/orly_owl_files/orly_owl_Lin_4p_5_flat.txt')
-```
-
 ```{r}
+dat <- read.table('data/orly_owl_Lin_4p_5_flat.txt')
 fit <- lm(V1 ~ V2 + V3 + V4 + V5 - 1, data = dat)
 coef(summary(fit))
 ```
