@@ -125,55 +125,6 @@ mean(apples2)
 
 Как видим, она не так благополучно пережила это вторжение. Единственное неверное измерение сбило ее из разряда довольно крупных яблок в область гигантских грейпфрутов.
 
-## Медиана: недостающие измерения
-
-Собирая данные в эксперименте, мы не всегда можем дождаться его окончания. Допустим, мы измеряем время, затраченное лягушкой на то, чтобы перепрыгнуть препятствие.
-
-В эксперименте участвовало 20 животных. 16 из них перепрыгнули препятствие меньше чем за 15 минут и мы измерили эти показатели. Еще четыре лягушки были необычайно неспешны, и подождав еще 15 минут, мы ушли на обед. Смоделируем такие данные:
-
-```{r}
-set.seed(11)
-jump_time <- round(runif(16, 1, 14),1)
-#Генерируем значения из однородного распределения (n = 16, min = 1, max = 14)
-jump_time_sorted <- c(sort(jump_time), NA, NA, NA, NA)
-#Сортируем вектор и добавляем 4 медлительных лягушек
-jump_time_sorted
-```
-
-Сможете определить медиану?
-
-## Решение
-
-Многие наверное попробовали влоб
-
-```{r purl=FALSE}
-median(jump_time_sorted)
-median(jump_time_sorted, na.rm = T)
-```
-
-К сожалению это ответ неверный. При рассчете медианы R игнорирует NA. Но мы не хотим так легко с ними прощаться, ведь в эксперименте участвовало не 16 а 20 лягушек!
-
-## Решение
-
-Правильный ответ можно получить вручную, или же немного схитрить. Медиана будет находиться между $\frac{n}{2}$ и $\frac{n+1}{2}$, т.е. между 10-м и 11-м значениями. Найдем их:
-
-```{r}
-search.for <- c(10,11)
-jump_time_sorted[search.for]
-```
-
-Среднее между 7.6 и 8.5 это 8.05
-
-Второй вариант - добавить не NA, а заведомо большие, но численные, значения
-
-```{r}
-jump_time_sorted2 <- c(sort(jump_time), 100, 100, 100, 100)
-median(jump_time_sorted2)
-```
-
-Ещё пример применения -- определение LD50. Не все тестовые объекты умрут быстро, или вообще умрут. Можно ждать очень долго, но не собрать всех данных. Тем не менее, медиана готова нам помочь.
-
-
 ## Квантили
 
 Квантили делят распределение на четыре равные части, каждая из которых включает по 25% значений.
@@ -691,7 +642,7 @@ for (smpl in 1:100) {
 **Среднее значение выборочных средних стремится к среднему в генеральной совокупности**
 
 ```{r echo=FALSE, purl=FALSE, warning=FALSE}
-gg_means <- ggplot(data = data.frame(means = my_means), aes(x = means)) + geom_histogram(binwidth=1, fill="steelblue", color="black") + labs(title = "100 sample means, N = 5") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = mean(my_means), colour = "red", size = 1, linetype = "dashed")
+gg_means <- ggplot(data = data.frame(means = my_means), aes(x = means)) + geom_histogram(binwidth=1, fill="orangered", color="black") + labs(title = "100 sample means, N = 5") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = mean(my_means), colour = "red", size = 1, linetype = "dashed")
 gg_means
 ```
 
@@ -710,7 +661,7 @@ for (smpl in 1:100) {
   mu_i <- mean(X[i])
   my_means_30[smpl] <- mu_i
 }
-gg_means_30 <- ggplot(data = data.frame(means = my_means_30), aes(x = means)) + geom_histogram(binwidth=1, fill="steelblue", color="black") + labs(title = "100 sample means, N = 30") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = mean(my_means_30), colour = "red", size = 1, linetype = "dashed")
+gg_means_30 <- ggplot(data = data.frame(means = my_means_30), aes(x = means)) + geom_histogram(binwidth=1, fill="orangered", color="black") + labs(title = "100 sample means, N = 30") + xlim(30, 70) + geom_vline(xintercept = Mu, colour = "red", size = 1) + geom_vline(xintercept = mean(my_means_30), colour = "red", size = 1, linetype = "dashed")
 grid.arrange(gg_population, gg_means, gg_means_30, ncol = 1)
 ```
 
