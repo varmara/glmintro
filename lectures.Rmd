@@ -51,7 +51,7 @@ title: Презентации и данные
 
 ### Анализ мощности
 
-- Презентация <!-- [2.3_power.html](2.3_power.html) --->
+- Презентация [2.3_power.html](2.3_power.html)
 - Код [2.3_power_code.R](2.3_power_code.R)
 - Данные
     + [remission.xlsx](data/remission.xlsx)
@@ -60,7 +60,7 @@ title: Презентации и данные
 
 ### Множественное тестирование
 
-- Презентация <!-- [2.4_multiple_comparisons.html](2.4_multiple_comparisons.html) --->
+- Презентация [2.4_multiple_comparisons.html](2.4_multiple_comparisons.html)
 - Код [2.4_multiple_comparisons_code.R](2.4_multiple_comparisons_code.R)
 - Данные [fake_expression_samples.csv](data/fake_expression_samples.csv)
 
