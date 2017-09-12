@@ -439,17 +439,52 @@ gg_g + geom_smooth(method = "lm")
 
 ### Проверяем условия применимости
 
-```{r MG1-residuals, fig.show='hold', fig.height=3, fig.width=10, purl=FALSE}
-set.seed(9827)
-cook_cutoff <- 4 / (nrow(goat) - length(coef(MG1) - 2))
-op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
-plot(MG1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
-residualPlot(MG1)        # График остатков
-qqPlot(MG1)              # Квантильный график остатков
-par(op)
+>- Все нормально
+
+```{r block-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+MG1_diag <- fortify(MG1)
+library(gridExtra)
+grid.arrange(
+  ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) + 
+    geom_bar(stat = "identity"),
+  ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) + 
+    geom_boxplot(),
+  nrow = 1)
 ```
 
->- Все нормально
+```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+qqPlot(MG1)   
+```
+
+
+## Решение
+
+```{r eval=FALSE, purl=FALSE}
+# Данные для графиков остатков
+MG1_diag <- fortify(MG1)
+
+# 1) График расстояния Кука
+ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) + 
+    geom_bar(stat = "identity")
+
+# 2) График остатков от предсказанных значений
+ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0)
+
+# 3) Графики остатков от предикторов в модели и не в модели
+ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0)
+ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) + 
+    geom_boxplot()
+
+# 4) Квантильный график остатков
+qqPlot(MG1)       
+```
+
 
 ## Решение
 
@@ -474,42 +509,48 @@ drop1(MG2, test = "F")
 
 ## Проверяем условия применимости финальной модели
 
-```{r MG2-residuals, fig.show='hold', fig.height=3.5, fig.width=10, purl=FALSE}
-set.seed(849)
-cook_cutoff <- 4 / (nrow(goat) - length(coef(MG2) - 2))
-op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
-plot(MG2, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
-residualPlot(MG2)        # График остатков
-qqPlot(MG2)              # Квантильный график остатков
-par(op)
+```{r block-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+MG2_diag <- fortify(MG2)
+library(gridExtra)
+grid.arrange(
+  ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) + 
+    geom_bar(stat = "identity"),
+  ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) + 
+    geom_boxplot(),
+  nrow = 1)
 ```
 
-## Решение
-
-### Заготовка графика остатков в ggplot
-
-```{r gg-MG2-residuals, purl=FALSE}
-MG2_diag <- data.frame(goat, .fitted = fitted(MG2), .resid = resid(MG2))
-gg_res <- ggplot(MG2_diag, aes(x = .fitted, y = .resid)) + 
-  geom_point() + geom_smooth(method = "loess") +
-  geom_hline(yintercept = 0)
-gg_res
+```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+qqPlot(MG2)   
 ```
 
-## Решение
 
-### Графики остатков от предикторов в модели
+## Решение
 
 ```{r eval=FALSE, purl=FALSE}
-gg_res %+% aes(x = init)
-gg_res %+% aes(x = treat) + geom_boxplot()
-```
+# Данные для графиков остатков
+MG2_diag <- fortify(MG2)
 
-```{r gg-MG2-residual-plots, eval=TRUE, echo=FALSE, purl=FALSE, fig.width=10}
-grid.arrange(
-gg_res %+% aes(x = init),
-gg_res %+% aes(x = treat) + geom_boxplot(),
-nrow = 1)
+# 1) График расстояния Кука
+ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) + 
+    geom_bar(stat = "identity")
+
+# 2) График остатков от предсказанных значений
+ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0)
+
+# 3) Графики остатков от предикторов в модели и не в модели
+ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) + 
+    geom_point() + geom_hline(yintercept = 0)
+ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) + 
+    geom_boxplot()
+
+# 4) Квантильный график остатков
+qqPlot(MG2)       
 ```
 
 ## Проверяем значимость коэффициентов

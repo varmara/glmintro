@@ -21,12 +21,12 @@
 # (пг/мл) - ventilation - вентиляция легких (мл/мин)
 
 
-#### Загрузка пакетов из библиотеки ####
+#### Загрузка пакетов из библиотеки ########################
 
 library(readxl)
 library(ggplot2)
 
-#### Знакомство с данными ####
+#### Знакомство с данными ##################################
 
 # Не забудьте установить рабочую директорию или
 # отредактируйте путь к файлу данных
@@ -76,8 +76,8 @@ ggplot(prog, aes(x = pr^2, y = vent)) +
 # - продолжим без трансформации и изучим остатки
 # - трансформируем данные.
 
-#### ВАРИАНТ БЕЗ ТРАНСФОРМАЦИИ ############
-#### Подбираем модель ####
+#### ВАРИАНТ БЕЗ ТРАНСФОРМАЦИИ ##############################
+#### Подбираем модель ######################################
 
 M1 <- lm(vent ~ pr, data = prog)
 summary(M1)
@@ -99,63 +99,66 @@ summary(M1)
 # Multiple R-squared:  0.237,	Adjusted R-squared:  0.21
 # F-statistic: 8.71 on 1 and 28 DF,  p-value: 0.00635
 
-#### Проверяем условия применимости ####
+#### Проверяем условия применимости ########################
 
-# Расстояние Кука
-cook_cutoff <- 4 / (nrow(prog) - length(coef(M1) - 2))
-plot(M1, which = 4, cook.levels = cook_cutoff)
-# OK
+# Данные для графиков остатков
+M1_diag <- fortify(M1)
 
-# График остатков
-residualPlot(M1)
-# Вот теперь точно видно гетерогенность дисперсий
+# 1) График расстояния Кука
+ggplot(M1_diag, aes(x = 1:nrow(M1_diag), y = .cooksd)) +
+  geom_bar(stat = "identity")
 
-# Квантильный график остатков
-set.seed(293234)
+# 2) График остатков от предсказанных значений
+gg_resid <- ggplot(data = M1_diag, aes(x = .fitted, y = .stdresid)) +
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
+
+# 3) Графики остатков от предикторов в модели и не в модели
+gg_resid + aes(x = pr)
+
+# 4) Квантильный график остатков
 qqPlot(M1)
-# OK
 
 # Итог: на графике остатков видно, что связь нелинейна,
 # необходима трансформация или применение нелинейной
 # регрессии
 
-#### ВАРИАНТ C ТРАНСФОРМАЦИЕЙ ############
+#### ВАРИАНТ C ТРАНСФОРМАЦИЕЙ ##############################
 
 # Трансформируем предиктор
-prog$pr_tr <- log(prog$pr)
+prog$pr_l <- log(prog$pr)
 
-M2 <- lm(vent ~ pr_tr, data = prog)
+M2 <- lm(vent ~ pr_l, data = prog)
 summary(M2)
 
-#### Проверяем условия применимости ####
+#### Проверяем условия применимости ########################
 
-## Расстояние Кука
-cook_cutoff <- 4 / (nrow(prog) - length(coef(M2) - 2))
-plot(M2, which = 4, cook.levels = cook_cutoff)
-# OK
+# Данные для графиков остатков
+M2_diag <- fortify(M2)
 
-## График остатков
-residualPlot(M2)
-# трансформация плохо помогла...
+# 1) График расстояния Кука
+ggplot(M2_diag, aes(x = 1:nrow(M2_diag), y = .cooksd)) +
+  geom_bar(stat = "identity")
 
-## Квантильный график остатков
-set.seed(293234)
+# 2) График остатков от предсказанных значений
+gg_resid <- ggplot(data = M2_diag, aes(x = .fitted, y = .stdresid)) +
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
+# Гетерогенность дисперсий
+
+# 3) Графики остатков от предикторов в модели и не в модели
+gg_resid + aes(x = pr_l)
+# Гетерогенность дисперсий
+
+# 4) Квантильный график остатков
 qqPlot(M2)
-# OK
 
-## Графики остатков от предикторов в модели и нет
-M2_diag <- data.frame(prog,
-                      .resid = resid(M2, type = "pearson"))
-gg_res <- ggplot(M2_diag, aes(x = pr_tr, y = .resid)) +
-  geom_hline(yintercept = 0) +
-  geom_point()
-gg_res
 
-#### Описываем результаты ####
+#### Описываем результаты ##################################
 summary(M2)
 
 # Call:
-#   lm(formula = vent ~ pr_tr, data = prog)
+#   lm(formula = vent ~ pr_l, data = prog)
 #
 # Residuals:
 #   Min      1Q  Median      3Q     Max
@@ -164,7 +167,7 @@ summary(M2)
 # Coefficients:
 #   Estimate Std. Error t value Pr(>|t|)
 # (Intercept)    38.26      12.64    3.03   0.0053 **
-#   pr_tr           8.15       3.18    2.56   0.0161 *
+#   pr_l           8.15       3.18    2.56   0.0161 *
 #   ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 #
@@ -175,15 +178,15 @@ summary(M2)
 # Вентиляция достоверно зависит от уровня прогестерона (t-тест, p < 0.05 )
 
 ## Уравнение модели
-# vent = 38.26 + 8.15pr_tr
+# vent = 38.26 + 8.15pr_l
 
 ## Доля объясненной изменчивости
 # Adjusted R-squared:  0.161
 
-#### График модели  ####
+#### График модели  ########################################
 
 # Обычный график нам не подходит - там предиктор  трансформирован
-ggplot(prog, aes(x = pr_tr, y = vent)) +
+ggplot(prog, aes(x = pr_l, y = vent)) +
   geom_point() +
   geom_smooth(method = "lm")
 
@@ -191,7 +194,7 @@ ggplot(prog, aes(x = pr_tr, y = vent)) +
 
 # Данные для графика
 NewData <- data.frame(
-  pr_tr = seq(min(prog$pr_tr), max(prog$pr_tr), length = 100))
+  pr_l = seq(min(prog$pr_l), max(prog$pr_l), length = 100))
 
 # предсказанные значения
 Predictions <- predict(M2, newdata = NewData, se.fit = TRUE)
@@ -205,7 +208,7 @@ NewData$upr <- NewData$fit + 1.96 * NewData$SE
 NewData$lwr <- NewData$fit - 1.96 * NewData$SE
 
 # Обратная трансформация предиктора
-NewData$pr <- exp(NewData$pr_tr)
+NewData$pr <- exp(NewData$pr_l)
 
 # График модели после обратной трансформации
 ggplot(NewData, aes(x = pr, y = fit)) +
