@@ -45,7 +45,7 @@ title: Презентации и данные
 
 ### Тестирование гипотез
 
-- Презентация <!-- [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html) --->
+- Презентация [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html)
 - Код [2.2_hypothesis_testing_code.R](2.2_hypothesis_testing_code.R)
 - Данные 
 
