@@ -142,7 +142,7 @@ pl_cat +
   geom_smooth(method = "lm", aes(fill = "Conf.interval"), alpha = 0.4, size = 2) +
 # 2) Интервал предсказаний создаем при помощи геома ribbon ("лента")
 # Данные берем из другого датафрейма - из cat_predicted
-# ymin и ymax - эстетики геома ribbon, которые задают нижний и верхний край ленты в точках с заданным x (x = MRINACount было задано в ggplot() при создании pl_cat, поэтому сейчас его указывать не обязательно)
+# ymin и ymax - эстетики геома ribbon, которые задают нижний и верхний край ленты в точках с заданным x (x = Bwt было задано в ggplot() при создании pl_cat, поэтому сейчас его указывать не обязательно)
   geom_ribbon(data = cat_predicted,  aes(ymin = lwr, ymax = upr, fill = "Conf. area for prediction"), alpha = 0.2) +
 
 # 3) Вручную настраиваем цвета заливки при помощи шкалы fill_manual.
