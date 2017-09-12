@@ -600,7 +600,7 @@ pt(t_value_lizards, df = 198)
 Мы должны либо умножить p.value на 2, либо поделить  $\alpha$ пополам, и только после этого сравнивать их.
 
 ```{r}
-p.value <- 2 * pt(t.value, df = 198)
+p.value <- 2 * pt(t_value_lizards, df = 198)
 p.value
 ```
 
