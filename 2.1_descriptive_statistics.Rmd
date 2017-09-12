@@ -59,7 +59,28 @@ apples
 
 ## Медиана
 
+
 Чтобы получить медиану, мы должны ранжировать, или отсортировать, наш вектор по возрастанию:
+
+```{r}
+sort(apples)
+```
+
+
+
+<div class="columns-2">
+
+<center>
+![](images/2.1_apples_mixed.png)
+
+![](images/2.1_apples_sorted.png)
+
+</center>
+
+<div/>
+
+## Медиана
+
 
 ```{r}
 sort(apples)
@@ -72,7 +93,6 @@ sort(apples)
 ```{r}
 median(apples)
 ```
-
 
 ## Медиана: устойчивость к выбросам
 
