@@ -51,7 +51,7 @@ title: Презентации и данные
 
 ### Анализ мощности
 
-- Презентация <!-- [2.3_power.html](2.3_power.html) --->
+- Презентация [2.3_power.html](2.3_power.html)
 - Код [2.3_power_code.R](2.3_power_code.R)
 - Данные
     + [remission.xlsx](data/remission.xlsx)
