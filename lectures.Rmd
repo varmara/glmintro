@@ -6,7 +6,7 @@ title: Презентации и данные
 
 ### Планирование экспериментов
 
-- Презентация [pdf](1.1_experimental_design.pdf)
+- Презентация <!-- [pdf](1.1_experimental_design.pdf) -->
 
 ### Знакомство с R
 
@@ -18,7 +18,7 @@ title: Презентации и данные
 
 - [Cheat-sheet по RStudio](https://www.rstudio.com/wp-content/uploads/2016/01/rstudio-IDE-cheatsheet.pdf) от [RStudio](https://www.rstudio.com)
 - [Cheat-sheet по базовому R](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/base-r.pdf) от [Mhairi McNeill](http://mhairihmcneill.com/)
-- [Data import cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/source/pdfs/data-import-cheatsheet.pdf)
+- [Data import cheat-sheet](https://github.com/rstudio/cheatsheets/raw/master/source/pdfs/data-import-cheatsheet.pdf)
 
 ### Графики в R
 
@@ -68,30 +68,35 @@ title: Презентации и данные
 
 ### Оценка взаимосвязей: корреляция, линейная регрессия
 
-- Презентация <!-- [3.2_lm.html](3.2_lm.html) --->
+- Презентация [3.2_lm.html](3.2_lm.html)
 - Код [3.2_lm_exerc.R](3.2_lm_exerc.R)
 - Данные
     + [hellung.xls](data/hellung.xls)
     + [secher.xls](data/secher.xls)
     + [kfm.xls](data/kfm.xls)
-- Упражнения
+    + [catsM.xlsx](data/catsM.xlsx)
+- Упражненияb
     + [3.2_lm_exerc_2.R](3.2_lm_exerc_2.R)
     + [3.2_lm_exerc_3.R](3.2_lm_exerc_3.R)
 
 
 ### Условия применимости линейной регрессии
 
-- Презентация <!-- [3.3_assumptions.html](3.3_assumptions.html) --->
+- Презентация [3.3_assumptions.html](3.3_assumptions.html)
 - Код [3.3_assumptions_code.R](3.3_assumptions_code.R)
 - Данные
     + [orly_owl_Lin_4p_5_flat.txt](data/orly_owl_Lin_4p_5_flat.txt)
     + [catsM.xlsx](data/catsM.xlsx)
+    + [calcium.xlsx](data/calcium.xlsx)
+    + [progesterone_Brutsaert_et al_2002_lm.xlsx](data/progesterone_Brutsaert_et al_2002_lm.xlsx)
+    + [GAGurine.xlsx](data/GAGurine.xlsx)
+    + [mutations_Kong_et_al_2012_lm_assumptions.xlsx](data/mutations_Kong_et_al_2012_lm_assumptions.xlsx)
 - Упражнения (разбор готового кода)
-    + Код [3.3_assumptions_Ex_calcium.R](3.3_assumptions_Ex_calcium.R) | Данные [calcium.xlsx](data/calcium.xlsx)
-    + Код [3.3_assumptions_Ex_progesteron.R](3.3_assumptions_Ex_progesteron.R) | Данные [progesterone_Brutsaert_et al_2002_lm.xlsx](data/progesterone_Brutsaert_et al_2002_lm.xlsx)
+    + [3.3_assumptions_Ex_calcium.R](3.3_assumptions_Ex_calcium.R)
+    + [3.3_assumptions_Ex_progesteron.R](3.3_assumptions_Ex_progesteron.R)
 - Упражнения (написание кода)
-    + Задание [3.3_assumptions_task_GAG.R](3.3_assumptions_task_GAG.R) | Данные [GAGurine.xlsx](data/GAGurine.xlsx)
-    + Задание [3.3_assumptions_task_Mutations.R](3.3_assumptions_task_Mutations.R) | Данные [mutations_Kong_et_al_2012_lm_assumptions.xlsx](data/mutations_Kong_et_al_2012_lm_assumptions.xlsx)
+    + [3.3_assumptions_task_GAG.R](3.3_assumptions_task_GAG.R)
+    + [3.3_assumptions_task_Mutations.R](3.3_assumptions_task_Mutations.R)
 
 ## День 4
 

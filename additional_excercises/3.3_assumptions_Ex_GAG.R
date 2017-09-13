@@ -48,7 +48,7 @@ ggplot(gag, aes(x = Age, y = log(GAG))) +
   geom_point() +
   geom_smooth(method = "lm")
 # не очень хорошо,  но сойдет
-ggplot(gag, aes(x = Age, y = GAG^(0.7))) +
+ggplot(gag, aes(x = Age, y = GAG^(0.125))) +
   geom_point() +
   geom_smooth(method = "lm")
 # не оченьv
@@ -98,31 +98,6 @@ gg_res
 #### Описываем результаты ####
 summary(M1)
 
-# Call:
-#   lm(formula = GAG_l ~ Age, data = gag)
-#
-# Residuals:
-#   Min     1Q Median     3Q    Max
-# -1.573 -0.214 -0.047  0.155  1.296
-#
-# Coefficients:
-#   Estimate Std. Error t value Pr(>|t|)
-# (Intercept)    2.966      0.029   102.1   <2e-16 ***
-#   Age           -0.114      0.004   -28.4   <2e-16 ***
-#   ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-#
-# Residual standard error: 0.353 on 312 degrees of freedom
-# Multiple R-squared:  0.722,	Adjusted R-squared:  0.721
-# F-statistic:  810 on 1 and 312 DF,  p-value: <2e-16
-
-# Концентрация глюкозаминогликанов в моче с возрастом убывает (t-тест, p < 0.01 )
-
-## Уравнение модели
-# GAG_l = 2.97 - 0.11Age
-
-## Доля объясненной изменчивости
-# Adjusted R-squared:  0.721
 
 #### График модели  ####
 
@@ -155,9 +130,9 @@ NewData$lwr_tr <- exp(NewData$lwr)
 
 # График модели после обратной трансформации
 ggplot(NewData, aes(x = Age, y = GAG)) +
-  geom_ribbon(alpha = 0.5, aes(ymin = lwr_tr, ymax = upr_tr), fill = "red") +
+  geom_point(data = gag, aes(x = Age, y = GAG), alpha = 0.5) +
   geom_line() +
-  geom_point(data = gag, aes(x = Age, y = GAG), alpha = 0.5)
+  geom_ribbon(alpha = 0.5, aes(ymin = lwr_tr, ymax = upr_tr), fill = "red")
 
 # Трансформация не помогла, возможно, эти данные стоит
 #   при помощи нелинейной регрессии

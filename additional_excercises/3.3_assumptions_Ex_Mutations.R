@@ -117,14 +117,12 @@ set.seed(293234)
 qqPlot(M1)
 # OK
 
-# Итог: на графике остатков видно, что связь нелинейна,
-# необходима трансформация или применение нелинейной
-# регрессии
+# Итог:
 
 #### ВАРИАНТ C ТРАНСФОРМАЦИЕЙ ############
 
 # Трансформируем предиктор
-mut$pr_tr <- sqrt(mut$Fage)
+mut$pr_tr <- log(mut$Fage)
 
 M2 <- lm(Nmut ~ pr_tr, data = mut)
 summary(M2)
@@ -156,31 +154,7 @@ gg_res
 #### Описываем результаты ####
 summary(M2)
 
-# Call:
-#   lm(formula = Nmut ~ pr_tr, data = mut)
-#
-# Residuals:
-#   Min     1Q Median     3Q    Max
-# -8.60  -5.06  -1.24   3.17  19.74
-#
-# Coefficients:
-#   Estimate Std. Error t value Pr(>|t|)
-# (Intercept)   -22.10      13.82   -1.60     0.13
-# pr_tr          15.59       2.65    5.87 0.000012 ***
-#   ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-#
-# Residual standard error: 7.03 on 19 degrees of freedom
-# Multiple R-squared:  0.645,	Adjusted R-squared:  0.626
-# F-statistic: 34.5 on 1 and 19 DF,  p-value: 0.0000118
 
-#
-
-## Уравнение модели
-# Nmut = 64.09 + 0.0001 pr_tr
-
-## Доля объясненной изменчивости
-# Adjusted R-squared:  0.21
 
 #### График модели  ####
 
@@ -207,7 +181,7 @@ NewData$upr <- NewData$fit + 1.96 * NewData$SE
 NewData$lwr <- NewData$fit - 1.96 * NewData$SE
 
 # Обратная трансформация предиктора
-NewData$Fage <- NewData$pr_tr^2
+NewData$Fage <- exp(NewData$pr_tr)
 
 # График модели после обратной трансформации
 ggplot(NewData, aes(x = Fage, y = fit)) +
