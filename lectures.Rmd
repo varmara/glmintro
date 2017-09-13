@@ -75,7 +75,6 @@ title: Презентации и данные
     + [secher.xls](data/secher.xls)
     + [kfm.xls](data/kfm.xls)
 - Упражнения
-    
     + [3.2_lm_exerc_2.R](3.2_lm_exerc_2.R)
     + [3.2_lm_exerc_3.R](3.2_lm_exerc_3.R)
 
