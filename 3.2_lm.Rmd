@@ -77,6 +77,7 @@ nrow(cat)
 ##Есть ли отскакивающие значения? {.smaller}
 
 ```{r fig.height=2}
+library(ggplot2)
 gg_dot <- ggplot(cat, aes(y = 1:nrow(cat))) + geom_point()
 gg_dot + aes(x = Bwt)
 gg_dot + aes(x = Hwt)
@@ -290,7 +291,7 @@ $response = 4.6 + 5.3I_{Level2} + 9.9 I_{Level3} + \epsilon_i$
 $I_{i}$ - dummy variable   
 
 
-## Случайная и фиксиованая часть модели
+## Случайная и фиксированая часть модели
 В стохастические модели выделяется две части:
 
 **Фиксированная часть:** $у_i = 2 + 5x_i$   
@@ -356,11 +357,83 @@ stature of their Parents" (цит. по `Legendre & Legendre, 1998`)
 
 
 ## Кратко о методе макcимального правдоподобия 
-<img src="images/Zuur.png" width="600" height="500" >
+```{r gg-norm-tunnel, echo=FALSE, fig.height=7, purl=FALSE}
+## Based on code by Arthur Charpentier:
+## http://freakonometrics.hypotheses.org/9593
+## TODO: wrap it into a function and adapt it for use with other distributions
+## as Markus Gesmann has done here
+## http://www.magesblog.com/2015/08/visualising-theoretical-distributions.html
 
-<div class = "footnote">
-(из кн. Zuur et al., 2009, стр. 19)  
-</div>
+n <- 2
+X <- cat$Bwt 
+Y <- cat$Hwt
+df <- data.frame(X,Y)
+
+# regression
+reggig <- glm(Y ~ X, data = df, family = gaussian(link = "identity"))
+
+# empty plot
+vX <- seq(min(X) - 0.1, max(X) + 0.1, length = n)
+vY <- seq(min(Y) - 10, max(Y) + 10, length = n)
+mat <- persp(x = vX, y = vY, z = matrix(0, n, n), 
+             zlim = c(0, 0.1),
+             theta =  - 30, phi = 20, expand = 0.1,
+             ticktype  = "detailed",  box = FALSE, border = "gray60")
+
+x <- seq(min(X), max(X), length = 501)
+
+# expected values
+C <- trans3d(x, predict(reggig, newdata = data.frame(X = x), type = "response"), rep(0, length(x)), mat)
+lines(C, lwd = 2)
+
+sdgig <- sqrt(summary(reggig)$dispersion)
+
+# 1SD
+y1 <- qnorm(.95, predict(reggig, newdata = data.frame(X = x), type = "response"),  sdgig)
+C <- trans3d(x, y1, rep(0, length(x)), mat)
+lines(C, lty = 2, col = "#d95f02")
+y2 <- qnorm(.05, predict(reggig, newdata = data.frame(X = x), type = "response"),  sdgig)
+C <- trans3d(x, y2, rep(0, length(x)), mat)
+lines(C, lty = 2, col = "#d95f02")
+
+# C <- trans3d(c(x, rev(x)), c(y1, rev(y2)), rep(0, 2 * length(x)), mat)
+# polygon(C, border = NA, col = "yellow")
+
+# data points
+C <- trans3d(X, Y, rep(0, length(X)), mat)
+points(C, pch = 1, col = "black", cex = 0.4)
+
+# density curves
+n <- 6
+vX <- seq(min(X), max(X), length = n)
+
+mgig <- predict(reggig, newdata = data.frame(X = vX))
+
+sdgig <- sqrt(summary(reggig)$dispersion)
+
+for(j in n:1){
+  stp <- 251
+  x <- rep(vX[j], stp)
+  y <- seq(min(min(Y) - 10, 
+               qnorm(.05, 
+                     predict(reggig, 
+                             newdata = data.frame(X = vX[j]), 
+                             type = "response"),  
+                     sdgig)), 
+           max(Y) + 10, 
+           length = stp)
+  z0 <- rep(0, stp)
+  z <- dnorm(y,  mgig[j],  sdgig)
+  C <- trans3d(c(x, x), c(y, rev(y)), c(z, z0), mat)
+  polygon(C, border = NA, col = "light blue", density = 40)
+  C <- trans3d(x, y, z0, mat)
+  lines(C, lty = 2, col = "grey60")
+  C <- trans3d(x, y, z, mat)
+  lines(C, col = "steelblue")
+}
+```
+
+
 
 ## Кратко о методе макcимального правдоподобия 
 Симулированный пример с использованием `geom_violin()`
