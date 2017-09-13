@@ -419,9 +419,9 @@ sqrt(sum((raw.deviates)^2) / length(apples))
 - плохо работают с несимметричными распределениями.
 
 
-## В какой из выборок разброс максимален? В какой минимален?
+## Сравните разброс в выборках
 
-```{r sd_compare1, echo=FALSE, purl=FALSE, fig.width=5.5, fig.height = 5, warning=FALSE, message=FALSE}
+```{r sd_compare1, echo=FALSE, purl=FALSE, fig.width=9, fig.height = 6, warning=FALSE, message=FALSE}
 set.seed(999)
 y1 <- rnorm(500, 10, 4)
 y2 <- rnorm(500, 10, 1)
@@ -449,19 +449,19 @@ grid.arrange(arrangeGrob(gy1, gy2, gy3, ncol = 1), arrangeGrob(gy4, gy5, gy6, nc
 
 ## Проверим себя
 
-```{r sd_compare2, echo=FALSE, purl=FALSE, fig.width=5.5, fig.height = 5, warning=FALSE, message=FALSE}
+```{r sd_compare2, echo=FALSE, purl=FALSE, fig.width=9, fig.height = 6, warning=FALSE, message=FALSE}
 
-gy1a <- ggplot(sd_compare, aes(x = y1)) +geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20)) + labs(x = round(sd(y1),2))
+gy1a <- ggplot(sd_compare, aes(x = y1)) +geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20)) + labs(x = round(sd(y1),1))
 
-gy2a <- ggplot(sd_compare, aes(x = y2)) +geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y2),2))
+gy2a <- ggplot(sd_compare, aes(x = y2)) +geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y2),1))
 
 gy3a <- ggplot(sd_compare, aes(x = y3)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y3),2))
 
-gy4a <- ggplot(sd_compare, aes(x = y4)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y4),2))
+gy4a <- ggplot(sd_compare, aes(x = y4)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y4),1))
 
-gy5a <- ggplot(sd_compare, aes(x = y5)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = mean(y5), color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y5),2))
+gy5a <- ggplot(sd_compare, aes(x = y5)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = mean(y5), color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y5),1))
 
-gy6a <- ggplot(sd_compare, aes(x = y6)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y6),2))
+gy6a <- ggplot(sd_compare, aes(x = y6)) + geom_histogram(fill="steelblue", color = "grey20") +  geom_vline (xintercept = 10, color = "red", linetype = "dashed", size - 1.5) + scale_x_continuous(limits=c(0,20))  + labs(x = round(sd(y6),1))
 
 grid.arrange(arrangeGrob(gy1a, gy2a, gy3a, ncol = 1), arrangeGrob(gy4a, gy5a, gy6a, ncol = 1), ncol = 2)
 ```
