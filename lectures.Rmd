@@ -6,7 +6,7 @@ title: Презентации и данные
 
 ### Планирование экспериментов
 
-- Презентация <!-- [pdf](1.1_experimental_design.pdf) -->
+- Презентация [pdf](1.1_experimental_design.pdf)
 
 ### Знакомство с R
 
@@ -17,7 +17,8 @@ title: Презентации и данные
 Дополнительные материалы:
 
 - [Cheat-sheet по RStudio](https://www.rstudio.com/wp-content/uploads/2016/01/rstudio-IDE-cheatsheet.pdf) от [RStudio](https://www.rstudio.com)
-- [Cheat-sheet по базовому R](https://github.com/rstudio/cheatsheets/raw/master/old/pdfs/base-r.pdf) от [Mhairi McNeill](http://mhairihmcneill.com/)
+- Очень краткая шпаргалка по R [Cheat-sheet по базовому R](http://www.rstudio.com/wp-content/uploads/2016/06/r-cheat-sheet.pdf) от [Mhairi McNeill](http://mhairihmcneill.com/)
+- Более подробная шпаргалка [R reference card](https://cran.r-project.org/doc/contrib/Short-refcard.pdf) от Tom Short
 - [Data import cheat-sheet](https://github.com/rstudio/cheatsheets/raw/master/source/pdfs/data-import-cheatsheet.pdf)
 
 ### Графики в R
@@ -39,19 +40,19 @@ title: Презентации и данные
 
 ### Описательная статистика
 
-- Презентация [2.1_descriptive_statistics.html](2.1_descriptive_statistics.html)
+- Презентация <!-- [2.1_descriptive_statistics.html](2.1_descriptive_statistics.html) -->
 - Код [2.1_descriptive_statistics_code.R](2.1_descriptive_statistics_code.R)
 - Данные [data/2.1_diatome_count.csv](data/2.1_diatome_count.csv)
 
 ### Тестирование гипотез
 
-- Презентация [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html)
+- Презентация <!-- [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html) -->
 - Код [2.2_hypothesis_testing_code.R](2.2_hypothesis_testing_code.R)
 - Данные [data/2.2_aml.csv](data/2.2_aml.csv)
 
 ### Анализ мощности
 
-- Презентация [2.3_power.html](2.3_power.html)
+- Презентация <!-- [2.3_power.html](2.3_power.html) -->
 - Код [2.3_power_code.R](2.3_power_code.R)
 - Данные
     + [remission.xlsx](data/remission.xlsx)
@@ -60,7 +61,7 @@ title: Презентации и данные
 
 ### Множественное тестирование
 
-- Презентация [2.4_multiple_comparisons.html](2.4_multiple_comparisons.html)
+- Презентация <!-- [2.4_multiple_comparisons.html](2.4_multiple_comparisons.html) -->
 - Код [2.4_multiple_comparisons_code.R](2.4_multiple_comparisons_code.R)
 - Данные [fake_expression_samples.csv](data/fake_expression_samples.csv)
 
@@ -68,7 +69,7 @@ title: Презентации и данные
 
 ### Оценка взаимосвязей: корреляция, линейная регрессия
 
-- Презентация [3.2_lm.html](3.2_lm.html)
+- Презентация <!-- [3.2_lm.html](3.2_lm.html) -->
 - Код [3.2_lm_exerc.R](3.2_lm_exerc.R)
 - Данные
     + [hellung.xls](data/hellung.xls)
@@ -82,7 +83,7 @@ title: Презентации и данные
 
 ### Условия применимости линейной регрессии
 
-- Презентация [3.3_assumptions.html](3.3_assumptions.html)
+- Презентация <!-- [3.3_assumptions.html](3.3_assumptions.html) -->
 - Код [3.3_assumptions_code.R](3.3_assumptions_code.R)
 - Данные
     + [orly_owl_Lin_4p_5_flat.txt](data/orly_owl_Lin_4p_5_flat.txt)
