@@ -47,7 +47,7 @@ title: Презентации и данные
 
 - Презентация [2.2_hypothesis_testing.html](2.2_hypothesis_testing.html)
 - Код [2.2_hypothesis_testing_code.R](2.2_hypothesis_testing_code.R)
-- Данные 
+- Данные [data/2.2_aml.csv](data/2.2_aml.csv)
 
 ### Анализ мощности
 

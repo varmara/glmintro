@@ -331,7 +331,7 @@ but some are useful"
 <div class="columns-2">
 
 
-<img src="images/Galton.png" width="220" height="299" >
+<img src="images/Galton.jpg" width="220" height="299" >
 
 
 Френсис Галтон (Francis Galton)
