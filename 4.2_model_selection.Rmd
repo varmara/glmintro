@@ -258,7 +258,7 @@ colSums(is.na(prost))
 ## Есть два дискретных фактора, временно не будем их учитывать (пока не научимся)
 
 ```{r fig.width=10, fig.height=5}
-pairs(prost)
+scatterplotMatrix(prost[, -9])
 ```
 
 ## Проверяем на колинеарность предикторов
@@ -269,81 +269,69 @@ library(car)
 vif(M1) # При желании, можно удалить lcp, но мы не будем
 ```
 
-## Выбросы, график остатков, квантильный график
 
-```{r fig.width=10, fig.show='hold'}
-set.seed(893247)
-cook_cutoff <- 4 / (nrow(prost) - length(coef(M1) - 2))
-op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
-plot(M1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
-residualPlot(M1)        # График остатков
-qqPlot(M1)              # Квантильный график остатков
-par(op)
+## Решение
+
+### 1) График расстояния Кука 
+
+- Выбросов нет
+
+```{r solution-0, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
+M1_diag <- fortify(M1)
+ggplot(M1_diag, aes(x = 1:nrow(M1_diag), y = .cooksd)) + 
+  geom_bar(stat = "identity")
 ```
 
->- Нелинейный паттерн в остатках? Возможно, нам нужно подобрать GAM? Или это неучтенные факторы?
+## Решение
 
-## Заготовка графика остатков в ggplot
+### 2) График остатков от предсказанных значений
 
-```{r}
-M1_diag <- data.frame(prost, 
-                      .resid = resid(M1, type = "pearson"),
-                      .fitted = fitted(M1))
-gg_res <- ggplot(M1_diag, aes(x = .fitted, y = .resid)) + 
-  geom_point() + geom_smooth(method = "loess") +
-  geom_hline(yintercept = 0)
-gg_res
+- Выбросов нет
+- Гетерогенность дисперсии не выявляется
+- Есть намек на нелинейность связей
+
+```{r solution-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
+gg_resid <- ggplot(data = M1_diag, aes(x = .fitted, y = .stdresid)) + 
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
 ```
 
->- Выглядит подозрительно нелинейно
 
+## Решение
 
-## Графики остатков от предикторов в модели
+### 3) Графики остатков от предикторов в модели и нет
 
-```{r eval=FALSE}
-# Предикторы в модели lcavol, lweight, age, lbph, lcp, pgg45
-gg_res %+% aes(x = lcavol)
-gg_res %+% aes(x = lweight)
-gg_res %+% aes(x = age)  #
-gg_res %+% aes(x = lbph) #
-gg_res %+% aes(x = lcp)
-gg_res %+% aes(x = pgg45 ) # нелинейый паттерн
-```
-
-## Графики остатков от предикторов в модели 
-
-```{r echo=FALSE, fig.height=6, fig.width=10, purl=FALSE}
+```{r solution-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=5, echo=FALSE}
+res_1 <- gg_resid + aes(x = lcavol)
+res_2 <- gg_resid + aes(x = lweight)
+res_3 <- gg_resid + aes(x = age)
+res_4 <- gg_resid + aes(x = lbph)
+res_5 <- gg_resid + aes(x = svi)
+res_6 <- gg_resid + aes(x = lcp)
+res_7 <- gg_resid + aes(x = gleason)
+res_8 <- gg_resid + aes(x = pgg45)
 library(gridExtra)
-grid.arrange(
-# Предикторы в модели lcavol, lweight, age, lbph, lcp, pgg45
-gg_res %+% aes(x = lcavol),
-gg_res %+% aes(x = lweight),
-gg_res %+% aes(x = age),
-gg_res %+% aes(x = lbph), 
-gg_res %+% aes(x = lcp),
-gg_res %+% aes(x = pgg45 ), # нелинейый паттерн
-ncol = 2)
+grid.arrange(res_1, res_2, res_3, res_4,
+             res_5, res_6, res_7, res_8, nrow = 2)
 ```
 
-## Графики остатков от предикторов не в модели 
+## Решение
 
-```{r eval=FALSE}
-# Дискретные предикторы не в модели svi, gleason
-gg_res %+% aes(x = factor(svi)) + geom_boxplot()
-gg_res %+% aes(x = factor(gleason)) + geom_boxplot()
-# Похоже, что есть зависимость
-# Возможно, добавление этих факторов в модель улучшит дело --- в следующий раз
+### 3) Код для графиков остатков от предикторов в модели и нет
+
+```{r solution-2, fig.show='hide', purl=FALSE, echo=TRUE}
 ```
 
-```{r echo=FALSE, purl=FALSE}
-grid.arrange(
-# Дискретные предикторы не в модели svi, gleason
-gg_res %+% aes(x = factor(svi)) + geom_boxplot(),
-gg_res %+% aes(x = factor(gleason)) + geom_boxplot(),
-ncol = 2)
-# Похоже, что есть зависимость
-# Возможно, добавление этих факторов в модель улучшит дело --- в следующий раз
+## Решение
+
+### 4) Квантильный график остатков
+
+- Отклонения от нормального распределения остатков не выявляются
+
+```{r solution-3, purl=FALSE, fig.width=4, fig.height=4}
+qqPlot(M1)
 ```
+
 
 ## Влияют ли предикторы?
 
@@ -559,87 +547,74 @@ summary(M5)
 
 Проверьте финальную модель на выполнение условий применимости
 
-## Выбросы, график остатков, квантильный график
 
-```{r fig.width=10, fig.show='hold', purl=FALSE}
-set.seed(293234)
-cook_cutoff <- 4 / (nrow(prost) - length(coef(M5) - 2))
-op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
-plot(M5, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
-residualPlot(M5)        # График остатков
-qqPlot(M5)              # Квантильный график остатков
-par(op)
+
+## Решение
+
+### 1) График расстояния Кука 
+
+- Выбросов нет
+
+```{r solution-0a, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
+M5_diag <- fortify(M5)
+removed_vars <- c("lcp", "lbph", "age", "pgg45", "svi", "gleason")
+M5_diag_full <- data.frame(M5_diag, prost[, removed_vars])
+ggplot(M5_diag_full, aes(x = 1:nrow(M5_diag_full), y = .cooksd)) + 
+  geom_bar(stat = "identity")
 ```
 
-## График остатков --- заготовка
+## Решение
 
-```{r purl=FALSE}
-M_diag <- data.frame(prost, 
-                      .resid = resid(M5, type = "pearson"),
-                      .fitted = fitted(M5))
-gg_res <- ggplot(M_diag, aes(x = .fitted, y = .resid)) + 
-  geom_point() + geom_smooth(method = "loess") +
-  geom_hline(yintercept = 0)
-gg_res
-```
+### 2) График остатков от предсказанных значений
 
->- Видны нелинейные паттерны. Нужно использовать другую модель! Но мы пока продолжим, чтобы поучиться.
+- Выбросов нет
+- Гетерогенность дисперсии не выявляется
+- Есть намек на нелинейность связей
 
-## Графики остатков от предикторов в модели
-
-```{r eval=FALSE, purl=FALSE}
-# Предикторы в модели lcavol, lcp
-gg_res %+% aes(x = lcavol)
-gg_res %+% aes(x = lweight)  # нелинейый паттерн, возможно нужен GAM
-```
-
-```{r echo=FALSE, purl=FALSE}
-grid.arrange(
-# Предикторы в модели lcavol, lcp
-gg_res %+% aes(x = lcavol),
-gg_res %+% aes(x = lweight),  # нелинейый паттерн, возможно нужен GAM
-ncol = 2
-)
-```
-
-## Графики остатков от непрерывных предикторов не в модели
-```{r eval=FALSE, purl=FALSE}
-# Непрерывные предикторы не в модели lweight, age, lbph, pgg45, 
-gg_res %+% aes(x = age)  #
-gg_res %+% aes(x = lbph) #
-gg_res %+% aes(x = lcp)    # нелинейый паттерн
-gg_res %+% aes(x = pgg45 ) # нелинейый паттерн
-```
-
-```{r echo=FALSE, fig.height=4, purl=FALSE}
-grid.arrange(
-# Непрерывные предикторы не в модели lweight, age, lbph, pgg45, 
-gg_res %+% aes(x = age),  #
-gg_res %+% aes(x = lbph), #
-gg_res %+% aes(x = lcp),   # нелинейый паттерн
-gg_res %+% aes(x = pgg45), # нелинейый паттерн
-ncol = 2
-)
+```{r solution-1a, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
+gg_resid <- ggplot(data = M5_diag_full, aes(x = .fitted, y = .stdresid)) + 
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
 ```
 
 
-## Графики остатков от дискретных предикторов не в модели
+## Решение
 
-```{r eval=FALSE, purl=FALSE}
-# Дискретные предикторы не в модели svi, gleason
-gg_res %+% aes(x = factor(svi)) + geom_boxplot()
-gg_res %+% aes(x = factor(gleason)) + geom_boxplot()
-# Есть зависимости. Возможно, добавление этих факторов в модель улучшит дело - в следующий раз
+### 3) Графики остатков от предикторов в модели и нет
+
+```{r solution-2a, fig.show='hold', purl=FALSE, fig.width=10, fig.height=5, echo=FALSE}
+res_1 <- gg_resid + aes(x = lcavol)
+res_2 <- gg_resid + aes(x = lweight)
+res_3 <- gg_resid + aes(x = age)
+res_4 <- gg_resid + aes(x = lbph)
+res_5 <- gg_resid + aes(x = svi)
+res_6 <- gg_resid + aes(x = lcp)
+res_7 <- gg_resid + aes(x = gleason)
+res_8 <- gg_resid + aes(x = pgg45)
+library(gridExtra)
+grid.arrange(res_1, res_2, res_3, res_4,
+             res_5, res_6, res_7, res_8, nrow = 2)
 ```
 
-```{r echo=FALSE, purl=FALSE}
-grid.arrange(
-# Дискретные предикторы не в модели svi, gleason
-gg_res %+% aes(x = factor(svi)) + geom_boxplot(),
-gg_res %+% aes(x = factor(gleason)) + geom_boxplot(),
-ncol = 2)
-# Есть зависимости. Возможно, добавление этих факторов в модель улучшит дело - в следующий раз
+## Решение
+
+### 3) Код для графиков остатков от предикторов в модели и нет
+
+```{r solution-2a, fig.show='hide', purl=FALSE, echo=TRUE}
 ```
+
+## Решение
+
+### 4) Квантильный график остатков
+
+- Отклонения от нормального распределения остатков не выявляются
+
+```{r solution-3a, purl=FALSE, fig.width=4, fig.height=4}
+qqPlot(M5)
+```
+
+
+
 
 ## Описываем финальную модель
 
@@ -864,8 +839,8 @@ GLM1 <- glm(lpsa ~ . - svi - gleason, data = prost)
 
 Тест отношения правдоподобий можно сделать с помощью тех же функций, что и частный F-критерий:
 
-- по-одному `anova(mod1, mod2, test = "Chisq")`
-- все сразу `drop1(mod1, test = "Chisq")`
+- по-одному `anova(M1, mod2, test = "Chisq")`
+- все сразу `drop1(M1, test = "Chisq")`
 
 
 ## Решение (шаг 1)
