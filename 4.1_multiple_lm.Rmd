@@ -210,7 +210,7 @@ summary(mod1)
 
 - Выбросов нет
 
-```{r solution-0, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+```{r solution-0, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
 mod1_diag <- fortify(mod1)
 ggplot(mod1_diag, aes(x = 1:nrow(mod1_diag), y = .cooksd)) + 
   geom_bar(stat = "identity")
@@ -224,7 +224,7 @@ ggplot(mod1_diag, aes(x = 1:nrow(mod1_diag), y = .cooksd)) +
 - Гетерогенность дисперсии не выявляется
 - Есть намек на нелинейность связей
 
-```{r solution-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+```{r solution-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
 gg_resid <- ggplot(data = mod1_diag, aes(x = .fitted, y = .stdresid)) + 
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
@@ -235,7 +235,7 @@ gg_resid
 
 ### 3) Графики остатков от предикторов в модели и нет
 
-```{r solution-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+```{r solution-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=5, echo=FALSE}
 res_1 <- gg_resid + aes(x = lcavol)
 res_2 <- gg_resid + aes(x = lweight)
 res_3 <- gg_resid + aes(x = age)
@@ -251,11 +251,18 @@ grid.arrange(res_1, res_2, res_3, res_4,
 
 ## Решение
 
+### 3) Код для графиков остатков от предикторов в модели и нет
+
+```{r solution-2, fig.show='hide', purl=FALSE, echo=TRUE}
+```
+
+## Решение
+
 ### 4) Квантильный график остатков
 
 - Отклонения от нормального распределения остатков не выявляются
 
-```{r solution-3, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+```{r solution-3, purl=FALSE, fig.width=4, fig.height=4}
 qqPlot(mod1)
 ```
 
