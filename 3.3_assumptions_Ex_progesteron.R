@@ -25,6 +25,7 @@
 
 library(readxl)
 library(ggplot2)
+library(car)
 
 #### Знакомство с данными ##################################
 

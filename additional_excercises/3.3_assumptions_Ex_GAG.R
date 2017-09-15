@@ -22,6 +22,7 @@
 
 library(readxl)
 library(ggplot2)
+library(car)
 
 #### Знакомство с данными ####
 
@@ -51,26 +52,24 @@ ggplot(gag, aes(x = Age, y = GAG)) +
 ggplot(gag, aes(x = Age, y = GAG)) +
   geom_point() +
   geom_smooth(method = "lm")
+# Сразу понятно, что линейная регрессия по сырым данным здесь не подойдет
 
 # Попробуем трансформировать переменные
 ggplot(gag, aes(x = Age, y = log(GAG))) +
   geom_point() +
   geom_smooth(method = "lm")
 # не очень хорошо,  но сойдет
-ggplot(gag, aes(x = Age, y = GAG^(0.125))) +
+ggplot(gag, aes(x = Age, y = GAG^(0.1))) +
   geom_point() +
   geom_smooth(method = "lm")
-# не оченьv
-ggplot(gag, aes(x = Age, y = sqrt(GAG))) +
+# не очень, но похоже
+ggplot(gag, aes(x = log(Age), y = GAG)) +
   geom_point() +
   geom_smooth(method = "lm")
-# не очень
-ggplot(gag, aes(x = Age, y = GAG^(1/4))) +
-  geom_point() +
-  geom_smooth(method = "lm")
-# не очень
+# Линейно, но будет гетерогенность дисперсии.
+# Печально, но придется трансформировать отклик, что плохо
 
-# - трансформируем данные.
+# - трансформируем данные
 
 #### ВАРИАНТ C ТРАНСФОРМАЦИЕЙ ############
 
@@ -82,31 +81,59 @@ summary(M1)
 
 #### Проверяем условия применимости ####
 
-## Расстояние Кука
-cook_cutoff <- 4 / (nrow(gag) - length(coef(M1) - 2))
-plot(M1, which = 4, cook.levels = cook_cutoff)
-# OK
+# Данные для графиков остатков
+M1_diag <- fortify(M1)
 
-## График остатков
-residualPlot(M1)
-# трансформация плохо помогла...
+# 1) График расстояния Кука
+ggplot(M1_diag, aes(x = 1:nrow(M1_diag), y = .cooksd)) +
+  geom_bar(stat = "identity")
 
-## Квантильный график остатков
-set.seed(293234)
+# 2) График остатков от предсказанных значений
+gg_resid <- ggplot(data = M1_diag, aes(x = .fitted, y = .stdresid)) +
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
+# Видна нелинейность и небольшая гетерогенность дисперсий
+
+# 3) Графики остатков от предикторов в модели и не в модели
+gg_resid + aes(x = Age)
+# Видна нелинейность и небольшая гетерогенность дисперсий
+
+# 4) Квантильный график остатков
 qqPlot(M1)
-# OK
+# Видны отклонения от нормального распределения
 
-## Графики остатков от предикторов в модели и нет
-M1_diag <- data.frame(gag,
-                      .resid = resid(M1, type = "pearson"))
-gg_res <- ggplot(M1_diag, aes(x = Age, y = .resid)) +
-  geom_hline(yintercept = 0) +
-  geom_point()
-gg_res
+# Итог:
+# На самом деле эти данные нужно анализировать при помощи нелинейной регрессии
 
 #### Описываем результаты ####
 summary(M1)
 
+# Call:
+#   lm(formula = GAG_l ~ Age, data = gag)
+#
+# Residuals:
+#   Min       1Q   Median       3Q      Max
+# -1.57292 -0.21444 -0.04702  0.15543  1.29594
+#
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)
+# (Intercept)  2.966099   0.029050  102.10   <2e-16 ***
+#   Age         -0.113917   0.004003  -28.45   <2e-16 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#
+# Residual standard error: 0.353 on 312 degrees of freedom
+# Multiple R-squared:  0.7218,	Adjusted R-squared:  0.721
+# F-statistic: 809.7 on 1 and 312 DF,  p-value: < 2.2e-16
+
+# Способ 1: Концентрация глюкозаминогликанов в моче достоверно уменьшается с возрастом (t = -28.45, df = 312, p < 0.01)
+
+# Способ 2: Концентрация глюкозаминогликанов в моче достоверно уменьшается с возрастом (F = 810, df1 = 1, df2 = 312, p < 0.01)
+
+# Уравнение модели:
+# GAG_l = 2.97 - 0.11Age
+
+# Модель описывает 72% общей изменчивости (R^2 = 0.72)
 
 #### График модели  ####
 
@@ -139,10 +166,10 @@ NewData$lwr_tr <- exp(NewData$lwr)
 
 # График модели после обратной трансформации
 ggplot(NewData, aes(x = Age, y = GAG)) +
-  geom_point(data = gag, aes(x = Age, y = GAG), alpha = 0.5) +
-  geom_line() +
-  geom_ribbon(alpha = 0.5, aes(ymin = lwr_tr, ymax = upr_tr), fill = "red")
+  geom_point(data = gag, aes(x = Age, y = GAG), alpha = 0.3) +
+  geom_ribbon(alpha = 0.7, aes(ymin = lwr_tr, ymax = upr_tr), fill = "red") +
+  geom_line(color = "blue")
 
 # Трансформация не помогла, возможно, эти данные стоит
-#   при помощи нелинейной регрессии
+# анализировать при помощи нелинейной регрессии
 

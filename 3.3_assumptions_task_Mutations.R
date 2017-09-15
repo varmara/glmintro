@@ -29,6 +29,7 @@
 
 library(readxl)
 library(ggplot2)
+library(car)
 
 #### Знакомство с данными ####
 
@@ -37,3 +38,4 @@ library(ggplot2)
 
 # Открываем данные
 mut <- read_excel("data/mutations_Kong_et_al_2012_lm_assumptions.xlsx", sheet = 1)
+

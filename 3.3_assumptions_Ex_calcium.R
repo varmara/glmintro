@@ -19,6 +19,7 @@
 
 library(readxl)
 library(ggplot2)
+library(car)
 
 #### Знакомство с данными ##################################
 
@@ -34,9 +35,12 @@ str(calc)
 # Есть ли пропущенные значения?
 colSums(is.na(calc))
 
-# Сколько было разных экспозиций, и сколько было повторностей?
-length(unique(calc$time))
+
+# Сколько было повторностей в каждой экспозиции?
 table(calc$time)
+
+# Сколько было разных экспозиций?
+length(unique(calc$time))
 
 # Есть ли выбросы? Построим дот-плот
 gg_dot <- ggplot(calc, aes(y = 1:nrow(calc))) + geom_point()
@@ -76,6 +80,10 @@ ggplot(calc, aes(x = time, y = (cal)^2)) +
 
 M1 <- lm(cal ~ time, data = calc)
 summary(M1)
+
+# Уравнение линейной регрессии:
+# cal = 1.03 + 0.24time
+
 # регрессия объясняет довольно много изменчивости
 # Adjusted R-squared:  0.741
 
@@ -208,4 +216,5 @@ ggplot(NewData, aes(x = time, y = fit)) +
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr)) +
   geom_line() +
   geom_point(data = calc, aes(x = time, y = cal))
+
 
