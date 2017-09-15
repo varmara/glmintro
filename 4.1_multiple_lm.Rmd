@@ -1,7 +1,7 @@
 ---
 title: "Множественная линейная регрессия"
 subtitle: 
-author: "Вадим Хайтов"
+author: "Вадим Хайтов, Марина Варфоломеева"
 output:
   ioslides_presentation:
     css: assets/my_styles.css
@@ -28,36 +28,30 @@ opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, 
 + Подобрать множественную линейную модель
 + Протестировать ее статистическую значимость и валидность
 
-## Пример: связь между размером злокачественной опухоли простаты и прочими клиническими параметрами {.columns-2}
-Вопрос: можно ли судить о величине опухоли базируясь на знаниях клинических параметров. 
+## Пример: Опухоль простаты
+
+Можно ли судить о величине злокачественной опухоли простаты базируясь на знаниях клинических параметров? (Данные Stamey et al., 1989)
 
 Исследовано 97 пациентов, перенесших простатотомию. 
 
-Источник: Stamey, T.A., Kabalin, J.N., McNeal, J.E., Johnstone, I.M., Freiha, F., Redwine, E.A. and Yang, N. (1989) Prostate specific antigen in the diagnosis and treatment of adenocarcinoma of the prostate: II. radical prostatectomy treated patients, Journal of Urology 141(5), 1076–1083.
-
 **Зависимая перменная**
 
-- lcavol - log(cancer volume)
+- `lpsa` --- логарифм концентрации простат-специфичного антигена
 
 **Предикторы**
 
-lweight - log(prostate weight)
-
-age - Возраст
-
-lbph - log(benign prostatic hyperplasia amount)
-
-svi - seminal vesicle invasion
-
-lcp - log(capsular penetration)
-
-gleason - Gleason score
-
-pgg45 - percentage Gleason scores 4 or 5
-
-lpsa - log(prostate specific antigen)
+- `lcavol` --- логарифм объема опухоли
+- `lweight` --- логарифм веса
+- `age` --- возраст пациента
+- `lbph` --- логарифм степени доброкачественной гиперплазии
+- `svi` --- поражение семенных пузырьков
+- `lcp` --- логарифм меры поражения капсулы
+- `gleason` --- оценка по шкале Глисона
+- `pgg45` --- доля оценок 4 и 5 по шкале Глисона
+- `lpsa` --- логарифм концентрации простат-специфичного антигена
 
 
+<!-- <small>Источник: Stamey, T.A., Kabalin, J.N., McNeal, J.E., Johnstone, I.M., Freiha, F., Redwine, E.A. and Yang, N. (1989) Prostate specific antigen in the diagnosis and treatment of adenocarcinoma of the prostate: II. radical prostatectomy treated patients, Journal of Urology 141(5), 1076–1083.</small> -->
 
 
 ## Читаем данные
@@ -76,7 +70,7 @@ str(prost)
 ## Есть ли пропущенные значения?
 
 ```{r}
-sapply(prost, function(x)sum(is.na(x)))
+colSums(is.na(prost))
 ```
 
 
@@ -110,8 +104,8 @@ $\beta_2$, $\beta_3$, ...., $\beta_p$ - аналогично
 library(ggplot2)
 theme_set(theme_bw())
 x <- runif(100, 0, 10)
-y <- 10*x + 10 + rnorm(100, 0, 50)
-qplot (x=x, y=y) + geom_smooth(method = "lm")
+y <- 10 * x + 10 + rnorm(100, 0, 50)
+qplot (x = x, y = y) + geom_smooth(method = "lm")
 ```
 
 ## Геометрическая интерпретация множественной линейной модели
@@ -156,45 +150,42 @@ $$y_i = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + \beta_3x_{i3} + ... + \beta_px
 ## Исследование данных (Data Exploration)
 Задание: Постройте dotplot для всех переменных, оцените присутствие отскакивающих значений
 
-##Решение 
+## Решение 
 
 
-```{r, echo=FALSE, fig.height=5}
+```{r, echo=FALSE, fig.height=5, purl=FALSE}
+gg_dot <- ggplot(prost, aes(x = 1:nrow(prost))) + geom_point()
+Pl1 <- gg_dot + aes(y = lcavol)
+Pl2 <- gg_dot + aes(y = lweight)
+Pl3 <- gg_dot + aes(y = age)
+Pl4 <- gg_dot + aes(y = lbph)
+Pl5 <- gg_dot + aes(y = svi)
+Pl6 <- gg_dot + aes(y = lcp)
+Pl7 <- gg_dot + aes(y =  gleason)
+Pl8 <- gg_dot + aes(y =  pgg45)
+Pl9 <- gg_dot + aes(y =  lpsa)
 library(gridExtra)
-Pl1 <- ggplot(prost, aes(x = 1:nrow(prost), y = lcavol)) + geom_point()
-Pl2 <- ggplot(prost, aes(x = 1:nrow(prost), y = lweight)) + geom_point()
-Pl3 <- ggplot(prost, aes(x = 1:nrow(prost), y = age)) + geom_point()
-Pl4 <- ggplot(prost, aes(x = 1:nrow(prost), y = lbph)) + geom_point()
-Pl5 <- ggplot(prost, aes(x = 1:nrow(prost), y = svi)) + geom_point()
-Pl6 <- ggplot(prost, aes(x = 1:nrow(prost), y = lcp)) + geom_point()
-Pl7 <- ggplot(prost, aes(x = 1:nrow(prost), y =  gleason)) + geom_point()
-Pl8 <- ggplot(prost, aes(x = 1:nrow(prost), y =  pgg45)) + geom_point()
-Pl9 <- ggplot(prost, aes(x = 1:nrow(prost), y =  lpsa)) + geom_point()
-
-grid.arrange(Pl1, Pl2, Pl3, Pl4, Pl5, Pl6, Pl7, Pl8, Pl9, ncol =3, nrow = 3)
-
+grid.arrange(Pl1, Pl2, Pl3, Pl4, Pl5, Pl6, 
+             Pl7, Pl8, Pl9, ncol = 3, nrow = 3)
 ```
-
-
-
 
 ## Явные проблемы --- есть сильные корреляции между некоторым предикторами
 
 ```{r fig.height=7, fig.height=7, fig.width=8, echo=FALSE}
-scatterplotMatrix(prost[ , -1])
+scatterplotMatrix(prost[, -9])
 ```
 
 ## Задание
 
-- Напишите код, который позволит рассчитать парамтеры линейной модели, описывющей зависимиоть lcavol от всех остальных величин (lweight, age, lbph, svi, lcp, gleason, pgg45, lpsa)
+- Напишите код, который позволит рассчитать параметры линейной модели, описывающей зависимость lpsa от всех остальных величин (lcavol, lweight, age, lbph, svi, lcp, gleason, pgg45)
 
 
 
 ## Решение
 
-```{r}
-mod1 <- lm(lcavol ~ lweight + age + lbph + svi + lcp + gleason + pgg45 + lpsa, data = prost)
-mod1 <- lm(lcavol ~  . , data = prost) # то же самое
+```{r purl=FALSE}
+mod1 <- lm(lpsa ~ lcavol + lweight + age + lbph + svi + lcp + gleason + pgg45, data = prost)
+mod1 <- lm(lpsa ~  . , data = prost) # то же самое
 
 summary(mod1)
 ```
@@ -203,63 +194,96 @@ summary(mod1)
 
 ## Вспомним условия применимости линейных моделей
 
-- Линейная связь между зависимой перменной ($Y$) и предикторами ($X$)
+- Линейная связь между зависимой переменной ($Y$) и предикторами ($X$)
 - Независимость значений $Y$ друг от друга
 - Нормальное распределение $Y$ для каждого уровня значений $X$
-- Гомогенность дисерсий $Y$ для каждого уровня значений $X$
-- Отсутствие коллинеарности предикторов (для можественной регрессии)
+- Гомогенность дисперсий $Y$ для каждого уровня значений $X$
+- Отсутствие коллинеарности предикторов (для множественной регрессии)
 
 ## Задание
 
 - Проверьте условия применимости модели
 
+## Решение
 
-## Решение средствами базовой графики
+### 1) График расстояния Кука 
 
-```{r purl=TRUE}
-op <- par(mfrow = c(1, 3))
-plot(mod1, which = 4)
-residualPlot(mod1)
-qqPlot(mod1)
-par(op)
+- Выбросов нет
+
+```{r solution-0, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+mod1_diag <- fortify(mod1)
+ggplot(mod1_diag, aes(x = 1:nrow(mod1_diag), y = .cooksd)) + 
+  geom_bar(stat = "identity")
 ```
 
+## Решение
+
+### 2) График остатков от предсказанных значений
 
 - Выбросов нет
 - Гетерогенность дисперсии не выявляется
-- Отклонения от нормального распределения остатков не выявляются
 - Есть намек на нелинейность связей
 
-## Решение в `ggplot2`
-
-```{r, purl=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
-prost_diag <- fortify(mod1)
-# квантильный график
-mean_val <- mean(prost_diag$.stdresid)
-sd_val <- sd(prost_diag$.stdresid)
-gg_qq <- ggplot(prost_diag, aes(sample = .stdresid)) + geom_point(stat = "qq") + geom_abline(intercept = mean_val, slope = sd_val)
-# остатки и расстояние Кука
-gg_res <- ggplot(data = prost_diag, aes(x = .fitted, y = .stdresid, size = .cooksd)) + geom_point() + geom_hline(aes(yintercept = 0)) + geom_smooth(se = F)
-# вместе
-library(gridExtra)
-grid.arrange(gg_qq, gg_res, nrow = 1, widths = c(0.45, 0.55))
+```{r solution-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+gg_resid <- ggplot(data = mod1_diag, aes(x = .fitted, y = .stdresid)) + 
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
 ```
 
 
-# Мультиколинеарность
+## Решение
 
-## Мультиколинеарность
+### 3) Графики остатков от предикторов в модели и нет
 
-Мультиколинеарность ---  наличие линейной зависимости между независимыми переменными (факторами) регрессионной модели.
+```{r solution-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+res_1 <- gg_resid + aes(x = lcavol)
+res_2 <- gg_resid + aes(x = lweight)
+res_3 <- gg_resid + aes(x = age)
+res_4 <- gg_resid + aes(x = lbph)
+res_5 <- gg_resid + aes(x = svi)
+res_6 <- gg_resid + aes(x = lcp)
+res_7 <- gg_resid + aes(x = gleason)
+res_8 <- gg_resid + aes(x = pgg45)
+library(gridExtra)
+grid.arrange(res_1, res_2, res_3, res_4,
+             res_5, res_6, res_7, res_8, nrow = 2)
+```
 
-При наличии мультиколинеарности оценки параметров получаются неточными, а значит сложно будет дать интерпретацию влияния предикторов на отклик. 
+## Решение
+
+### 4) Квантильный график остатков
+
+- Отклонения от нормального распределения остатков не выявляются
+
+```{r solution-3, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+qqPlot(mod1)
+```
+
+
+<!-- ## Решение средствами базовой графики -->
+
+<!-- ```{r purl=TRUE} -->
+<!-- op <- par(mfrow = c(1, 3)) -->
+<!-- plot(mod1, which = 4) -->
+<!-- residualPlot(mod1) -->
+<!-- qqPlot(mod1) -->
+<!-- par(op) -->
+<!-- ``` -->
+
+# Мультиколлинеарность
+
+## Мультиколлинеарность
+
+Мультиколлинеарность ---  наличие линейной зависимости между независимыми переменными (факторами) регрессионной модели.
+
+При наличии мультиколлинеарности оценки параметров получаются неточными, а значит сложно будет дать интерпретацию влияния предикторов на отклик. 
 
 Косвенные признаки мультиколинеарности:
 
 - Большие ошибки оценок параметров             
 - Большинство параметров модели недостоверно отличаются от нуля, но F критерий говорит, что вся модель значима
 
-### Проверка на мультиколинеарность
+### Проверка на мультиколлинеарность
 
 - Фактор инфляции дисперсии (Variance inflation factor, VIF)
 
@@ -275,51 +299,61 @@ $$x_1 = c_0 + c_2x_2 +c_2x_3 + .... + c_px_p$$
 3. Вычисляем фактор инфляции дисперсии
 $$VIF = \frac{1}{1-R^2}$$
 
-## Что делать, если мультиколинеарность выявлена?
+## Что делать, если мультиколлинеарность выявлена?
 
 - Можно последовательно удалить из модели избыточные предикторы с VIF > 3 (иногда VIF > 2)
     1. подбираем модель
     2. считаем VIF
     3. удаляем предиктор с самым большим VIF
-    4. повторяем 1-3
+    4. повторяем 1-3, пока VIF не станет меньше 2
 
-- Можно заменить исходные предикторы новыми независимыми друго от друга переменными, полученными с помощью метода главных компонент
+- Можно заменить исходные предикторы новыми независимыми друг от друга переменными, полученными с помощью метода главных компонент
 
-## Проверяем отсутствие мультиколинеарности
+## Проверяем отсутствие мультиколлинеарности
 
 Функция `vif()` из пакета `car`
+
 ```{r}
 vif(mod1)
 ```
 
 
-В нашей модели явной мультколинеарности нет
+В нашей модели сильной мультиколлинеарности нет.
 
-Однако, возможно, что  `pgg45` - избыточный предиктор
+Однако, возможно, что  `lcp` - избыточный предиктор
 
 ## Удалим из модели избыточный предиктор
 
 ```{r}
-mod2 <- update(mod1, ~ . -pgg45)
+mod2 <- update(mod1, ~ . - lcp)
 vif(mod2)
 ```
 
-Теперь мультиколинеарности нет
+Мультиколлинеарность осталась. Стоит удалить `pgg45`
+
+```{r}
+mod3 <- update(mod2, ~ . - pgg45)
+vif(mod3)
+```
+
+Теперь мультиколлинеарности нет.
 
 ## В этой модели осталось много незначимых предикторов {.smaller}
 
 ```{r}
-summary(mod2)
+summary(mod3)
 ```
 
 ### Что дальше?
 
 Два варианта действий:
 
-- Оставить все как есть. Если значение коэффициента при предикторе не  отличается значимо от нуля, значит, этот предиктор не влияет на объем опухоли
+- Оставить все как есть. Если значение коэффициента при предикторе не  отличается значимо от нуля, значит, этот предиктор не влияет на объем опухоли. __ПРОВЕРЬТЕ ВЫПОЛНЕНИЕ УСЛОВИЙ ПРИМЕНИМОСТИ ДЛЯ ФИНАЛЬНОЙ МОДЕЛИ!__
 - Провести пошаговый подбор оптимальной модели (об этом позднее)
 
 Пока оставим все как есть и попытаемся выяснить, какие предикторы влияют сильнее всего
+
+# Сравнение вклада предикторов
 
 ## Какой из предиктов оказывает наиболее сильное влияние?
 
@@ -330,19 +364,20 @@ summary(mod2)
 Для стандартизации используем функцию `scale()`
 
 ```{r, tidy=TRUE}
-mod2_scaled <- lm(lcavol ~ scale(lweight) + scale(age) + scale(lbph) + scale(svi) + scale(lcp) + scale(gleason) + scale(pgg45) + scale(lpsa), data = prost)
+mod3_scaled <- lm(lpsa ~ scale(lcavol) + scale(lweight) + scale(age) + scale(lbph) + scale(svi) + scale(lcp) + scale(gleason) + scale(pgg45), data = prost)
 ```
 
 ## Какой из предиктов оказывает наиболее сильное влияние? {.smaller}
 
 ```{r}
-summary(mod2_scaled)
+summary(mod3_scaled)
 ```
 
 ## Вопрос
-Какая доля суммарной дисперсии зависимой переменной описывается данной моделью
 
-## Еще раз про Adjusted R-squared - скорректированный коэффициет детерминации
+Какая доля суммарной дисперсии зависимой переменной описывается данной моделью?
+
+## Adjusted R-squared - скорректированный коэффициет детерминации
 
 Применяется если необходимо сравнить две модели с разным количеством параметров  
 
@@ -353,12 +388,11 @@ $k$ - количество параметров в модели
 Вводится штраф за каждый новый параметр
 
 
-
 ## Какой из предиктов оказывает наиболее сильное влияние?
 
-- Сильнее всего c объемом опухоли связан, lpsa (концетрация специфического антигена) и lcp (capsular penetration).
-- При изменении логарифма концентрации антигена на 1 стандартное отклонение, логарифм объема опухоли изменяется на `r round(coef(mod2_scaled)[9], 2)`
-- При изменении логарифма capsular penetration на 1 стандартное отклонение, логарифм объема опухоли изменяется на `r round(coef(mod2_scaled)[6], 2)`
+- Сильнее всего c концентрацией простат-специфичного антигена связан логарифм объема опухоли (`lcavol`) и оценка поражения семенных пузырьков (`svi`)
+- При изменении логарифма объема опухоли на 1SD логарифм концентрации антигена изменяется на `r round(coef(mod3_scaled)[2], 2)`
+- При изменении логарифма оценки поражения семенных пузырьков на 1SD, логарифм концентрации антигена изменяется на `r round(coef(mod3_scaled)[6], 2)`
 
 ## Include or Don't include? That is the question...
 
@@ -368,7 +402,7 @@ $k$ - количество параметров в модели
 ## Include or Don't include? That is the question...
 
 
-Вопрос о включении в модель взаимоодействия предикторов совсем непростой
+Вопрос о включении в модель взаимодействия предикторов совсем непростой
 
 Существует несколько подходов:
 
@@ -389,7 +423,7 @@ $k$ - количество параметров в модели
 
 ## Summary
 
-- При построении множественной регрессии важно, помимо других условий, проверить модель на наличие мультиколинеарности
+- При построении множественной регрессии важно, помимо других условий, проверить модель на наличие мультиколлинеарности
 - Если модель построена на основе стандартизированных значений предикторов, то можно сравнивать влияние этих предикторов
 - В модель можно (а иногда и нужно) включать взаимодействия предикторов
 
@@ -400,6 +434,3 @@ $k$ - количество параметров в модели
 + Diez D. M., Barr C. D., Cetinkaya-Rundel M. (2014) Open Intro to Statistics., pp. 354-367.
 + Logan M. (2010) Biostatistical Design and Analysis Using R. A Practical Guide, pp. 170-173, 208-211
 + Zuur, A.F. et al. 2009. Mixed effects models and extensions in ecology with R. - Statistics for biology and health. Springer, New York, NY. pp. 538-552.
-
-
-
