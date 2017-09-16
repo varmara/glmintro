@@ -96,22 +96,28 @@ title: Презентации и данные
     + [3.3_assumptions_Ex_calcium.R](3.3_assumptions_Ex_calcium.R)
     + [3.3_assumptions_Ex_progesteron.R](3.3_assumptions_Ex_progesteron.R)
 - Упражнения (написание кода)
-    + [3.3_assumptions_task_GAG.R](3.3_assumptions_task_GAG.R)
-    + [3.3_assumptions_task_Mutations.R](3.3_assumptions_task_Mutations.R)
+    + [3.3_assumptions_Task_GAG.R](3.3_assumptions_Task_GAG.R)
+    + [3.3_assumptions_Task_Mutations.R](3.3_assumptions_Task_Mutations.R)
 
 ## День 4
 
 ### Множественная линейная регрессия
 
 - Презентация <!-- [4.1_multiple_lm.html](4.1_multiple_lm.html) --->
-- Код []
+- Код [4.1_multiple_lm_code.R](4.1_multiple_lm_code.R)
 - Данные
+    + [Prostate.xlsx](data/Prostate.xlsx)
+    + [loyn.csv](data/loyn.csv)
+    + [birthwt.csv](data/birthwt.csv)
+- Упражнения (разбор кода) [4.1_multiple_lm_Ex_Loyn's_bird_data.R](4.1_multiple_lm_Ex_Loyn's_bird_data.R)
+- Упражнения (написание кода) [4.1_multiple_lm_Task_birthwt.R](4.1_multiple_lm_Task_birthwt.R)
 
 ### Выбор моделей
 
 - Презентация <!-- [4.2_model_selection.html](4.2_model_selection.html) --->
 - Код []
 - Данные
+    + [4.2_model_selection_Ex_Loyn's_bird_data.R](4.2_model_selection_Ex_Loyn's_bird_data.R)
 
 
 ## День 5
