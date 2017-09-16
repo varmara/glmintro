@@ -31,6 +31,9 @@ str(prost)
 
 # Знакомство с данными #########################
 
+# ## Знакомство с данными #########################
+
+
 # ## Есть ли пропущенные значения?
 colSums(is.na(prost))
 
@@ -41,6 +44,7 @@ colSums(is.na(prost))
 
 
 
+# Связь между переменными - оценка с ипомощью базовой графики
 scatterplotMatrix(prost[, -9])
 
 
@@ -90,6 +94,29 @@ mod3_scaled <- lm(lpsa ~ scale(lcavol) + scale(lweight) + scale(age) + scale(lbp
 
 # ## Какой из предиктов оказывает наиболее сильное влияние? {.smaller}
 summary(mod3_scaled)
+
+#Визуализация модели###############################
+
+# Создаем искусственный датафрейм, где будет визуализироваться самый важный предиктор, а остальные будут рассматриваться, как средние
+
+MyData <- data.frame(lcavol = seq(min(prost$lcavol), max(prost$lcavol), 0.5), lweight = mean(prost$lweight), age = mean(prost$age), lbph = mean(prost$lbph), svi = mean(prost$svi), lcp = mean(prost$lcp), gleason = mean(prost$gleason), pgg45 = mean(prost$pgg45) )
+
+
+MyData$Predict <- predict(mod3, newdata = MyData)
+
+ggplot(MyData, aes(x = lcavol, y = Predict)) + geom_line() + geom_point(data = prost, aes(x = lcavol, y = lpsa))
+
+
+#Визуализиуем связь с двумя важнейшими переменными
+
+MyData <- expand.grid(lcavol = seq(min(prost$lcavol), max(prost$lcavol), 0.1), lweight = mean(prost$lweight), age = mean(prost$age), lbph = mean(prost$lbph), svi = seq(min(prost$svi), max(prost$svi), 0.01), lcp = mean(prost$lcp), gleason = mean(prost$gleason), pgg45 = mean(prost$pgg45) )
+
+
+MyData$Predict <- predict(mod3, newdata = MyData)
+
+ggplot(MyData, aes(x = lcavol, y = Predict )) + geom_line(aes(color = svi, group = svi)) + geom_point(data = prost, aes(x = lcavol, y = lpsa)) + scale_color_continuous(low = "yellow", high = "red")
+
+
 
 
 # ## Вопрос #######################################
