@@ -108,9 +108,11 @@ title: Презентации и данные
 - Данные
     + [Prostate.xlsx](data/Prostate.xlsx)
     + [loyn.csv](data/loyn.csv)
-    + [birthwt.csv](data/birthwt.csv)
-- Упражнения (разбор кода) [4.1_multiple_lm_Ex_Loyn's_bird_data.R](4.1_multiple_lm_Ex_Loyn's_bird_data.R)
-- Упражнения (написание кода) [4.1_multiple_lm_Task_birthwt.R](4.1_multiple_lm_Task_birthwt.R)
+    + [SAheart.xlsx](data/SAheart.xlsx)
+- Упражнения (разбор кода) 
+    + [4.1_multiple_lm_Ex_Loyn's_bird_data.R](4.1_multiple_lm_Ex_Loyn's_bird_data.R)
+- Упражнения (написание кода) 
+    + [4.1_multiple_lm_Task_SAheart.R](4.1_multiple_lm_Task_SAheart.R)
 
 ### Выбор моделей
 
@@ -119,10 +121,11 @@ title: Презентации и данные
 - Данные
     + [Prostate.xlsx](data/Prostate.xlsx)
     + [loyn.csv](data/loyn.csv)
+    + [SAheart.xlsx](data/SAheart.xlsx)
 - Упражнения (разбор кода)
     + [4.2_model_selection_Ex_Loyn's_bird_data.R](4.2_model_selection_Ex_Loyn's_bird_data.R)
 - Упражнения (написание кода)
-    + []()
+    + [4.2_model_selection_Task_SAheart.R](4.2_model_selection_Task_SAheart.R)
 
 ## День 5
 
@@ -131,6 +134,9 @@ title: Презентации и данные
 - Презентация <!-- []() --->
 - Код []
 - Данные
+    + [vitcap2.csv](data/vitcap2.csv)
+    + [goats.csv](data/goats.csv)
+    +
 - Упражнения (разбор кода)
     + []()
 - Упражнения (написание кода)
@@ -141,6 +147,9 @@ title: Презентации и данные
 - Презентация <!-- [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html) --->
 - Код []
 - Данные
+    + [Puromycin.xlsx](data/Puromycin.xlsx)
+    + [cats.xlsx](data/cats.xlsx)
+    + [fev.xls](data/fev.xls)
 - Упражнения (разбор кода)
     + []()
 - Упражнения (написание кода)
