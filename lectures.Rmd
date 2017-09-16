@@ -69,7 +69,7 @@ title: Презентации и данные
 
 ### Оценка взаимосвязей: корреляция, линейная регрессия
 
-- Презентация <!-- [3.2_lm.html](3.2_lm.html) -->
+- Презентация [3.2_lm.html](3.2_lm.html)
 - Код [3.2_lm_exerc.R](3.2_lm_exerc.R)
 - Данные
     + [hellung.xls](data/hellung.xls)
@@ -83,7 +83,7 @@ title: Презентации и данные
 
 ### Условия применимости линейной регрессии
 
-- Презентация <!-- [3.3_assumptions.html](3.3_assumptions.html) -->
+- Презентация [3.3_assumptions.html](3.3_assumptions.html)
 - Код [3.3_assumptions_code.R](3.3_assumptions_code.R)
 - Данные
     + [orly_owl_Lin_4p_5_flat.txt](data/orly_owl_Lin_4p_5_flat.txt)
