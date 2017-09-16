@@ -83,25 +83,54 @@ M1 <- lm(rate ~ lc + state, data = Puromycin)
 summary(M1)
 ```
 
-## Проверяем выполнение условий применимости {.smaller}
+## Проверяем выполнение условий применимости 
 
-```{r M1-residuals, fig.width=10}
-library(car)
-vif(M1) # есть ли колинеарность?
-set.seed(7364)
-cook_cutoff <- 4 / (nrow(Puromycin) - length(coef(M1) - 2))
-op <- par(mfrow = c(1, 3)) # располагаем картинки в 3 колонки
-plot(M1, which = 4, cook.levels = cook_cutoff)  # Расстояние Кука
-residualPlot(M1)        # График остатков
-qqPlot(M1)              # Квантильный график остатков
-par(op)
+## Решение
+
+```{r}
+# Данные для графиков остатков
+M1_diag <- fortify(M1)
 ```
+### 1) График расстояния Кука
+
+```{r}
+ggplot(M1_diag, aes(x = 1:nrow(M1_diag), y = .cooksd)) +
+  geom_bar(stat = "identity")
+```
+
+## Решение
+
+### 2) График остатков от предсказанных значений
+```{r}
+gg_resid <- ggplot(data = M1_diag, aes(x = .fitted, y = .stdresid)) +
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
+```
+
+## Решение
+
+### 3) Графики остатков от предикторов в модели и не в модели
+
+```{r fig.width=10}
+library(gridExtra)
+grid.arrange(gg_resid + aes(x = lc), 
+             gg_resid + aes(x = state), 
+             nrow = 1)
+```
+
+## Решение
+
+### 4) Квантильный график остатков
+```{r fig.height=4}
+qqPlot(M1)
+```
+
 
 # График предсказаний линейной модели
 
 ## Рисуем график предсказаний
 
-Что не так с этим графиком?
+Что не так с этим графиком? Это наша модель?
 
 ```{r M1-predictions}
 ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + 
@@ -133,27 +162,14 @@ NewData$SE <- Predictions$se.fit
 # доверительный интервал
 NewData$upr <- NewData$fit + 1.96 * NewData$SE
 NewData$lwr <- NewData$fit - 1.96 * NewData$SE
+
+# Обратная трансформация предиктора
+NewData$conc <- exp(NewData$lc)
 ```
 
 ## Рисуем график предсказаний (Вторая попытка)
 
-Что не так с этим графиком?
-
-```{r gg-M1-predictions, purl=FALSE}
-ggplot(NewData, aes(x = lc, y = fit)) + 
-  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
-  geom_line(aes(colour = state)) +
-  geom_point(data = Puromycin, aes(x = lc, y = rate, colour = state))
-```
-
->- Этот график с логарифмической шкалой. Хорошо бы трансформировать предиктор в исходную шкалу
-
-## Рисуем график предсказаний (Третья попытка)
-
 ```{r gg-M1-predictions-backtrans, purl=FALSE}
-# Обратная трансформация предиктора
-NewData$conc <- exp(NewData$lc)
-
 ggplot(NewData, aes(x = conc, y = fit)) + 
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
   geom_line(aes(colour = state)) +
@@ -305,275 +321,183 @@ anova(lm(rate ~ state + lc + state:lc, data = Puromycin))
 Anova(M2, type = 3) 
 ```
 
-# Модель со взаимодействием на примере данных о влиянии глистогонных на рост коз
 
-## Глистогонные и рост коз
+# Модель со взаимодействием на примере данных о токсичности нитрофена
 
-Как влияет на прирост массы коз интенсивность профилактики паразитарных заболеваний?
+## Токсичность нитрофена
 
-<div class="columns-2">
+Нитрофен --- гербицид, тератоген, мутаген. Сейчас он не используется в США (первый пестицид, использование которого было запрещено из-за тератогенных эффектов), но все еще используется в России. Эти данные --- данные эксперимента по оценке токсичности нитрофена на дафниях _Ceriodaphnia dubia_ (Bailer, Oris 1994).
 
-<img src="images/Goat-by-Jennifer-C.-Flickr.jpg" width="300" height="300">   
-<small> Goat by Jennifer C. [on Flickr](https://flic.kr/p/fjU4J9) </small>  
+50 дафний случайно разделили на 5 групп, посадили в емкости с разной концентрацией нитрофена, оценили число яиц трех последовательных генераций.
 
-
-Известно, что у легких животных привес больше, поэтому мы должны учитывать в модели не только способ обработки от глистов, но и влияние начального веса.
-
-
-- `Treatment` - обработка от глистов (стандартная, интенсивная)
-- `Weightgain` - привес, кг
-- `Initial.wt` - начальный вес, кг
-
-
-</div>
-
-<small>
-<div class=.footnote>Пример из библиотеки данных   
-http://www.statlab.uni-heidelberg.de/data/ancova/goats.story.html</div>
-
-</small>
-
-## Читаем данные и знакомимся с ними
+- `conc` --- концентрация нитрофена
+- `total` --- суммарный размер потомства
+- `brood` --- номер выводка
+- `N` --- размер потомства в выводке
 
 ```{r}
 library(readxl)
-goat <- read_excel("data/goats.xlsx", sheet = 1)
-head(goat)
-str(goat)
+nit <- read_excel("data/nitrofen.xlsx", sheet = 1)
+head(nit)
 ```
-
-## Читаем данные и знакомимся с ними
-
-```{r}
-colSums(is.na(goat))
-# переименуем переменные для краткости
-colnames(goat) <- c("treat", "wt", "init")
-# объемы выборок
-table(goat$treat)
-# зададим порядок уровней фактора для удобства интерпретации
-goat$treat <- factor(goat$treat, levels = c("standard", "intensive"))
-```
-
-## Есть ли выбросы?
-
-```{r dot-plots, fig.height=2}
-gg_dot <- ggplot(goat, aes(y = 1:nrow(goat))) + geom_point()
-gg_dot + aes(x = wt)
-gg_dot + aes(x = init)
-```
-
->- Все ок
 
 ## Задание
 
-- Подберите модель, описывающую зависимость между увеличением веса коз и способом прфилактической обработки животных
+- Исследуйте данные о токсичноси нитрофена
+- Чтобы выяснить, как численность потомства дафний зависит от концентрации нитрофена в каждом из трех выводков, подберите модель со взаимодействием дискретного и непрерывного предикторов
 - Проверьте условия применимости этой модели
 - Упростите модель, если это возможно
-- Проверьте условия применимости финальной модели
-- Напишите общее уравнение и отдельные уравнения модели для двух способов профилактики
+- Напишите общее уравнение и отдельные уравнения модели для трех выводков
 - Постройте график предсказаний модели
 
 ## Решение
 
-### Нет ли колинеарности между начальным весом и тритментом
-
-```{r gg-colinearity, fig.width=3, purl=FALSE}
-MG <- lm(wt ~ treat + init, data = goat)
-vif(MG)
-ggplot(goat, aes(x = treat, y = init)) + geom_boxplot()
-```
-
->- Выраженной колинеарности нет
-
-## Решение
-
-### Проверяем, есть ли взаимодействие способа обработки от глистов и начального веса
-
-```{r, purl=FALSE}
-MG1 <- lm(wt ~ treat * init, data = goat)
-```
-
-
-Формула модели со взаимодействием выглядит в сокращенном виде так:
-
-```{r echo=FALSE, results='asis', purl=FALSE}
-formula(MG1)
-```
-
-а в полном виде то же самое выглядит так:
-
-```{r echo=FALSE, results='asis', purl=FALSE}
-full_fact <- function(fit, nways = 2){
-  vars <- all.vars(formula(fit))
-  if(nways > length(vars) - 1 | nways <= 0) {
-    stop("nways should be a positive number less or equal to the number of predictors")
-  } 
-  pred <- vars[-1]
-  for (i in 2:nways) {
-    pred <- c(pred, paste(combn(vars[-1], 1), collapse = ":"))
-  }
-  frm <- paste(vars[1], paste(pred, collapse = " + "), sep = " ~ ")
-  return(frm)
-}
-cat(full_fact(fit = MG1, nways = 2))
+```{r}
+str(nit)
+colSums(is.na(nit))
+table(nit$conc, nit$brood)
 ```
 
 ## Решение
 
-### График модели со взаимодействием
-
-Похоже, что взаимодействие не будет достоверным. 
-
-```{r gg-predictions, purl=FALSE}
-gg_g <- ggplot(data = goat, aes(y = wt, x = init, colour = treat)) + 
-  geom_point()  +
-  labs(x = "Начальный вес, кг",
-       y = "Привес, кг") +
-  scale_colour_discrete("Способ обработки", 
-                        breaks = c("intensive", "standard"), 
-                        labels = c("Интенсивный", "Стандартный"))
-gg_g + geom_smooth(method = "lm")
+```{r fig.show='hold', fig.height=2.5}
+ggplot(nit, aes(x = total, y = 1:nrow(nit))) + geom_point()
+ggplot(nit, aes(x = N, y = 1:nrow(nit))) + geom_point()
 ```
 
 ## Решение
 
-### Проверяем условия применимости
+### Проверка на колинеарность
 
->- Все нормально
-
-```{r block-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
-MG1_diag <- fortify(MG1)
-library(gridExtra)
-grid.arrange(
-  ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) + 
-    geom_bar(stat = "identity"),
-  ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) + 
-    geom_boxplot(),
-  nrow = 1)
+```{r}
+N1 <- lm(N ~ conc + brood, data = nit)
+vif(N1)
 ```
 
-```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
-qqPlot(MG1)   
-```
-
+>- Колинеарности нет
 
 ## Решение
 
-```{r eval=FALSE, purl=FALSE}
+### Проверка на гомогенность углов наклона
+
+Подберем полную модель. Попробуем для начала не учитывать общую плодовитость `total` (хоть это и не правильно)
+
+```{r}
+N2 <- lm(N ~ conc * brood + total, data = nit)
+drop1(N2, test = "F")
+```
+
+>- От исключения взаимодействия модель становится значительно хуже. Оставляем. Это не ANCOVA
+
+## Решение
+
+```{r}
 # Данные для графиков остатков
-MG1_diag <- fortify(MG1)
-
-# 1) График расстояния Кука
-ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) + 
-    geom_bar(stat = "identity")
-
-# 2) График остатков от предсказанных значений
-ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0)
-
-# 3) Графики остатков от предикторов в модели и не в модели
-ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0)
-ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) + 
-    geom_boxplot()
-
-# 4) Квантильный график остатков
-qqPlot(MG1)       
+N2_diag <- fortify(N2)
 ```
+### 1) График расстояния Кука
 
+```{r}
+ggplot(N2_diag, aes(x = 1:nrow(N2_diag), y = .cooksd)) +
+  geom_bar(stat = "identity")
+```
 
 ## Решение
 
-### Выбор оптимальной модели
-
-Пробуем удалить взаимодействие
-
-```{r, purl=FALSE}
-drop1(MG1, test = "F")
+### 2) График остатков от предсказанных значений
+```{r}
+gg_resid <- ggplot(data = N2_diag, aes(x = .fitted, y = .stdresid)) +
+  geom_point() + geom_hline(yintercept = 0)
+gg_resid
 ```
 
->- Можно удалять
+Откуда эти полосочки?
 
-## Удаляем взаимодействие и пробуем упростить дальше
+>- Это счетные данные, поэтому полоски --- это N = 0, 1, 2, и т.п.
 
-```{r, purl=FALSE}
-MG2 <- update(MG1, .~. - treat:init)
-drop1(MG2, test = "F")
-```
+## Решение
 
-Дальше упростить не получится. Вот наша оптимальная модель
+### 3) Графики остатков от предикторов в модели и не в модели
 
-## Проверяем условия применимости финальной модели
-
-```{r block-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
-MG2_diag <- fortify(MG2)
+```{r fig.width=10}
 library(gridExtra)
-grid.arrange(
-  ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) + 
-    geom_bar(stat = "identity"),
-  ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) + 
-    geom_boxplot(),
-  nrow = 1)
+grid.arrange(gg_resid + aes(x = conc), 
+             gg_resid + aes(x = brood), 
+             gg_resid + aes(x = total),
+             nrow = 1)
 ```
-
-```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
-qqPlot(MG2)   
-```
-
 
 ## Решение
 
-```{r eval=FALSE, purl=FALSE}
-# Данные для графиков остатков
-MG2_diag <- fortify(MG2)
-
-# 1) График расстояния Кука
-ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) + 
-    geom_bar(stat = "identity")
-
-# 2) График остатков от предсказанных значений
-ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0)
-
-# 3) Графики остатков от предикторов в модели и не в модели
-ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) + 
-    geom_point() + geom_hline(yintercept = 0)
-ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) + 
-    geom_boxplot()
-
-# 4) Квантильный график остатков
-qqPlot(MG2)       
+### 4) Квантильный график остатков
+```{r fig.height=4}
+qqPlot(N2)
 ```
 
-## Проверяем значимость коэффициентов
+## Проверяем значимость коэффициентов {.smaller}
 
-```{r, purl=FALSE}
-summary(MG2)
+```{r}
+summary(N2)
+```
+
+## Таблица дисперсионного анализа
+
+```{r}
+anova(N2)
 ```
 
 ## Записываем уравнение модели
 
-```{r, purl=FALSE}
-coef(MG2)
+```{r}
+coef(N2)
 ```
-Уравнение:
 
-$`r lm_equation(MG2, strict = FALSE)`$
+Общее уравнение: 
 
-Привес коз при интенсивной обработке от глистов на 1.26 кг выше, чем при стандартном методе обработки (t-тест, p < 0.05)
+`r lm_equation(N2, strict = FALSE)`
+
+- Для выводка 1: $N = -6.72 + 0.03conc + 0.33total$
+- Для выводка 2: $N = 2.1 - 0.01conc + 0.33total$
+- Для выводка 3: $N = 4.61 - 0.02conc + 0.33total$
+
+## Задание
+
+Постройте график предсказаний модели
+
+<!-- ## Данные для графика -->
+
+<!-- ```{r} -->
+<!-- library(plyr) -->
+<!-- NewData <- ddply( -->
+<!--   nit, .variables = .(brood), summarise,  -->
+<!--   total = seq(min(total), max(total), length = 100)) -->
+
+<!-- # предсказанные значения -->
+<!-- Predictions <- predict(N2, newdata = NewData, se.fit = TRUE) -->
+<!-- NewData$fit <- Predictions$fit -->
+
+<!-- # стандартные ошибки -->
+<!-- NewData$SE <- Predictions$se.fit -->
+
+<!-- # доверительный интервал -->
+<!-- NewData$upr <- NewData$fit + 1.96 * NewData$SE -->
+<!-- NewData$lwr <- NewData$fit - 1.96 * NewData$SE -->
+<!-- ``` -->
+
+<!-- ## Рисуем график предсказаний (Вторая попытка) -->
+
+<!-- ```{r gg-M1-predictions-backtrans, purl=FALSE} -->
+<!-- ggplot(NewData, aes(x = conc, y = fit)) +  -->
+<!--   # geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) + -->
+<!--   # geom_line(aes(colour = brood)) + -->
+<!--   geom_point(data = nit, aes(x = conc, y = N, colour = brood)) -->
+<!-- ``` -->
+
+
 
 ## Take home messages
 
 - У дискретных и непрерывных факторов могут быть взаимодействия, поэтому анализ нужно начинать с более полной модели (чтобы можно было  протестировать и исключить недостоверные взаимодействия)
-- Если вам приходится трансформировать предиктор для анализа, его нужно трансформировать обратно в исходную шкалу для представления результатов на графиках
 
 ## Что почитать
 

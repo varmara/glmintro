@@ -53,27 +53,27 @@ vit$Group [vit$group == 3] <- "Not exposed"
 
 ```
 
+## Меняем порядок уровней
+```{r}
+vit$Group <- factor(vit$Group, levels = c("Not exposed", "Short exposed", "Long exposed"))
+
+levels(vit$Group)
+```
+
 
 
 
 ##Вычисляем средние
 
-```{r}
+```{r, message=FALSE}
 library(dplyr)
 vit_summary <- vit %>%  group_by(Group) %>%  #Передаем датафрейм группирующей функции
             summarise(mean_capac = mean(vital.capacity),  # Вычисляем среднюю
-            mean_capac = sd(vital.capacity), # Стандартное отклонение
+            SD_capac = sd(vital.capacity), # Стандартное отклонение
             n_capac = n(),  # объем выборки
             SE_capac = sd(vital.capacity)/sqrt(n())) # Стандартную ошибку
 
 vit_summary
-```
-
-## Меняем порядок уровней
-```{r}
-vit_summary$Group <- factor(vit_summary$Group, levels = c("Not exposed", "Short exposed", "Long exposed"))
-
-levels(vit_summary$Group)
 ```
 
 
@@ -96,7 +96,7 @@ ggplot(x, aes(x=labels, y=response)) + geom_boxplot()+ geom_point(color="blue", 
 
 ```
 
-Модель для данного примера имеет такой вид  
+Модель имеет такой вид  
 <br>
 <br>
 $response = 4.6 + 5.3I_{Level2} + 9.9 I_{Level3} + \epsilon_i$
@@ -104,6 +104,25 @@ $response = 4.6 + 5.3I_{Level2} + 9.9 I_{Level3} + \epsilon_i$
 $I_{i}$ - dummy variable   
 
 Моделями с дискретными предикторами занимается классический **дисперсионный анализ**
+
+##Модель с дискретным предиктором
+
+```{r}
+M1 <- lm(vital.capacity ~ Group, data = vit)
+anova(M1)
+```
+
+В принципе можно было бы обсуждать результат.  
+
+
+##Смотрим на результаты {.smaller}
+
+```{r}
+summary(M1)
+```
+
+Куда делась одна градация фактора?
+Как записать данную модель?
 
 ## Переменные-болванки (dummy variables)
 
@@ -132,6 +151,408 @@ $\textbf{y}$ - Вектор предсказанных значений
 $\boldsymbol{\beta}$ - вектор коэффициентов линейной модели
 $\textbf{X}$ - Модельная матрица
 
+
+## Смотрим на модельную матрицу
+
+```{r}
+model.matrix(M1)
+```
+
+
+## Смотрим на модельную матрицу
+В моельной матрице три колоки
+
+1 - Intercept   
+2 - GroupShort exposed - в тех строках, которые соответствуют градации переменной `Group` = "Short exposed" стоит 1, в остальных строках  - 0   
+3.  GroupLong exposed - в тех строках, которые соответствуют градации переменной `Group` = "Long exposed" стоит 1, в остальных строках  - 0   
+4. Одна из градаций фактора (первая, если не специально не указать иное) становится **базовым уровнем**
+
+##Предсказанные значения
+
+```{r}
+fitted(M1)
+
+```
+
+##Предсказанные значения
+
+```{r}
+model.matrix(M1) %*% coefficients(M1)
+
+```
+
+## Как записать модель с дискретными предикторами
+$$
+ vital.capacity = 4.46205 + 0.00974 I_{Group = Short} -0.51288  I_{Group = Long}
+$$
+
+$I$ - переменная болванка, которая принимает значение 1 или 0
+
+
+## Запись модели с дискретными предикторами
+
+Если мы хотим вычислить предсказание модели (значение объема легких) для индавида, имеющего Group =  Short exposed
+
+$$
+ vital.capacity = 4.46205 + 0.00974 \cdot 1  -0.51288 \cdot  0 = \\
+ = 4.46205 + 0.00974 = 4.47
+$$
+
+## Запись модели с дискретными предикторами
+
+Если мы хотим вычислить предсказание модели (значение объема легких) для индавида, имеющего Group =  Long exposed
+
+$$
+ vital.capacity = 4.46205 + 0.00974 \cdot 0  -0.51288 \cdot  1 = \\
+ = 4.46205 -0.51288   = 3.95
+$$
+
+## Запись модели с дискретными предикторами
+
+Если мы хотим вычислить предсказание модели (значение объема легких) для индавида, имеющего Group =  Not exposed
+
+$$
+ vital.capacity = 4.46205 + 0.00974 \cdot 0  -0.51288 \cdot  0 = \\
+ = 4.46205
+$$
+Это базовый уровень. Для него предсказанное занчение равно `Intercept`
+
+## Изменяем базовый уровень
+
+```{r}
+
+vit$Group <-  relevel(vit$Group, ref = "Long exposed" )
+
+```
+
+##Изменились ли результаты?
+
+```{r}
+M2 <- lm(vital.capacity ~ Group, data = vit)
+summary(M2)
+```
+
+##Вычислим предсказание модели M2 для индивидов из всех трех групп
+
+Для "Not exposed"
+
+```{r}
+3.949 + 0.513 * 1 + 0.523 * 0
+```
+
+Для "Short exposed"
+
+```{r}
+3.949 + 0.513 * 0 + 0.523 * 1
+```
+
+
+Для "Long exposed"
+
+```{r}
+3.949 + 0.513 * 0 + 0.523 * 0
+```
+
+
+
+
+
+
+## Вернемся к результатам
+
+Можно ли доверять полученным результатам?
+
+```{r}
+M1_diag <- fortify(M1)
+qplot(vit$age, M1_diag$.stdresid) + geom_smooth(method = "lm")
+```
+Очевидный паттерн в остатках! 
+
+Необходимо включать еще одну перменную - **`ковариату`**
+
+# Analysis of covariance (ANCOVA) 
+
+
+##Меняем модель
+
+```{r}
+M3 <- lm(vital.capacity ~ Group + age, data = vit)
+```
+
+##Диагностика модели 
+
+```{r}
+M3_diag <- fortify(M3)
+qplot(vit$age, M3_diag$.stdresid) + geom_smooth(method = "lm")
+
+```
+
+Паттерн исчез!
+
+## Результаты
+```{r}
+summary(M3)
+```
+
+#### Результаты
+```{r}
+anova(M3)
+```
+
+Противоречие с результатами `summary()`!
+
+## Поменяем порядок предикторов
+
+```{r}
+anova(lm(formula = vital.capacity ~ age + Group, data = vit))
+```
+
+Почему так узнаете чуть позднее...
+
+
+# ANCOVA на примере данных о влиянии глистогонных на рост коз
+
+## Глистогонные и рост коз
+
+Как влияет на прирост массы коз интенсивность профилактики паразитарных заболеваний?
+
+<div class="columns-2">
+
+<img src="images/Goat-by-Jennifer-C.-Flickr.jpg" width="300" height="300">
+<small> Goat by Jennifer C. [on Flickr](https://flic.kr/p/fjU4J9) </small>
+
+
+Известно, что у легких животных привес больше, поэтому мы должны учитывать в модели не только способ обработки от глистов, но и влияние начального веса.
+
+
+- `Treatment` - обработка от глистов (стандартная, интенсивная)
+- `Weightgain` - привес, кг
+- `Initial.wt` - начальный вес, кг
+
+
+</div>
+
+<small>
+<div class=.footnote>Пример из библиотеки данных
+http://www.statlab.uni-heidelberg.de/data/ancova/goats.story.html</div>
+
+</small>
+
+## Читаем данные и знакомимся с ними
+
+```{r}
+library(readxl)
+goat <- read_excel("data/goats.xlsx", sheet = 1)
+head(goat)
+str(goat)
+```
+
+## Читаем данные и знакомимся с ними
+
+```{r}
+colSums(is.na(goat))
+# переименуем переменные для краткости
+colnames(goat) <- c("treat", "wt", "init")
+# объемы выборок
+table(goat$treat)
+# зададим порядок уровней фактора для удобства интерпретации
+goat$treat <- factor(goat$treat, levels = c("standard", "intensive"))
+```
+
+## Есть ли выбросы?
+
+```{r dot-plots, fig.height=2}
+gg_dot <- ggplot(goat, aes(y = 1:nrow(goat))) + geom_point()
+gg_dot + aes(x = wt)
+gg_dot + aes(x = init)
+```
+
+>- Все ок
+
+## Задание
+
+- Подберите модель, описывающую зависимость между увеличением веса коз и способом прфилактической обработки животных
+- Проверьте условия применимости этой модели
+- Упростите модель, если это возможно
+- Проверьте условия применимости финальной модели
+- Напишите общее уравнение и отдельные уравнения модели для двух способов профилактики
+- Постройте график предсказаний модели
+
+## Решение
+
+### Нет ли колинеарности между начальным весом и тритментом
+
+```{r gg-colinearity, fig.width=3, purl=FALSE}
+MG <- lm(wt ~ init + treat, data = goat)
+vif(MG)
+ggplot(goat, aes(x = treat, y = init)) + geom_boxplot()
+```
+
+>- Выраженной колинеарности нет
+
+##Результаты
+
+```{r}
+summary(MG)
+```
+
+##Результаты
+
+```{r}
+anova(MG)
+```
+
+## Решение
+
+### График модели со взаимодействием
+
+Похоже, что взаимодействие не будет достоверным.
+
+```{r gg-predictions, purl=FALSE}
+gg_g <- ggplot(data = goat, aes(y = wt, x = init, colour = treat)) +
+  geom_point()  +
+  labs(x = "Начальный вес, кг",
+       y = "Привес, кг") +
+  scale_colour_discrete("Способ обработки",
+                        breaks = c("intensive", "standard"),
+                        labels = c("Интенсивный", "Стандартный"))
+gg_g + geom_smooth(method = "lm")
+```
+
+## Решение
+
+### Проверяем условия применимости
+
+>- Все нормально
+
+```{r block-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+MG1_diag <- fortify(MG1)
+library(gridExtra)
+grid.arrange(
+  ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) +
+    geom_bar(stat = "identity"),
+  ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) +
+    geom_boxplot(),
+  nrow = 1)
+```
+
+```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+qqPlot(MG1)
+```
+
+
+## Решение
+
+```{r eval=FALSE, purl=FALSE}
+# Данные для графиков остатков
+MG1_diag <- fortify(MG1)
+
+# 1) График расстояния Кука
+ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) +
+    geom_bar(stat = "identity")
+
+# 2) График остатков от предсказанных значений
+ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0)
+
+# 3) Графики остатков от предикторов в модели и не в модели
+ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0)
+ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) +
+    geom_boxplot()
+
+# 4) Квантильный график остатков
+qqPlot(MG1)
+```
+
+
+## Решение
+
+### Выбор оптимальной модели
+
+Пробуем удалить взаимодействие
+
+```{r, purl=FALSE}
+drop1(MG1, test = "F")
+```
+
+>- Можно удалять
+
+## Удаляем взаимодействие и пробуем упростить дальше
+
+```{r, purl=FALSE}
+MG2 <- update(MG1, .~. - treat:init)
+drop1(MG2, test = "F")
+```
+
+Дальше упростить не получится. Вот наша оптимальная модель
+
+## Проверяем условия применимости финальной модели
+
+```{r block-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+MG2_diag <- fortify(MG2)
+library(gridExtra)
+grid.arrange(
+  ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) +
+    geom_bar(stat = "identity"),
+  ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) +
+    geom_boxplot(),
+  nrow = 1)
+```
+
+```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+qqPlot(MG2)
+```
+
+
+## Решение
+
+```{r eval=FALSE, purl=FALSE}
+# Данные для графиков остатков
+MG2_diag <- fortify(MG2)
+
+# 1) График расстояния Кука
+ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) +
+    geom_bar(stat = "identity")
+
+# 2) График остатков от предсказанных значений
+ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0)
+
+# 3) Графики остатков от предикторов в модели и не в модели
+ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0)
+ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) +
+    geom_boxplot()
+
+# 4) Квантильный график остатков
+qqPlot(MG2)
+```
+
+## Проверяем значимость коэффициентов
+
+```{r, purl=FALSE}
+summary(MG2)
+```
+
+## Записываем уравнение модели
+
+```{r, purl=FALSE}
+coef(MG2)
+```
+Уравнение:
+
+$`r lm_equation(MG2, strict = FALSE)`$
+
+Привес коз при интенсивной обработке от глистов на 1.26 кг выше, чем при стандартном методе обработки (t-тест, p < 0.05)
 
 
 
@@ -419,270 +840,6 @@ anova(lm(rate ~ state + lc + state:lc, data = Puromycin))
 Anova(M2, type = 3)
 ```
 
-# Модель со взаимодействием на примере данных о влиянии глистогонных на рост коз
-
-## Глистогонные и рост коз
-
-Как влияет на прирост массы коз интенсивность профилактики паразитарных заболеваний?
-
-<div class="columns-2">
-
-<img src="images/Goat-by-Jennifer-C.-Flickr.jpg" width="300" height="300">
-<small> Goat by Jennifer C. [on Flickr](https://flic.kr/p/fjU4J9) </small>
-
-
-Известно, что у легких животных привес больше, поэтому мы должны учитывать в модели не только способ обработки от глистов, но и влияние начального веса.
-
-
-- `Treatment` - обработка от глистов (стандартная, интенсивная)
-- `Weightgain` - привес, кг
-- `Initial.wt` - начальный вес, кг
-
-
-</div>
-
-<small>
-<div class=.footnote>Пример из библиотеки данных
-http://www.statlab.uni-heidelberg.de/data/ancova/goats.story.html</div>
-
-</small>
-
-## Читаем данные и знакомимся с ними
-
-```{r}
-library(readxl)
-goat <- read_excel("data/goats.xlsx", sheet = 1)
-head(goat)
-str(goat)
-```
-
-## Читаем данные и знакомимся с ними
-
-```{r}
-colSums(is.na(goat))
-# переименуем переменные для краткости
-colnames(goat) <- c("treat", "wt", "init")
-# объемы выборок
-table(goat$treat)
-# зададим порядок уровней фактора для удобства интерпретации
-goat$treat <- factor(goat$treat, levels = c("standard", "intensive"))
-```
-
-## Есть ли выбросы?
-
-```{r dot-plots, fig.height=2}
-gg_dot <- ggplot(goat, aes(y = 1:nrow(goat))) + geom_point()
-gg_dot + aes(x = wt)
-gg_dot + aes(x = init)
-```
-
->- Все ок
-
-## Задание
-
-- Подберите модель, описывающую зависимость между увеличением веса коз и способом прфилактической обработки животных
-- Проверьте условия применимости этой модели
-- Упростите модель, если это возможно
-- Проверьте условия применимости финальной модели
-- Напишите общее уравнение и отдельные уравнения модели для двух способов профилактики
-- Постройте график предсказаний модели
-
-## Решение
-
-### Нет ли колинеарности между начальным весом и тритментом
-
-```{r gg-colinearity, fig.width=3, purl=FALSE}
-MG <- lm(wt ~ treat + init, data = goat)
-vif(MG)
-ggplot(goat, aes(x = treat, y = init)) + geom_boxplot()
-```
-
->- Выраженной колинеарности нет
-
-## Решение
-
-### Проверяем, есть ли взаимодействие способа обработки от глистов и начального веса
-
-```{r, purl=FALSE}
-MG1 <- lm(wt ~ treat * init, data = goat)
-```
-
-
-Формула модели со взаимодействием выглядит в сокращенном виде так:
-
-```{r echo=FALSE, results='asis', purl=FALSE}
-formula(MG1)
-```
-
-а в полном виде то же самое выглядит так:
-
-```{r echo=FALSE, results='asis', purl=FALSE}
-full_fact <- function(fit, nways = 2){
-  vars <- all.vars(formula(fit))
-  if(nways > length(vars) - 1 | nways <= 0) {
-    stop("nways should be a positive number less or equal to the number of predictors")
-  }
-  pred <- vars[-1]
-  for (i in 2:nways) {
-    pred <- c(pred, paste(combn(vars[-1], 1), collapse = ":"))
-  }
-  frm <- paste(vars[1], paste(pred, collapse = " + "), sep = " ~ ")
-  return(frm)
-}
-cat(full_fact(fit = MG1, nways = 2))
-```
-
-## Решение
-
-### График модели со взаимодействием
-
-Похоже, что взаимодействие не будет достоверным.
-
-```{r gg-predictions, purl=FALSE}
-gg_g <- ggplot(data = goat, aes(y = wt, x = init, colour = treat)) +
-  geom_point()  +
-  labs(x = "Начальный вес, кг",
-       y = "Привес, кг") +
-  scale_colour_discrete("Способ обработки",
-                        breaks = c("intensive", "standard"),
-                        labels = c("Интенсивный", "Стандартный"))
-gg_g + geom_smooth(method = "lm")
-```
-
-## Решение
-
-### Проверяем условия применимости
-
->- Все нормально
-
-```{r block-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
-MG1_diag <- fortify(MG1)
-library(gridExtra)
-grid.arrange(
-  ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) +
-    geom_bar(stat = "identity"),
-  ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) +
-    geom_boxplot(),
-  nrow = 1)
-```
-
-```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
-qqPlot(MG1)
-```
-
-
-## Решение
-
-```{r eval=FALSE, purl=FALSE}
-# Данные для графиков остатков
-MG1_diag <- fortify(MG1)
-
-# 1) График расстояния Кука
-ggplot(MG1_diag, aes(x = 1:nrow(MG1_diag), y = .cooksd)) +
-    geom_bar(stat = "identity")
-
-# 2) График остатков от предсказанных значений
-ggplot(data = MG1_diag, aes(x = .fitted, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0)
-
-# 3) Графики остатков от предикторов в модели и не в модели
-ggplot(data = MG1_diag, aes(x = init, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0)
-ggplot(data = MG1_diag, aes(x = treat, y = .stdresid)) +
-    geom_boxplot()
-
-# 4) Квантильный график остатков
-qqPlot(MG1)
-```
-
-
-## Решение
-
-### Выбор оптимальной модели
-
-Пробуем удалить взаимодействие
-
-```{r, purl=FALSE}
-drop1(MG1, test = "F")
-```
-
->- Можно удалять
-
-## Удаляем взаимодействие и пробуем упростить дальше
-
-```{r, purl=FALSE}
-MG2 <- update(MG1, .~. - treat:init)
-drop1(MG2, test = "F")
-```
-
-Дальше упростить не получится. Вот наша оптимальная модель
-
-## Проверяем условия применимости финальной модели
-
-```{r block-2, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
-MG2_diag <- fortify(MG2)
-library(gridExtra)
-grid.arrange(
-  ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) +
-    geom_bar(stat = "identity"),
-  ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0),
-  ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) +
-    geom_boxplot(),
-  nrow = 1)
-```
-
-```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
-qqPlot(MG2)
-```
-
-
-## Решение
-
-```{r eval=FALSE, purl=FALSE}
-# Данные для графиков остатков
-MG2_diag <- fortify(MG2)
-
-# 1) График расстояния Кука
-ggplot(MG2_diag, aes(x = 1:nrow(MG2_diag), y = .cooksd)) +
-    geom_bar(stat = "identity")
-
-# 2) График остатков от предсказанных значений
-ggplot(data = MG2_diag, aes(x = .fitted, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0)
-
-# 3) Графики остатков от предикторов в модели и не в модели
-ggplot(data = MG2_diag, aes(x = init, y = .stdresid)) +
-    geom_point() + geom_hline(yintercept = 0)
-ggplot(data = MG2_diag, aes(x = treat, y = .stdresid)) +
-    geom_boxplot()
-
-# 4) Квантильный график остатков
-qqPlot(MG2)
-```
-
-## Проверяем значимость коэффициентов
-
-```{r, purl=FALSE}
-summary(MG2)
-```
-
-## Записываем уравнение модели
-
-```{r, purl=FALSE}
-coef(MG2)
-```
-Уравнение:
-
-$`r lm_equation(MG2, strict = FALSE)`$
-
-Привес коз при интенсивной обработке от глистов на 1.26 кг выше, чем при стандартном методе обработки (t-тест, p < 0.05)
 
 ## Take home messages
 

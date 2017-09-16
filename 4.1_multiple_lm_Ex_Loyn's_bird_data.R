@@ -87,16 +87,20 @@ ggplot(ABUND_diag, aes(x = 1:nrow(ABUND_diag), y = .cooksd)) +
 # 2) График остатков от предсказанных значений
 gg_resid <- ggplot(data = ABUND_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
-gg_resid
+gg_resid + geom_smooth()
 
 # 3) Графики остатков от предикторов в модели и не в модели
-# В модели: AREA + YRISOL + DIST + LDIST + GRAZE + ALT
+# В модели: AREA + YRISOL + DIST + LDIST + ALT
+# Не в модели  GRAZE
 gg_resid + aes(x = AREA)
 # Два лесных участка большой площади. Таких больших лесов мало, поэтому в этой области мы не можем оценить варьирование. На следующих графиках мы увидим похожие вещи.
 gg_resid + aes(x = YRISOL)
 gg_resid + aes(x = DIST)
 gg_resid + aes(x = LDIST)
 gg_resid + aes(x = ALT)
+
+gg_resid + aes(x = factor(bird$GRAZE)) + geom_boxplot() #на грани допустимого. Прослеживается паттерн. Следовательно GRAZE важный фактор
+
 
 # 4) Квантильный график остатков
 qqPlot(model2)
@@ -107,9 +111,8 @@ qqPlot(model2)
 summary(model2)
 
 ## Уравнение модели
-# ???
 
-# Доля объясненной изменчивости
+
 
 # ## Сравним две модели
 summary(model)$adj.r.squared
@@ -118,11 +121,32 @@ summary(model2)$adj.r.squared
 # Удаление этого предиктора, скорее, ухудшает модель!
 # И так будет всегда при удалении предикторов)))
 # Почему удаление лишних предикторов может быть полезно -
-#   в следующей лекции
+# в следующей лекции
 
 #### График модели  ########################################
 
 # Множественную регрессию сложно изобразить на графике.
 # Один из возможных вариантов -- это график отклика от важного предиктора, когда все другие предикторы принимают свои средние значения.
 
+# Какой из предикторов самый важный?
+
+
+
+#Рассмотрим самый важный предиктор
+model2_scaled <- lm(ABUND ~ scale(AREA) + scale(YRISOL) + scale(DIST) + scale(LDIST) + scale(ALT), data = bird)
+
+summary(model2_scaled) #Два самых важных предиктора
+
+MyData <- data.frame(YRISOL = seq(min(bird$YRISOL), max(bird$YRISOL), 1), #Этот предиктор рассмотрим
+                     AREA = mean(bird$AREA), #Остальные предикторы - средние
+                     DIST = mean(bird$DIST),
+                     LDIST = mean(bird$LDIST),
+                     ALT = mean(bird$ALT) )
+
+
+MyData$Predict <- predict(model2, newdata = MyData, se.fit = T)
+
+ggplot(MyData, aes(x = YRISOL, y = Predict)) + geom_line() + geom_point(data = bird, aes(x = YRISOL, y = ABUND))
+
+#Постройте самостоятельно график, отражающий связь с двумя предикторами
 
