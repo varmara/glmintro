@@ -146,7 +146,7 @@ ggplot(pressure_diag, aes(x = 1:nrow(pressure_diag), y = .cooksd)) +
 gg_resid <- ggplot(data = pressure_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
-# Гетерогенность дисперсий не видна
+# Гетерогенность дисперсий не видна? Но, кажется для какого-то объекта предсказаны очень низкие значения. Нет ли у нас выбросов?
 
 # 3) Графики остатков от предикторов в модели и не в модели
 # В модели: tobacco_l + ldl_l + typea + obesity + alcohol_l

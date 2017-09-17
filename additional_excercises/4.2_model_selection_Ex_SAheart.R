@@ -146,7 +146,7 @@ ggplot(pressure_diag, aes(x = 1:nrow(pressure_diag), y = .cooksd)) +
 gg_resid <- ggplot(data = pressure_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
-# Гетерогенность дисперсий не видна
+# Гетерогенность дисперсий не видна? Но, кажется для какого-то объекта предсказаны очень низкие значения. Нет ли у нас выбросов?
 
 # 3) Графики остатков от предикторов в модели и не в модели
 # В модели: tobacco_l + ldl_l + typea + obesity + alcohol_l
@@ -158,7 +158,6 @@ gg_resid + aes(x = typea)
 gg_resid + aes(x = obesity_l)
 # Похоже, что величина остатков зависит от степени ожирения? Или может быть результаты сильно зависят от нескольких значений (один тощий и два толстых)
 gg_resid + aes(x = alcohol_l)
-gg_resid + aes(x = pressure$famhist)
 
 # 4) Квантильный график остатков
 qqPlot(mod2)
@@ -231,8 +230,11 @@ GLM6 <- update(GLM5, . ~ . - obesity_l)
 # Способ 3. Информационные критерии (Один из)
 AIC(GLM2, GLM3, GLM4, GLM5, GLM6)
 
-# Финальная модель GLM5
+# Финальная модель GLM5 по AIC
 # spb ~ alcohol_l + obesity_l
+
+# Но мы можем выбрать более простую модель GLM6
+# spb ~ alcohol_l
 
 BIC(GLM2, GLM3, GLM4, GLM5, GLM6)
 # финальная модель GLM6
@@ -246,7 +248,7 @@ summary(GLM6)
 
 # Данные для графиков остатков
 GLM6_diag <- fortify(GLM6)
-removed_before <- c("adiposity")
+removed_before <- c("adiposity", "famhist")
 removed_now <- c("ldl_l", "tobacco_l", "typea", "obesity_l")
 removed_vars <- c(removed_before, removed_now)
 GLM6_diag_full <- data.frame(GLM6_diag, pressure[, removed_vars])
@@ -262,8 +264,11 @@ gg_resid <- ggplot(data = GLM6_diag_full, aes(x = .fitted, y = .stdresid)) +
 gg_resid
 
 # 3) Графики остатков от предикторов в модели и не в модели
-# В модели: 
+# В модели:
 gg_resid + aes(x = adiposity)
+# Подозрительно
+gg_resid + aes(x = adiposity) + geom_smooth()
+# кажется, что могли и не удалять
 gg_resid + aes(x = ldl_l)
 gg_resid + aes(x = tobacco_l)
 gg_resid + aes(x = typea)
@@ -271,11 +276,61 @@ gg_resid + aes(x = obesity_l)
 
 gg_resid + aes(x = alcohol_l)
 
-gg_resid + aes(x = pressure$famhist)
+gg_resid + aes(x = famhist)
+# Но можно и так
+ggplot(data = GLM6_diag_full, aes(x = famhist, y = .stdresid)) +
+  geom_boxplot()
+# Т.е. давление не зависит от семейной истории сердечных заболеваний.
+# И ничего страшного не случилось из-за того, что мы этот фактор не учли с самого начала.
 
 # 4) Квантильный график остатков
 # нельзя построить для модели GLM6. используем mod6, идентиную по составу предикторов
-
 qqPlot(mod6)
+# Отклонения. Но мы помним, что они не страшны
+# На самом деле, квантильный график можно и не
+# строить, т.к. большая часть информации уже была
+# на графике (2) остатков от предсказанных
+# значений
 
+#### Описываем результаты? ##################################
+
+summary(mod6)
+
+## Зависимость давления от алкоголя достоверна
+
+## Уравнение модели
+# sbp = 138.39 + 2.55alcohol_l
+
+# Доля объясненной изменчивости
+# 2%
+# Но у нас получилась ерунда, а не модель!
+
+#### Визуализируем результаты ###################################
+
+# Данные для графика
+NewData <- data.frame(
+  alcohol_l = seq(min(pressure$alcohol_l),
+                  max(pressure$alcohol_l),
+                  length.out = 100))
+# предсказанные значения
+Predictions <- predict(mod6, newdata = NewData, se.fit = TRUE)
+NewData$fit <- Predictions$fit
+# стандартные ошибки
+NewData$SE <- Predictions$se.fit
+# доверительный интервал
+NewData$upr <- NewData$fit + 1.96 * NewData$SE
+NewData$lwr <- NewData$fit - 1.96 * NewData$SE
+
+# обратная трансформация предиктора
+NewData$alcohol <- exp(NewData$alcohol_l)
+
+# график предсказаний модели
+gg_predictions <- ggplot(NewData, aes(x = alcohol, y = fit)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.3) +
+  geom_line()
+gg_predictions
+
+# Можем добавить исходные значения
+gg_predictions +
+geom_point(data = pressure, aes(x = alcohol, y = sbp))
 
