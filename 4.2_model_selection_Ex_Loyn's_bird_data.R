@@ -137,13 +137,13 @@ drop1(model4, test = "F")
 
 GLM2 <- glm(ABUND ~ AREA + YRISOL + DIST + LDIST + ALT, data = bird)
 
-drop1(GLM2, test = "Chi")
+drop1(GLM2, test = "Chisq")
 # Удаляем AREA
 GLM3 <- update(GLM2, . ~ . - AREA)
-drop1(GLM3, test = "Chi")
+drop1(GLM3, test = "Chisq")
 # Удаляем LDIST
 GLM4 <- update(GLM3, . ~ . - LDIST)
-drop1(GLM4, test = "Chi")
+drop1(GLM4, test = "Chisq")
 # Больше ничего удалить нельзя
 
 # финальная модель GLM4
