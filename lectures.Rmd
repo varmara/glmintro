@@ -136,11 +136,12 @@ title: Презентации и данные
 - Данные
     + [vitcap2.csv](data/vitcap2.csv)
     + [goats.csv](data/goats.csv)
-    +
+    + [fev.xls](data/fev.xls)
+    + [cats.xlsx](data/cats.xlsx)
 - Упражнения (разбор кода)
-    + []()
+    + [5.1_no_interaction_Ex_fev.R](5.1_no_interaction_Ex_fev.R)
 - Упражнения (написание кода)
-    + []()
+    + [5.1_no_interaction_Task_cats.R](5.1_no_interaction_Task_cats.R)
 
 ### Взаимодействие дискретного и непрерывного предикторов
 
@@ -149,20 +150,21 @@ title: Презентации и данные
 - Данные
     + [Puromycin.xlsx](data/Puromycin.xlsx)
     + [nitrofen.xlsx](data/nitrofen.xlsx)
-    + [cats.xlsx](data/cats.xlsx)
     + [fev.xls](data/fev.xls)
+    + [cats.xlsx](data/cats.xlsx)
 - Упражнения (разбор кода)
-    + []()
+    + [5.2_interactions_Ex_fev.R](5.2_interactions_Ex_fev.R)
 - Упражнения (написание кода)
-    + []()
+    + [5.2_interactions_Task_cats.R](5.2_interactions_Task_cats.R)
 
 ## День 6
 
 ### Практикум по анализу данных
 
 - Данные
-- Упражнения (разбор кода)
-    + []()
 - Упражнения (написание кода)
     + []()
+- Упражнения (разбор кода)
+    + []()
+
 
