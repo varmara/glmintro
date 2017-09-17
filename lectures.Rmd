@@ -148,6 +148,7 @@ title: Презентации и данные
 - Код []
 - Данные
     + [Puromycin.xlsx](data/Puromycin.xlsx)
+    + [nitrofen.xlsx](data/nitrofen.xlsx)
     + [cats.xlsx](data/cats.xlsx)
     + [fev.xls](data/fev.xls)
 - Упражнения (разбор кода)
