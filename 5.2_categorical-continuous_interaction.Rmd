@@ -290,7 +290,7 @@ $rate_{untreated} = 164.58 + 26.98 lc$
 
 ```{r}
 M1 <- lm(rate ~ lc + state, data = Puromycin)
-M2 <- M2 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
+M2 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
 
 # anova(M1, M2, test="F")
 drop1(M2, test = "F")
@@ -331,7 +331,7 @@ Anova(M2, type = 3)
 50 дафний случайно разделили на 5 групп, посадили в емкости с разной концентрацией нитрофена, оценили число яиц трех последовательных генераций.
 
 - `conc` --- концентрация нитрофена
-- `total` --- суммарный размер потомства
+- `total` --- суммарная плодовитость
 - `brood` --- номер выводка
 - `N` --- размер потомства в выводке
 
@@ -343,8 +343,12 @@ head(nit)
 
 ## Задание
 
-- Исследуйте данные о токсичноси нитрофена
-- Чтобы выяснить, как численность потомства дафний зависит от концентрации нитрофена в каждом из трех выводков, подберите модель со взаимодействием дискретного и непрерывного предикторов
+- Исследуйте данные о токсичности нитрофена
+- Чтобы выяснить, как численность потомства дафний зависит от 
+    + концентрации нитрофена
+    + от выводка
+    + взаимодействия концентрации нитрофена и выводка
+    + и от суммарной плодовитости дафнии
 - Проверьте условия применимости этой модели
 - Упростите модель, если это возможно
 - Напишите общее уравнение и отдельные уравнения модели для трех выводков
@@ -370,8 +374,8 @@ ggplot(nit, aes(x = N, y = 1:nrow(nit))) + geom_point()
 ### Проверка на колинеарность
 
 ```{r}
-N1 <- lm(N ~ conc + brood, data = nit)
-vif(N1)
+nit_mod_1 <- lm(N ~ conc + brood + total, data = nit)
+vif(nit_mod_1)
 ```
 
 >- Колинеарности нет
@@ -380,11 +384,11 @@ vif(N1)
 
 ### Проверка на гомогенность углов наклона
 
-Подберем полную модель. Попробуем для начала не учитывать общую плодовитость `total` (хоть это и не правильно)
+Подберем полную модель.
 
 ```{r}
-N2 <- lm(N ~ conc * brood + total, data = nit)
-drop1(N2, test = "F")
+nit_mod_2 <- lm(N ~ conc * brood + total, data = nit)
+drop1(nit_mod_2, test = "F")
 ```
 
 >- От исключения взаимодействия модель становится значительно хуже. Оставляем. Это не ANCOVA
@@ -393,12 +397,12 @@ drop1(N2, test = "F")
 
 ```{r}
 # Данные для графиков остатков
-N2_diag <- fortify(N2)
+nit_mod_2_diag <- fortify(nit_mod_2)
 ```
 ### 1) График расстояния Кука
 
 ```{r}
-ggplot(N2_diag, aes(x = 1:nrow(N2_diag), y = .cooksd)) +
+ggplot(nit_mod_2_diag, aes(x = 1:nrow(nit_mod_2_diag), y = .cooksd)) +
   geom_bar(stat = "identity")
 ```
 
@@ -406,14 +410,14 @@ ggplot(N2_diag, aes(x = 1:nrow(N2_diag), y = .cooksd)) +
 
 ### 2) График остатков от предсказанных значений
 ```{r}
-gg_resid <- ggplot(data = N2_diag, aes(x = .fitted, y = .stdresid)) +
+gg_resid <- ggplot(data = nit_mod_2_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
 ```
 
 Откуда эти полосочки?
 
->- Это счетные данные, поэтому полоски --- это N = 0, 1, 2, и т.п.
+>- Размер потомства --- счетная величина, поэтому полоски --- это N = 0, 1, 2, и т.п.
 
 ## Решение
 
@@ -431,68 +435,85 @@ grid.arrange(gg_resid + aes(x = conc),
 
 ### 4) Квантильный график остатков
 ```{r fig.height=4}
-qqPlot(N2)
+qqPlot(nit_mod_2)
 ```
 
 ## Проверяем значимость коэффициентов {.smaller}
 
-```{r}
-summary(N2)
-```
-
-## Таблица дисперсионного анализа
+Подумайте, что означают эти коэффициенты
 
 ```{r}
-anova(N2)
+summary(nit_mod_2)
 ```
 
 ## Записываем уравнение модели
 
 ```{r}
-coef(N2)
+coef(nit_mod_2)
 ```
 
 Общее уравнение: 
 
-`r lm_equation(N2, strict = FALSE)`
+`r lm_equation(nit_mod_2, strict = FALSE)`
 
 - Для выводка 1: $N = -6.72 + 0.03conc + 0.33total$
 - Для выводка 2: $N = 2.1 - 0.01conc + 0.33total$
 - Для выводка 3: $N = 4.61 - 0.02conc + 0.33total$
 
+
+## Таблица дисперсионного анализа {.smaller}
+
+Из-за того, что у нас есть дискретный фактор с несколькими уровнями, за его влияние отвечают сразу несколько коэффициентов. Проверить влияние фактора целиком можно при помощи дисперсионного анализа. Он работает аналогично тому, как мы это видели для простой линейной регрессии.
+
+```{r}
+anova(nit_mod_2)
+```
+
+## Сложные модели лучше по возможности изображать в виде графика {.smaller}
+
+### Данные для графика
+
+У нас три переменные в модели - выводок, концентрация, и суммарная плодовитость. Мы не можем их одновременно изобразить на одном графике. Для визуализации результатов нам важнее зависимость размера потомства от концентрации, чем от суммарной плодовитости. Поэтому мы изобразим предсказанный размер потомства при разных концентрациях ниторофена и __при средней суммарной плодовитости__.
+
+```{r}
+library(plyr)
+# ряд значений концентрации один и тот же для
+# каждого выводка, поэтому
+NewData <- expand.grid(brood = unique(nit$brood),
+                       conc = unique(nit$conc),
+  # средние значения суммарной плодовитости для каждого выводка
+                       total = mean(nit$total))
+# предсказанные значения
+Predictions <- predict(nit_mod_2, newdata = NewData, se.fit = TRUE)
+NewData$fit <- Predictions$fit
+# стандартные ошибки
+NewData$SE <- Predictions$se.fit
+# доверительный интервал
+NewData$upr <- NewData$fit + 1.96 * NewData$SE
+NewData$lwr <- NewData$fit - 1.96 * NewData$SE
+```
+
+
 ## Задание
 
 Постройте график предсказаний модели
 
-<!-- ## Данные для графика -->
+## Рисуем график предсказаний (Вторая попытка)
 
-<!-- ```{r} -->
-<!-- library(plyr) -->
-<!-- NewData <- ddply( -->
-<!--   nit, .variables = .(brood), summarise,  -->
-<!--   total = seq(min(total), max(total), length = 100)) -->
+```{r nit-mod-2-predict, purl=FALSE}
+ggplot(NewData, aes(x = conc, y = fit)) +
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) +
+  geom_line(aes(colour = brood))
+```
 
-<!-- # предсказанные значения -->
-<!-- Predictions <- predict(N2, newdata = NewData, se.fit = TRUE) -->
-<!-- NewData$fit <- Predictions$fit -->
+## На графике предсказаний можно показать исходные значения
 
-<!-- # стандартные ошибки -->
-<!-- NewData$SE <- Predictions$se.fit -->
-
-<!-- # доверительный интервал -->
-<!-- NewData$upr <- NewData$fit + 1.96 * NewData$SE -->
-<!-- NewData$lwr <- NewData$fit - 1.96 * NewData$SE -->
-<!-- ``` -->
-
-<!-- ## Рисуем график предсказаний (Вторая попытка) -->
-
-<!-- ```{r gg-M1-predictions-backtrans, purl=FALSE} -->
-<!-- ggplot(NewData, aes(x = conc, y = fit)) +  -->
-<!--   # geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) + -->
-<!--   # geom_line(aes(colour = brood)) + -->
-<!--   geom_point(data = nit, aes(x = conc, y = N, colour = brood)) -->
-<!-- ``` -->
-
+```{r nit-mod-2-predict-points, purl=FALSE}
+ggplot(NewData, aes(x = conc, y = fit)) +
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) +
+  geom_line(aes(colour = brood)) +
+  geom_point(data = nit, aes(x = conc, y = N, colour = brood))
+```
 
 
 ## Take home messages
