@@ -132,15 +132,17 @@ title: Презентации и данные
 ### Дискретные предикторы в регрессионных моделях
 
 - Презентация <!-- []() --->
-- Код []
+- Код [5.1_categorical-no_interactions_ANCOVA_code.R](5.1_categorical-no_interactions_ANCOVA_code.R)
 - Данные
     + [vitcap2.csv](data/vitcap2.csv)
     + [goats.csv](data/goats.csv)
     + [fev.xls](data/fev.xls)
     + [cats.xlsx](data/cats.xlsx)
+    + [hellung.xls](data/hellung.xls)
 - Упражнения (разбор кода)
     + [5.1_no_interaction_Ex_fev.R](5.1_no_interaction_Ex_fev.R)
 - Упражнения (написание кода)
+    + [5.1_no_interactions_Task_Infusoria.R](5.1_no_interactions_Task_Infusoria.R)
     + [5.1_no_interaction_Task_cats.R](5.1_no_interaction_Task_cats.R)
 
 ### Взаимодействие дискретного и непрерывного предикторов
