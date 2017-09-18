@@ -147,7 +147,7 @@ title: Презентации и данные
 
 ### Взаимодействие дискретного и непрерывного предикторов
 
-- Презентация <!-- [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html) --->
+- Презентация [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html)
 - Код [5.2_categorical-continuous_interaction_code.R](5.2_categorical-continuous_interaction_code.R)
 - Данные
     + [Puromycin.xlsx](data/Puromycin.xlsx)
