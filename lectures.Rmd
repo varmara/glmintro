@@ -163,11 +163,12 @@ title: Презентации и данные
 
 ### Практикум по анализу данных
 
-- Упражнения (написание кода)
-    + []()
-- Данные
+- Упражнения для самоконтоля:
+    <!-- + [6.1_Control_Task.R](6.1_Control_Task.R) -->
+    + [fev.xls](data/fev.xls)
+    + [picture.jpg](picture.jpg)
 - Упражнения (разбор кода)
-    + [6.2_lm_power_simulation_Ex_cats.R](6.2_lm_power_simulation_Ex_cats.R)
+<!--  +  [6.2_lm_power_simulation_Ex_cats.R](6.2_lm_power_simulation_Ex_cats.R) --->
 - Данные
     + [loyn.csv](data/loyn.csv)
     + [cats.xlsx](data/cats.xlsx) 
