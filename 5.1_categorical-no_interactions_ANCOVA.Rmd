@@ -1,6 +1,6 @@
 ---
 title: "Дискретные предикторы в линейных моделях"
-author: Марина Варфоломеева, Вадим Хайтов
+author: Вадим Хайтов, Марина Варфоломеева
 output:
   ioslides_presentation:
     widescreen: true
