@@ -1,0 +1,549 @@
+---
+title: "Взаимодействие дискретных и непрерывных предикторов"
+author: Марина Варфоломеева, Вадим Хайтов
+output:
+  ioslides_presentation:
+    widescreen: true
+    css: assets/my_styles.css
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE, cache = FALSE, purl = FALSE}
+# output options
+options(width = 70, scipen = 6, digits = 3)
+library(knitr)
+# chunk default options
+opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, warning = FALSE)
+```
+
+## Мы рассмотрим
+
++ Линейные модели c непрерывными и дискретными предикторами
++ Взаимодействие дискретных и непрерывных предикторов
+
+##Влияет ли стаж работы на предприятиях, вырабатывающих кадмий, на жизненнй объем легких?
+
+Прмер взят из книги:
+P. Armitage and G. Berry (1987), Statistical Methods in Medical Research, 2nd ed., Blackwell, p.286.
+
+Данные представленны в пакете `ISwR`
+
+Переменные:
+
+`group` - Группа 1: Более 10 лет в отрасли, контактирующие с кадмием; Группа 3 -  не подвергались воздействию.
+
+`age` - возраст
+
+`vital.capacity` - объем легких (л).
+
+## Загружаем данные
+
+```{r}
+vit <- read.table("data/vitcap2.csv", header = TRUE, sep = ";")
+```
+
+
+##Немного преобразуем исходный датасет
+
+```{r}
+vit$Group [vit$group == 1] <- "Long exposed"
+vit$Group [vit$group == 2] <- "Short exposed"
+vit$Group [vit$group == 3] <- "Not exposed"
+
+```
+
+## Меняем порядок уровней
+```{r}
+vit$Group <- factor(vit$Group, levels = c("Not exposed", "Short exposed", "Long exposed"))
+
+levels(vit$Group)
+```
+
+
+
+
+##Вычисляем средние
+
+```{r, message=FALSE}
+library(dplyr)
+vit_summary <- vit %>%  group_by(Group) %>%  #Передаем датафрейм группирующей функции
+            summarise(mean_capac = mean(vital.capacity),  # Вычисляем среднюю
+            SD_capac = sd(vital.capacity), # Стандартное отклонение
+            n_capac = n(),  # объем выборки
+            SE_capac = sd(vital.capacity)/sqrt(n())) # Стандартную ошибку
+
+vit_summary
+```
+
+
+
+##Визуализируем результаты
+
+```{r}
+library(ggplot2)
+ggplot(vit_summary, aes(x = Group, y = mean_capac)) +  geom_bar(stat = "identity", aes(fill = Group)) + geom_errorbar(aes(ymin = mean_capac - SE_capac, ymax = mean_capac + SE_capac), width = 0.2)
+
+```
+
+## Модели с дискретными предикторами
+
+```{r , echo=FALSE}
+set.seed(1234)
+x <- data.frame(labels = c(rep("Level 1", 10), rep( "Level 2", 10), rep("Level 3", 10)), response = c(rnorm(10, 5, 1), rnorm(10, 10, 1), rnorm(10, 15, 1)))
+
+ggplot(x, aes(x=labels, y=response)) + geom_boxplot()+ geom_point(color="blue", size=4) + xlab(" ")
+
+```
+
+Модель имеет такой вид
+<br>
+<br>
+$response = 4.6 + 5.3I_{Level2} + 9.9 I_{Level3} + \epsilon_i$
+
+$I_{i}$ - dummy variable
+
+Моделями с дискретными предикторами занимается классический **дисперсионный анализ**
+
+##Модель с дискретным предиктором
+
+```{r}
+M1 <- lm(vital.capacity ~ Group, data = vit)
+anova(M1)
+```
+
+В принципе можно было бы обсуждать результат.
+
+
+##Смотрим на результаты {.smaller}
+
+```{r}
+summary(M1)
+```
+
+Куда делась одна градация фактора?
+Как записать данную модель?
+
+## Переменные-болванки (dummy variables)
+
+Для понимания сути переменных-болванок полезно понимать более глубинные основы метода линейных моделей
+
+##Скрытая от глаз техника вычислений
+
+Для обычной модели с непрерывным предиктором каждое предсказанное значение вычисляется по следующей формуле $ y_i = b_0 + b_1  x_i$
+$$
+y_1 = b_0 + b_1  x_1  \\
+y_2 = b_0 + b_1  x_2 \\
+y_3 = b_0 + b_1  x_3 \\
+... \\
+y_n = b_0 + b_1  x_n
+$$
+
+##Скрытая от глаз техника вычислений
+Длинный ряд вычислений можно записать короче
+
+$$
+\textbf{y} = \textbf{X} \boldsymbol{\beta}
+$$
+
+Здесь
+$\textbf{y}$ - Вектор предсказанных значений
+$\boldsymbol{\beta}$ - вектор коэффициентов линейной модели
+$\textbf{X}$ - Модельная матрица
+
+
+## Смотрим на модельную матрицу
+
+```{r}
+model.matrix(M1)
+```
+
+
+## Смотрим на модельную матрицу
+В модельной матрице три колонки
+
+1 - Intercept
+2 - GroupShort exposed - в тех строках, которые соответствуют градации переменной `Group` = "Short exposed" стоит 1, в остальных строках  - 0
+3.  GroupLong exposed - в тех строках, которые соответствуют градации переменной `Group` = "Long exposed" стоит 1, в остальных строках  - 0
+4. Одна из градаций фактора (первая, если не специально не указать иное) становится **базовым уровнем**
+
+##Предсказанные значения
+
+```{r}
+fitted(M1)
+
+```
+
+##Предсказанные значения, вычисленные через матричное умножение
+
+```{r}
+model.matrix(M1) %*% coefficients(M1)
+
+```
+
+## Как записать модель с дискретными предикторами
+$$
+ vital.capacity = 4.46205 + 0.00974 I_{Group = Short} -0.51288  I_{Group = Long}
+$$
+
+$I$ - переменная болванка, которая принимает значение 1 или 0
+
+
+## Запись модели с дискретными предикторами
+
+Если мы хотим вычислить предсказание модели (значение объема легких) для индавида, имеющего Group =  Short exposed
+
+$$
+ vital.capacity = 4.46205 + 0.00974 \cdot 1  -0.51288 \cdot  0 = \\
+ = 4.46205 + 0.00974 = 4.47
+$$
+
+## Запись модели с дискретными предикторами
+
+Если мы хотим вычислить предсказание модели (значение объема легких) для индавида, имеющего Group =  Long exposed
+
+$$
+ vital.capacity = 4.46205 + 0.00974 \cdot 0  -0.51288 \cdot  1 = \\
+ = 4.46205 -0.51288   = 3.95
+$$
+
+## Запись модели с дискретными предикторами
+
+Если мы хотим вычислить предсказание модели (значение объема легких) для индавида, имеющего Group =  Not exposed
+
+$$
+ vital.capacity = 4.46205 + 0.00974 \cdot 0  -0.51288 \cdot  0 = \\
+ = 4.46205
+$$
+Это базовый уровень. Для него предсказанное занчение равно `Intercept`
+
+## Изменяем базовый уровень
+
+```{r}
+
+vit$Group <-  relevel(vit$Group, ref = "Long exposed" )
+
+```
+
+##Изменились ли результаты?
+
+```{r}
+M2 <- lm(vital.capacity ~ Group, data = vit)
+summary(M2)
+```
+
+##Вычислим предсказание модели M2 для индивидов из всех трех групп
+
+Для "Not exposed"
+
+```{r}
+3.949 + 0.513 * 1 + 0.523 * 0
+```
+
+Для "Short exposed"
+
+```{r}
+3.949 + 0.513 * 0 + 0.523 * 1
+```
+
+
+Для "Long exposed"
+
+```{r}
+3.949 + 0.513 * 0 + 0.523 * 0
+```
+
+
+
+
+
+
+## Вернемся к результатам
+
+Можно ли доверять полученным результатам?
+
+```{r}
+M1_diag <- fortify(M1)
+qplot(vit$age, M1_diag$.stdresid) + geom_smooth(method = "lm")
+```
+Очевидный паттерн в остатках!
+
+Необходимо включать еще одну перменную - **`ковариату`**
+
+# Analysis of covariance (ANCOVA)
+
+
+##Меняем модель
+
+```{r}
+M3 <- lm(vital.capacity ~ Group + age, data = vit)
+```
+
+##Диагностика модели
+
+```{r}
+M3_diag <- fortify(M3)
+qplot(vit$age, M3_diag$.stdresid) + geom_smooth(method = "lm")
+
+```
+
+Паттерн исчез!
+
+## Результаты
+```{r}
+summary(M3)
+```
+
+## Результаты
+```{r}
+anova(M3)
+```
+
+Противоречие с результатами `summary()`!
+
+## Поменяем порядок предикторов
+
+```{r}
+anova(lm(formula = vital.capacity ~ age + Group, data = vit))
+```
+`
+Результат тестирования зависит от порядка предикторов.
+Почему?
+
+## Два варианта тестирования
+
+- Последовательное
+- Иерархическое
+
+
+### Вариант 1. Последовательное тестирование (SS type I)
+
+Факторы тестируются в порядке включения в модель. Результат тестирования зависит от порядка включения.
+
+```{r}
+anova(M3)
+```
+Интересующй нас фактор должен бЫть на последнем месте.
+
+### Вариант 1. Последовательное тестирование (SS type I)
+
+Факторы тестируются в порядке включения в модель. Результат тестирования зависит от порядка включения.
+
+```{r}
+anova(lm(formula = vital.capacity ~ age + Group, data = vit))
+```
+
+Какой фактор ставить на какое место?
+
+>- Тот предиктор, который интересует исследователия надо поставить на второе место. Влияние этого фактора тестируется после удаления влияния ковариат.
+
+
+### Вариант 2. Иерархическое тестирование (SS type III)
+
+Каждый из факторов по отношению к модели только без него, но со всеми остальными.
+Нужно, если много факторов и выборки разного размера. Тогда результат не будет зависеть от порядка включения факторов в модель.
+
+```{r}
+library(car)
+Anova(M3, type = 3)
+```
+
+
+
+#ANCOVA на примере данных о влиянии глистогонных на рост коз
+
+## Глистогонные и рост коз
+
+Как влияет на прирост массы коз интенсивность профилактики паразитарных заболеваний?
+
+<div class="columns-2">
+
+<img src="images/Goat-by-Jennifer-C.-Flickr.jpg" width="300" height="300">
+<small> Goat by Jennifer C. [on Flickr](https://flic.kr/p/fjU4J9) </small>
+
+
+Известно, что у легких животных привес больше, поэтому мы должны учитывать в модели не только способ обработки от глистов, но и влияние начального веса.
+
+
+- `Treatment` - обработка от глистов (стандартная, интенсивная)
+- `Weightgain` - привес, кг
+- `Initial.wt` - начальный вес, кг
+
+
+</div>
+
+<small>
+<div class=.footnote>Пример из библиотеки данных
+http://www.statlab.uni-heidelberg.de/data/ancova/goats.story.html</div>
+
+</small>
+
+## Читаем данные и знакомимся с ними
+
+```{r}
+library(readxl)
+goat <- read_excel("data/goats.xlsx", sheet = 1)
+head(goat)
+str(goat)
+```
+
+## Читаем данные и знакомимся с ними
+
+```{r}
+colSums(is.na(goat))
+# переименуем переменные для краткости
+colnames(goat) <- c("treat", "wt", "init")
+# объемы выборок
+table(goat$treat)
+# зададим порядок уровней фактора для удобства интерпретации
+goat$treat <- factor(goat$treat, levels = c("standard", "intensive"))
+```
+
+## Есть ли выбросы?
+
+```{r dot-plots, fig.height=2}
+library(ggplot2)
+gg_dot <- ggplot(goat, aes(y = 1:nrow(goat))) + geom_point()
+gg_dot + aes(x = wt)
+gg_dot + aes(x = init)
+```
+
+>- Все ок
+
+## Задание
+
+- Подберите модель, описывающую зависимость между увеличением веса коз и способом прфилактической обработки животных
+- Проверьте условия применимости этой модели
+- Упростите модель, если это возможно
+- Проверьте условия применимости финальной модели
+- Напишите общее уравнение и отдельные уравнения модели для двух способов профилактики
+- Постройте график предсказаний модели
+
+## Решение
+
+### Нет ли колинеарности между начальным весом и тритментом
+
+```{r gg-colinearity, fig.width=3, purl=FALSE}
+MG <- lm(wt ~ init + treat, data = goat)
+vif(MG)
+ggplot(goat, aes(x = treat, y = init)) + geom_boxplot()
+```
+
+>- Выраженной колинеарности нет
+
+##Результаты
+
+```{r}
+summary(MG)
+```
+
+##Результаты
+
+```{r}
+anova(MG)
+```
+
+##Результаты
+
+```{r}
+library(car)
+Anova(MG, type = 3)
+```
+
+
+
+
+### График модели
+
+```{r gg-predictions, purl=FALSE}
+gg_g <- ggplot(data = goat, aes(y = wt, x = init, colour = treat)) +
+  geom_point()  +
+  labs(x = "Начальный вес, кг",
+       y = "Привес, кг") +
+  scale_colour_discrete("Способ обработки",
+                        breaks = c("intensive", "standard"),
+                        labels = c("Интенсивный", "Стандартный"))
+gg_g + geom_smooth(method = "lm")
+```
+
+## Решение
+
+### Проверяем условия применимости
+
+>- Все нормально
+
+```{r block-1, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2, echo=FALSE}
+MG_diag <- fortify(MG)
+library(gridExtra)
+grid.arrange(
+  ggplot(MG_diag, aes(x = 1:nrow(MG_diag), y = .cooksd)) +
+    geom_bar(stat = "identity"),
+  ggplot(data = MG_diag, aes(x = .fitted, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG_diag, aes(x = init, y = .stdresid)) +
+    geom_point() + geom_hline(yintercept = 0),
+  ggplot(data = MG_diag, aes(x = treat, y = .stdresid)) +
+    geom_boxplot(),
+  nrow = 1)
+```
+
+##Нормальнсть распределения остатков
+
+```{r block-1-q, purl=FALSE, fig.width=3, fig.height=3, echo=FALSE}
+qqPlot(MG)
+```
+
+## Записываем уравнение модели
+
+```{r, purl=FALSE}
+coef(MG)
+```
+Уравнение:
+
+
+```{r echo=FALSE, purl=FALSE}
+lm_equation <- function(fit, strict = TRUE, rnd = 2){
+#   extracting call formula
+  frml <- as.character(fit$call)[2]
+#   extract signs
+    sign <- ifelse(grepl("-", coef(fit)[-1]), " - ", " + ")
+  # extract coefficients
+  coeffs <- format(round(abs(coef(fit)), rnd), digits = 2, nsmall = rnd, trim = TRUE)
+  if(strict == TRUE){
+    i <- 1:(length(coeffs) - 1)
+    vars <- c("Y", paste0(" X", i))
+
+  } else {
+# extract vector of variable names
+  vars <- c(all.vars(formula(fit))[1], names(fit$coefficients)[-1])
+# combine everything
+  }
+  start <- ifelse(coef(fit)[1] > 0, paste(vars[1], coeffs[1], sep = " = "), paste(vars[1], coeffs[1], sep = " = - "))
+  end <- paste(sign, coeffs[-1], vars[-1], sep = "", collapse = "")
+  return(paste0(start, end, sep = ""))
+}
+```
+
+
+$`r lm_equation(MG, strict = FALSE)`$
+
+Привес коз при интенсивной обработке от глистов на 1.26 кг выше, чем при стандартном методе обработки (t-тест, p < 0.05)
+
+
+
+## Take home messages
+
+- Нет разницы между моделями с дискретнми и непрерывными предикторами
+- При анализе влияния дискретного фактора часто необходимо учитывать влияние ковариаты.
+- Пр тестировании гипотезы надо помнить о существовании двух типов тестирования: последовательное vs иерархическое.
+
+
+## Что почитать
+
++ <span style="color:red">Must read paper!</span> Zuur, A.F. and Ieno, E.N., 2016. A protocol for conducting and presenting results of regression‐type analyses. Methods in Ecology and Evolution, 7(6), pp.636-645.
+
++ Кабаков Р.И. R в действии. Анализ и визуализация данных на языке R. М.: ДМК Пресс, 2014
++ Zuur, A., Ieno, E.N. and Smith, G.M., 2007. Analyzing ecological data. Springer Science & Business Media.
++ Quinn G.P., Keough M.J. 2002. Experimental design and data analysis for biologists
++ Logan M. 2010. Biostatistical Design and Analysis Using R. A Practical Guide
+
