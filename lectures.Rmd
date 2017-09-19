@@ -164,7 +164,7 @@ title: Презентации и данные
 ### Практикум по анализу данных
 
 - Упражнения для самоконтоля:
-    <!-- + [6.1_Control_Task.R](6.1_Control_Task.R) -->
+    + [6.1_Control_Task.R](6.1_Control_Task.R)
     + [fev.xls](data/fev.xls)
     + [picture.jpg](picture.jpg)
 - Упражнения (разбор кода)
