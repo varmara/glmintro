@@ -2,7 +2,6 @@
 #
 # Прочитайте данные из файла "fev.xls" и удалите строки, в которых есть пропущенные значения
 
-
 library(readxl)
 
 fev <- read_excel("data/fev.xls", sheet = "tidy_data", skip = 1, na = "NA")
