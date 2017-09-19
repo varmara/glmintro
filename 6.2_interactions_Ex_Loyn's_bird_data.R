@@ -1,6 +1,5 @@
-# Множественная регрессия. Упражнение 2.
-
-# # Какие факторы определяют обилие птиц во фрагментированных лесных массивах Австралии?
+# Взаимодействие дискретных и непрерывных факторов######
+# Птицы в лесах австралии
 
 # (Пример взят из книги Quinn&Keugh,2002; Оригинальная работа Loyn, 1987)
 #
@@ -58,8 +57,6 @@ scatterplotMatrix(bird)
 # Итог: Удалим отскакивающие наблюдения, сделаем
 # фактором дискретную переменную и логарифмируем площадь
 
-
-
 # Делаем фактором дискретную переменную
 bird$GRAZE_factor <- factor(bird$GRAZE)
 
@@ -71,40 +68,44 @@ bird$GRAZE_factor <- factor(bird$GRAZE)
 include <- bird$AREA < 500 & bird$DIST < 1000 & bird$ALT < 250
 bird_1 <- bird[include, ]
 
+# Логарифмируем площадь
+bird_1$AREA_l <- bird_1$AREA
+
+# Дальше работаем с bird_1
+
 #### Анализ с учетом взаимодействия факторов, и с подбором оптимальной модели ########
 
 #### Построим линейную модель ##############################
 
-model <- lm(ABUND ~  AREA + YRISOL + DIST + LDIST + GRAZE_factor + ALT, data = bird_1)
+model <- lm(ABUND ~  AREA_l + YRISOL + DIST + LDIST + GRAZE_factor + ALT, data = bird_1)
 
 # # Проверка условий применимости ##########################
 
 # 0) ПРОВЕРКА НА МУЛЬТИКОЛЛИНЕАРНОСТЬ
 vif(model)
-# Возможно GRAZE - лишний предиктор. Но, допустим,
+# Возможно GRAZE_factor - лишний предиктор. Но, допустим,
 # нас на самом деле гораздо больше интересует, как
 # обилие птиц зависит от уровня выпаса скота, чем
-# от года изоляции леса. Поэтому мы вместо GRAZE
+# от года изоляции леса. Поэтому мы вместо GRAZE_factor
 # удалим YRISOL
 
 model2 <- update(model, ~ . -YRISOL)
 vif(model2)
 
-model3 <- update(model2, ~ . -AREA)
-vif(model3)
-
-summary(model3)
+summary(model2)
 # Мультиколлинеарности нет
 
-# Теперь работаем с моделью 3
 
-summary(model3)
+model2 <- lm(ABUND ~ AREA_l + DIST + LDIST + GRAZE_factor + ALT, data = bird_1)
+# Теперь работаем с моделью 2
+
+summary(model2)
 
 # Данные для графиков остатков
-ABUND_diag <- fortify(model3)
-removed_vars <- c("YRISOL", "AREA")
-ABUND_diag_full <- data.frame(ABUND_diag, bird_1[, removed_vars])
-
+ABUND_diag <- fortify(model2)
+# Удаляли YRISOL, нужно его вернуть
+ABUND_diag_full <- data.frame(ABUND_diag,
+                              YRISOL = bird_1$YRISOL)
 
 # 1) График расстояния Кука
 ggplot(ABUND_diag_full, aes(x = 1:nrow(ABUND_diag_full), y = .cooksd)) +
@@ -116,79 +117,60 @@ gg_resid <- ggplot(data = ABUND_diag_full, aes(x = .fitted, y = .stdresid)) +
 gg_resid
 
 # 3) Графики остатков от предикторов в модели и не в модели
-# В модели: AREA + YRISOL + DIST + LDIST + GRAZE + ALT
-gg_resid + aes(x = AREA)
-# Величина остатков зависит от площади леса. Возможно, придется вернуть в модель
+#  ABUND ~ AREA_l + DIST + LDIST + GRAZE_factor + ALT, не в модели YRISOL
+gg_resid + aes(x = AREA_l)
 gg_resid + aes(x = YRISOL)
-# Величина остатков зависит от года изоляции. Гетерогенность дисперсий
 gg_resid + aes(x = DIST)
 gg_resid + aes(x = LDIST)
-# Гетерогенность дисперсий
 gg_resid + aes(x = ALT)
 
 # 4) Квантильный график остатков
 qqPlot(model2)
 
 
-model3 <- lm(ABUND ~ DIST + LDIST + AREA*GRAZE_factor + ALT, data = bird_1)
-summary(model3)
 
+summary(model2)
+# Не все влияют, будем оптимизировать
 
 #### Подбор оптимальной модели ###############
 
 # Способ 1. Частный F-критерий
+drop1(model2, test = "F")
+# Удаляем DIST
+model3 <- update(model2, . ~ . - DIST)
 drop1(model3, test = "F")
 # Удаляем LDIST
 model4 <- update(model3, . ~ . - LDIST)
 drop1(model4, test = "F")
-# Удаляем DIST
-model5 <- update(model4, . ~ . - DIST)
+# Удаляем ALT
+model5 <- update(model4, . ~ . - ALT)
 drop1(model5, test = "F")
-# Удаляем ALT
-model6 <- update(model5, . ~ . - ALT)
-drop1(model6, test = "F")
 # Больше ничего удалить нельзя
 
-# финальная модель model6
-# ABUND ~ AREA + GRAZE_factor + AREA:GRAZE_factor
+# финальная модель model5
+# ABUND ~ AREA_l + GRAZE_factor
 
-# Способ 2. Тесты соотношения правдоподобий
+# То же самое можно сделать при помощи функции step()
 
-GLM3 <- glm(ABUND ~ DIST + LDIST + AREA*GRAZE_factor + ALT, data = bird_1)
-
-drop1(GLM3, test = "Chi")
-# Удаляем LDIST
-GLM4 <- update(GLM3, . ~ . - LDIST)
-drop1(GLM4, test = "Chi")
-# Удаляем DIST
-GLM5 <- update(GLM4, . ~ . - DIST)
-drop1(GLM5, test = "Chi")
-# Удаляем ALT
-GLM6 <- update(GLM5, . ~ . - ALT)
-drop1(GLM6, test = "Chi")
-# Больше ничего удалить нельзя
-
-# финальная модель GLM6
-# ABUND ~ AREA + GRAZE_factor + AREA:GRAZE_factor
-
-# Способ 3. Информационные критерии (Один из)
-AIC(GLM3, GLM4, GLM5, GLM6)
-
-# Финальная модель GLM6
-# ABUND ~ AREA + GRAZE_factor + AREA:GRAZE_factor
-
-BIC(GLM3, GLM4, GLM5, GLM6)
-# финальная модель GLM6
-# ABUND ~ AREA + GRAZE_factor + AREA:GRAZE_factor
+model_step <- step(model2)
+# сравните, получились одинаковые модели
+model5
+model_step
 
 #### Проверка условий применимости финальной модели ########
 
-# Допустим, мы остановились на model6
+# Допустим, мы остановились на model5
+
+# нужно протестировать, есть ли взаимодействие
+model6 <- lm(ABUND ~ AREA_l + GRAZE_factor + AREA_l:GRAZE_factor, data = bird_1)
+drop1(model6, test = "F")
+# Удаление взаимодействия из модели ее достоверно ухудшает
+# Т.е. наша финальная модель model6
+
+
 # Данные для графиков остатков
 model6_diag <- fortify(model6)
-removed_before <- c("YRISOL")
-removed_now <- c("LDIST", "DIST", "ALT")
-removed_vars <- c(removed_before, removed_now)
+removed_vars <- c("YRISOL", "LDIST", "DIST", "ALT")
 model6_diag_full <- data.frame(model6_diag, bird_1[, removed_vars])
 
 
@@ -200,33 +182,46 @@ ggplot(model6_diag_full, aes(x = 1:nrow(model6_diag_full), y = .cooksd)) +
 gg_resid <- ggplot(data = model6_diag_full, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
+# ОК, хороший график.
 
 # 3) Графики остатков от предикторов в модели и не в модели
-gg_resid + aes(x = AREA)
-# Разброс зависит от площади
+gg_resid + aes(x = AREA_l)
 gg_resid + aes(x = YRISOL)
-# от года изоляции
 gg_resid + aes(x = DIST)
-# от расстояния до ближайшено леса
 gg_resid + aes(x = LDIST)
-# и от расстояния до ближайшего большого леса
 gg_resid + aes(x = ALT)
+# Эти графики уже хуже - видна гетерогенность дисперсий
 
 # 4) Квантильный график остатков
 qqPlot(model6)
 
-# Итог не утешительный...
-# Пока что продолжим с этой оптимизированной моделью
-
+# Гетерогенность дисперсий не побороли
+# Дисперсия предсказаний зависит от предиктора и от факторов не в модели. Из-за этого увеличится вероятность ошибки I рода в тестах. Чтобы это исправить, на самом деле нужно моделировать гетерогенность дисперсий (средствами GLM). Но сейчас мы продолжим дальше.
 #### Описание результатов ##################################
 
 summary(model6)
+# Задание ------------------------------
+# Посмотрите на summary нашей модели и запишите
 
 # уравнение общее
 
 # уравнения для разных уровней выпаса скота
+# GRAZE_factor == 1
 
-# значимость эффектов
+# GRAZE_factor == 2
+
+# GRAZE_factor == 3
+
+# GRAZE_factor == 4
+
+# GRAZE_factor == 5
+#---------------------------------------------
+
+# За эффект GRAZE_factor у нас отвечает много коэффициентов
+# И за эффект взаимодействия тоже - много коэффициентов, поэтому
+# неудобно приводить в результатах
+# таблицу коэффициентов как в summary.
+# Лучше привести таблицу дисперсионного анализа
 anova(model6)
 
 # доля объясненной изменчивости
@@ -235,4 +230,34 @@ anova(model6)
 #### График модели  ########################################
 
 # На графике нужно изобразить зависимость обилия птиц от площади леса для разных уровней выпаса скота. Всего будет 5 линий
+
+library(plyr)
+NewData <- ddply(
+  .data = bird_1, .variables = .(GRAZE_factor), .fun = summarise,
+  AREA_l = seq(min(AREA_l), max(AREA_l), length = 100))
+
+# предсказанные значения
+Predictions <- predict(model6, newdata = NewData, se.fit = TRUE)
+NewData$fit <- Predictions$fit
+
+# стандартные ошибки
+NewData$SE <- Predictions$se.fit
+
+# доверительный интервал
+NewData$upr <- NewData$fit + 1.96 * NewData$SE
+NewData$lwr <- NewData$fit - 1.96 * NewData$SE
+
+# График без обратной трансформации
+ggplot(NewData, aes(x = AREA_l, y = fit)) +
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = GRAZE_factor)) +
+  geom_line(aes(colour = GRAZE_factor)) +
+  geom_point(data = bird_1, aes(x = AREA_l, y = ABUND, colour = GRAZE_factor))
+
+# Какой из этого вывод?
+# Обилие птиц слабо зависит от площади леса, если там мало пасут скот. Но зато оно сильно зависит от площади в лесах, где сильно пасут скот.
+# Кроме того, на графике становится видно, что лесов большой площади мало, и это леса, где мало пасут скот (GRAZE_factor 1 или 2). А лесов малой площади много, и во многих из них сильно пасут скот.
+
+# Задание ---------------------------------------
+# Сделайте график с обратной трансформацией предиктора AREA_l
+
 
