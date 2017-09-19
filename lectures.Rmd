@@ -168,7 +168,9 @@ title: Презентации и данные
     + [fev.xls](data/fev.xls)
     + [picture.jpg](picture.jpg)
 - Упражнения (разбор кода)
-<!--  +  [6.2_lm_power_simulation_Ex_cats.R](6.2_lm_power_simulation_Ex_cats.R) --->
+    + [6.2_lm_power_simulation_Ex_cats.R](6.2_lm_power_simulation_Ex_cats.R)
+    + [6.2_interactions_Ex_Loyn's_bird_data.R](6.2_interactions_Ex_Loyn's_bird_data.R)
+    + [6.2_among_individual_variability_Ex_sleepstudy.R](6.2_among_individual_variability_Ex_sleepstudy.R)
 - Данные
     + [loyn.csv](data/loyn.csv)
     + [cats.xlsx](data/cats.xlsx) 
