@@ -469,10 +469,9 @@ summary(mod6)
 
 ```{r solution-0a, fig.show='hold', purl=FALSE, fig.width=10, fig.height=2.2}
 mod6_diag <- fortify(mod6)
-removed_before <- c("lcp", "pgg45") 
-removed_now <- c("age", "lbph", "gleason")
-removed_vars <- c(removed_before, removed_now)
-mod6_diag_full <- data.frame(mod6_diag, prost[, removed_vars])
+mod6_diag_full <- data.frame(
+  mod6_diag, 
+  prost[, c("lcp", "pgg45", "age", "lbph", "gleason")])
 
 ggplot(mod6_diag_full, aes(x = 1:nrow(mod6_diag_full), y = .cooksd)) + 
   geom_bar(stat = "identity")

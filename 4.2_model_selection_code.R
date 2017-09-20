@@ -55,11 +55,10 @@ summary(mod3)
 
 mod4 <- update(mod3, . ~ . - age)
 anova(mod3, mod4)
-mod5 <- update(mod4, . ~ . - lbph)
+mod5 <- update(mod3, . ~ . - lbph)
 anova(mod3, mod5)
 mod6 <- update(mod3, . ~ . - gleason)
 anova(mod3, mod6)
-# Удаляем gleason, и потом повторяем все снова...
 
 
 
