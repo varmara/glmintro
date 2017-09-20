@@ -103,7 +103,7 @@ title: Презентации и данные
 
 ### Множественная линейная регрессия
 
-<!-- - Презентация [4.1_multiple_lm.html](4.1_multiple_lm.html) -->
+- Презентация [4.1_multiple_lm.html](4.1_multiple_lm.html)
 - Код [4.1_multiple_lm_code.R](4.1_multiple_lm_code.R)
 - Данные
     + [Prostate.xlsx](data/Prostate.xlsx)
