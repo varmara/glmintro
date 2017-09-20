@@ -22,7 +22,60 @@ opts_chunk$set(fig.align='center', tidy = FALSE, fig.width = 7, fig.height = 3, 
 + Линейные модели c непрерывными и дискретными предикторами
 + Взаимодействие дискретных и непрерывных предикторов
 
+## Геометрическая интерпретация коэффициентов регрессии
 
+```{r, echo=FALSE, warning=FALSE, fig.align='center',fig.width=10, fig.height=5}
+library(gridExtra); library(ggplot2)
+n <- 100
+a1 <- 50; a2 <- 45; a3 <- 5
+b1 <- 2; b2 <- 1
+sig1 <- 20; sig2 <- 30
+
+set.seed(329882)
+x <- runif(n * 2 , 0, 50)
+y1 <- a1 + b1 * x[1:n] + rnorm(n, 0, sig1)
+# small difference of intercept, compared to y1
+y2 <- a2 + b1 * x[(n + 1):(n * 2)] + rnorm(n, 0, sig1)
+# larger difference of intercept, compared to y1
+y3 <- a3 + b1 * x[(n + 1):(n * 2)] + rnorm(n, 0, sig1)
+# same intercept, different slope, compared to y1
+y4 <- a1 + b2 * x[(n + 1):(n * 2)] + rnorm(n, 0, sig1)
+# different intercept, different slope, compared to y1
+y5 <- a3 + b2 * x[(n + 1):(n * 2)] + rnorm(n, 0, sig1)
+
+
+# 1 line
+Group <- c(rep("Group1",n), rep("Group2", n))
+df1 <- data.frame(x = x,
+                  y = c(y1, y2),
+                  Group = Group)
+gg_1 <- ggplot(data = df1, aes(x = x, y = y)) + geom_point(aes(colour = Group)) + xlab("Independent (X)") + ylab("Dependent (Y)") + guides(color=F) + geom_smooth(method = "lm", alpha = 0.7) + ylim(0, 160) + scale_colour_brewer(palette = "Dark2") + theme_classic()
+
+# 2 lines, substantial difference of intercepts
+Group <- c(rep("Group1",n), rep("Group2", n))
+df2 <- data.frame(x = x,
+                  y = c(y1, y3),
+                  Group = Group)
+
+# 2 lines, similar intercept, different slope
+Group <- c(rep("Group1",n), rep("Group2", n))
+df3 <- data.frame(x = x,
+                  y = c(y1, y4),
+                  Group = Group)
+# 2 lines, different intercept, different slope
+Group <- c(rep("Group1",n), rep("Group2", n))
+df4 <- data.frame(x = x,
+                  y = c(y1, y5),
+                  Group = Group)
+
+grid.arrange(
+gg_1 + ggtitle("One intercept\nOne slope"), 
+gg_1 + aes(colour = Group) + ggtitle("Similar intercepts \nSimilar slopes"),
+gg_1 %+% df2 + aes(colour = Group) + ggtitle("Different intercepts\nSimilar slopes"),
+gg_1 %+% df3 + aes(colour = Group) + ggtitle("Similar intercepts\nDifferent slopes"),
+gg_1 %+% df4 + aes(colour = Group) + ggtitle("Different intercepts\nDifferent slopes"),
+  nrow = 1)
+```
 
 
 # ANCOVA на примере данных об активности пуромицина
