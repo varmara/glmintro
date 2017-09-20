@@ -170,17 +170,59 @@ qqPlot(mod2)
 summary(mod2)
 
 ## Уравнение модели
-# Y = 80.4 + 1.2*tabacco_l + 3*ldl_l - 0.2*typea + 18.5*obesity_l + 2.5*alcohol_l + e
+# Y = 80.4 + 1.2*tobacco_l + 3*ldl_l - 0.2*typea + 18.5*obesity_l + 2.5*alcohol_l + e
 
 # Доля объясненной изменчивости
 # 2.4%
-
+# Хорошая ли это модель?
 
 #### Подбор оптимальной модели
 summary(mod1)$adj.r.squared
 summary(mod2)$adj.r.squared
 
 #Вторая модель стала хуже, но вернуться к первой мы не можем
+
+#### График модели ###############################
+mod2
+
+# Данные для графика
+NewData <- data.frame(
+  # На этот предиктор будем смотреть
+  alcohol_l = seq(min(pressure$alcohol_l), max(pressure$alcohol_l), length.out = 100),
+  # Эти предикторы принимают средние значения
+  tobacco_l = mean(pressure$tobacco_l),
+  ldl_l = mean(pressure$ldl_l),
+  typea = mean(pressure$typea),
+  obesity_l = mean(pressure$obesity_l))
+
+# предсказанные значения
+Predictions <- predict(mod2, newdata = NewData, se.fit = TRUE)
+NewData$fit <- Predictions$fit
+# стандартные ошибки
+NewData$SE <- Predictions$se.fit
+# доверительный интервал
+NewData$upr <- NewData$fit + 1.96 * NewData$SE
+NewData$lwr <- NewData$fit - 1.96 * NewData$SE
+
+# обратная трансформация предиктора
+NewData$alcohol <- exp(NewData$alcohol_l)
+
+# график предсказаний модели
+gg_predictions <- ggplot(NewData, aes(x = alcohol, y = fit)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.3) +
+  geom_line()
+gg_predictions
+# Нужно помнить, что этот  график --- это "срез"
+# всей модели. Это предсказанное моделью
+# систолическое давление для людей со средним
+# значением всех других предикторов. Т.е. это
+# сферический конь в вакууме, в каком-то смысле
+
+# Точки исходных наблюдений добавлять нет смысла, поскольку, у большинства людей в нашей выборке значения других предикторов --- не средние.
+# Возможный вариант - добавить гребенку, изображающую исходные значения на осях X и Y.
+gg_predictions +
+  geom_rug(data = pressure, aes(x = alcohol, y = sbp))
+
 
 #### ВАРИАНТ 2. Анализ, без взаимодействия факторов с подбором оптимальной модели ###############
 
@@ -332,5 +374,5 @@ gg_predictions
 
 # Можем добавить исходные значения
 gg_predictions +
-geom_point(data = pressure, aes(x = alcohol, y = sbp))
+  geom_point(data = pressure, aes(x = alcohol, y = sbp))
 
