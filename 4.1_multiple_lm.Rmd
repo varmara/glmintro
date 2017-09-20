@@ -380,6 +380,92 @@ mod3_scaled <- lm(lpsa ~ scale(lcavol) + scale(lweight) + scale(age) + scale(lbp
 summary(mod3_scaled)
 ```
 
+## Визуализация модели {.smaller}
+
+```{r gg, eval=FALSE}
+# Создаем искусственный датафрейм, где будет визуализироваться самый важный предиктор, а остальные будут рассматриваться, как средние
+
+MyData <- data.frame(lcavol = seq(min(prost$lcavol), max(prost$lcavol), 0.5), 
+                     lweight = mean(prost$lweight), 
+                     age = mean(prost$age), 
+                     lbph = mean(prost$lbph), 
+                     svi = mean(prost$svi), 
+                     lcp = mean(prost$lcp), 
+                     gleason = mean(prost$gleason), 
+                     pgg45 = mean(prost$pgg45) )
+
+
+MyData$Predict <- predict(mod3, newdata = MyData)
+
+
+ggplot(MyData, aes(x = lcavol, y = Predict)) + geom_line() + geom_point(data = prost, aes(x = lcavol, y = lpsa))
+
+
+```
+
+##
+
+```{r gg, eval = TRUE, echo = FALSE}
+```
+
+
+
+## Визуализация модели с использовнием двух пердикторов{.smaller}
+
+```{r gg2, eval=FALSE}
+
+MyData <- expand.grid(lcavol = seq(min(prost$lcavol), max(prost$lcavol), 0.5), 
+                     lweight = mean(prost$lweight), 
+                     age = mean(prost$age), 
+                     lbph = mean(prost$lbph), 
+                     svi = unique(prost$svi), 
+                     lcp = mean(prost$lcp), 
+                     gleason = mean(prost$gleason), 
+                     pgg45 = mean(prost$pgg45) )
+
+
+MyData$Predict <- predict(mod3, newdata = MyData)
+
+
+ggplot(MyData, aes(x = lcavol, y = Predict, color = factor(svi))) + geom_line() + geom_point(data = prost, aes(x = lcavol, y = lpsa)) + facet_wrap(~svi)
+
+
+```
+
+##
+
+```{r gg2, eval = TRUE, echo = FALSE}
+```
+
+
+
+## Визуализация модели с использовнием трех пердикторов{.smaller}
+
+```{r gg3, eval=FALSE}
+
+MyData <- expand.grid(lcavol = seq(min(prost$lcavol), max(prost$lcavol), 0.5), 
+                      lweight = seq(min(prost$lweight), max(prost$lweight), 0.1), 
+                      age = mean(prost$age), 
+                      lbph = mean(prost$lbph), 
+                      svi = unique(prost$svi), 
+                      lcp = mean(prost$lcp), 
+                      gleason = mean(prost$gleason), 
+                      pgg45 = mean(prost$pgg45) )
+
+MyData$Predict <- predict(mod3, newdata = MyData)
+
+ggplot(MyData, aes(x = lcavol, y = Predict, color = lweight, group = lweight)) + geom_line() + geom_point(data = prost, aes(x = lcavol, y = lpsa)) + facet_wrap(~svi) + scale_color_continuous(high = "red", low = "yellow") + ylab("lpsa")
+
+```
+
+##
+
+```{r gg3, eval = TRUE, echo = FALSE}
+```
+
+
+
+
 ## Вопрос
 
 Какая доля суммарной дисперсии зависимой переменной описывается данной моделью?
