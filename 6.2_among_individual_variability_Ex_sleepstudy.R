@@ -77,7 +77,7 @@ ggplot(sleepstudy, aes(x = Reaction, y = Subject)) + geom_point(aes(colour = Day
 
 # Как меняется время время реакции с
 # продолжительностью хронического недосыпа?
-ggplot(sleepstudy, aes(x = Reaction, y = Days)) + geom_point()
+ggplot(sleepstudy, aes(x = Days, y = Reaction)) + geom_point()
 #
 
 #### Неправильный анализ 1 - без учета межиндивидуальной изменчивости и без взаимодействия факторов ########

@@ -69,7 +69,7 @@ include <- bird$AREA < 500 & bird$DIST < 1000 & bird$ALT < 250
 bird_1 <- bird[include, ]
 
 # Логарифмируем площадь
-bird_1$AREA_l <- bird_1$AREA
+bird_1$AREA_l <- log(bird_1$AREA)
 
 # Дальше работаем с bird_1
 
@@ -152,7 +152,7 @@ drop1(model5, test = "F")
 
 # То же самое можно сделать при помощи функции step()
 
-model_step <- step(model2)
+model_step <- step(model2, direction = "backward")
 # сравните, получились одинаковые модели
 model5
 model_step
@@ -182,7 +182,7 @@ ggplot(model6_diag_full, aes(x = 1:nrow(model6_diag_full), y = .cooksd)) +
 gg_resid <- ggplot(data = model6_diag_full, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
-# ОК, хороший график.
+# ОК
 
 # 3) Графики остатков от предикторов в модели и не в модели
 gg_resid + aes(x = AREA_l)
@@ -190,13 +190,14 @@ gg_resid + aes(x = YRISOL)
 gg_resid + aes(x = DIST)
 gg_resid + aes(x = LDIST)
 gg_resid + aes(x = ALT)
-# Эти графики уже хуже - видна гетерогенность дисперсий
+# Эти графики уже хуже - видна гетерогенность дисперсий/
 
 # 4) Квантильный график остатков
 qqPlot(model6)
 
 # Гетерогенность дисперсий не побороли
 # Дисперсия предсказаний зависит от предиктора и от факторов не в модели. Из-за этого увеличится вероятность ошибки I рода в тестах. Чтобы это исправить, на самом деле нужно моделировать гетерогенность дисперсий (средствами GLM). Но сейчас мы продолжим дальше.
+
 #### Описание результатов ##################################
 
 summary(model6)
@@ -253,11 +254,14 @@ ggplot(NewData, aes(x = AREA_l, y = fit)) +
   geom_line(aes(colour = GRAZE_factor)) +
   geom_point(data = bird_1, aes(x = AREA_l, y = ABUND, colour = GRAZE_factor))
 
+# Для интерпретации обязательно нужно сделать обратную трансформацию
+NewData$AREA <- exp(NewData$AREA_l)
+ggplot(NewData, aes(x = AREA, y = fit)) +
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = GRAZE_factor)) +
+  geom_line(aes(colour = GRAZE_factor)) +
+  geom_point(data = bird_1, aes(x = AREA, y = ABUND, colour = GRAZE_factor))
+
 # Какой из этого вывод?
-# Обилие птиц слабо зависит от площади леса, если там мало пасут скот. Но зато оно сильно зависит от площади в лесах, где сильно пасут скот.
+# Обилие птиц слабо зависит от площади леса, если там мало пасут скот (1-3), или слишком много пасут (5). Но зато оно сильно зависит от площади в лесах, где сильно пасут скот (4).
 # Кроме того, на графике становится видно, что лесов большой площади мало, и это леса, где мало пасут скот (GRAZE_factor 1 или 2). А лесов малой площади много, и во многих из них сильно пасут скот.
-
-# Задание ---------------------------------------
-# Сделайте график с обратной трансформацией предиктора AREA_l
-
 
