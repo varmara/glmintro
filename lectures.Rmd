@@ -103,7 +103,7 @@ title: Презентации и данные
 
 ### Множественная линейная регрессия
 
-- Презентация [4.1_multiple_lm.html](4.1_multiple_lm.html)
+<!-- - Презентация [4.1_multiple_lm.html](4.1_multiple_lm.html) -->
 - Код [4.1_multiple_lm_code.R](4.1_multiple_lm_code.R)
 - Данные
     + [Prostate.xlsx](data/Prostate.xlsx)
@@ -116,7 +116,7 @@ title: Презентации и данные
 
 ### Выбор моделей
 
-- Презентация [4.2_model_selection.html](4.2_model_selection.html)
+<!-- - Презентация [4.2_model_selection.html](4.2_model_selection.html) -->
 - Код [4.2_model_selection_code.R](4.2_model_selection_code.R)
 - Данные
     + [Prostate.xlsx](data/Prostate.xlsx)
@@ -131,7 +131,7 @@ title: Презентации и данные
 
 ### Дискретные предикторы в регрессионных моделях
 
-- Презентация [5.1_categorical-no_interactions_ANCOVA.html](5.1_categorical-no_interactions_ANCOVA.html)
+<!-- - Презентация [5.1_categorical-no_interactions_ANCOVA.html](5.1_categorical-no_interactions_ANCOVA.html) -->
 - Код [5.1_categorical-no_interactions_ANCOVA_code.R](5.1_categorical-no_interactions_ANCOVA_code.R)
 - Данные
     + [vitcap2.csv](data/vitcap2.csv)
@@ -147,7 +147,7 @@ title: Презентации и данные
 
 ### Взаимодействие дискретного и непрерывного предикторов
 
-- Презентация [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html)
+<!-- - Презентация [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html) -->
 - Код [5.2_categorical-continuous_interaction_code.R](5.2_categorical-continuous_interaction_code.R)
 - Данные
     + [Puromycin.xlsx](data/Puromycin.xlsx)
@@ -164,7 +164,7 @@ title: Презентации и данные
 ### Практикум по анализу данных
 
 - Упражнения для самоконтоля:
-    + [6.1_Control_Task.R](6.1_Control_Task.R)
+    <!-- + [6.1_Control_Task.R](6.1_Control_Task.R) -->
     + [fev.xls](data/fev.xls)
     + [picture.jpg](picture.jpg)
 - Упражнения (разбор кода)
