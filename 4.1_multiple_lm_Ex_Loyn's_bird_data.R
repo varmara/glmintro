@@ -87,7 +87,8 @@ ggplot(ABUND_diag, aes(x = 1:nrow(ABUND_diag), y = .cooksd)) +
 # 2) График остатков от предсказанных значений
 gg_resid <- ggplot(data = ABUND_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
-gg_resid + geom_smooth()
+gg_resid + geom_smooth(method = "loess")
+gg_resid + geom_smooth(method = "lm")
 
 # 3) Графики остатков от предикторов в модели и не в модели
 # В модели: AREA + YRISOL + DIST + LDIST + ALT
