@@ -615,10 +615,9 @@ drop1(mod6, test = &quot;F&quot;)</pre>
 </ul>
 
 <pre class = 'prettyprint lang-r'>mod6_diag &lt;- fortify(mod6)
-removed_before &lt;- c(&quot;lcp&quot;, &quot;pgg45&quot;) 
-removed_now &lt;- c(&quot;age&quot;, &quot;lbph&quot;, &quot;gleason&quot;)
-removed_vars &lt;- c(removed_before, removed_now)
-mod6_diag_full &lt;- data.frame(mod6_diag, prost[, removed_vars])
+mod6_diag_full &lt;- data.frame(
+  mod6_diag, 
+  prost[, c(&quot;lcp&quot;, &quot;pgg45&quot;, &quot;age&quot;, &quot;lbph&quot;, &quot;gleason&quot;)])
 
 ggplot(mod6_diag_full, aes(x = 1:nrow(mod6_diag_full), y = .cooksd)) + 
   geom_bar(stat = &quot;identity&quot;)</pre>
