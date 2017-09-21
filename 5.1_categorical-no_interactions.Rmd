@@ -194,7 +194,9 @@ gg_g <- ggplot(data = goat, aes(y = Wt, x = Init, colour = Treatment)) +
   scale_colour_discrete("Способ обработки",
                         breaks = c("intensive", "standard"),
                         labels = c("Интенсивный", "Стандартный"))
-gg_g + geom_smooth(method = "lm")
+MyData <- unique(goat[ , c("Init", "Treatment")])
+MyData$Predict <- predict(MG, newdata = MyData)
+gg_g + geom_line(data = MyData, aes(x = Init, y = Predict, color = Treatment))
 ```
 
 
