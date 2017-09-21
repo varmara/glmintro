@@ -142,8 +142,9 @@ title: Презентации и данные
 - Упражнения (разбор кода)
     + [5.1_no_interaction_Ex_fev.R](5.1_no_interaction_Ex_fev.R)
 - Упражнения (написание кода)
-    + [5.1_no_interactions_Task_Infusoria.R](5.1_no_interactions_Task_Infusoria.R)
     + [5.1_no_interaction_Task_cats.R](5.1_no_interaction_Task_cats.R)
+    + [5.1_no_interactions_Task_Infusoria.R](5.1_no_interactions_Task_Infusoria.R)
+
 
 ### Взаимодействие дискретного и непрерывного предикторов
 
