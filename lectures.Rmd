@@ -160,7 +160,7 @@ title: Презентации и данные
     + [5.2_interactions_Ex_nitrofen.R](5.2_interactions_Ex_nitrofen.R)
 - Упражнения (написание кода)
     + [5.2_interactions_Task_cats.R](5.2_interactions_Task_cats.R)
-    + [5.2_interactions_Task_iris.R](5.2_interactions_Ex_iris.R)
+    + [5.2_interactions_Task_iris.R](5.2_interactions_Task_iris.R)
 
 
 ## День 6
