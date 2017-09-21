@@ -152,7 +152,6 @@ title: Презентации и данные
 - Данные
     + [Puromycin.xlsx](data/Puromycin.xlsx)
     + [birthwt.csv](data/birthwt.csv)
-    
     + [cats.xlsx](data/cats.xlsx)
     + [nitrofen.xlsx](data/nitrofen.xlsx)
     + [iris.xlsx](data/iris.xlsx)
