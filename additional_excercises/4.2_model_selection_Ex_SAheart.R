@@ -25,20 +25,28 @@
 # 430–436.
 
 # Переменные:
-# sbp --- systolic blood pressure#
-# tobacco --- cumulative tobacco (kg)
-# ldl --- low density lipoprotein cholesterol
-# adiposity --- a numeric vector
-# famhist ---  family history of heart disease, a factor with levels Absent Present
-# typea --- type-A behavior
-# obesity --- a numeric vector
-# alcohol --- current alcohol consumption
-# age --- age at onset
-# chd --- coronary heart disease
+# sbp --- систолическое давление
+# tobacco --- кумулятивное количество табака (кг)
+# ldl --- холестерол низкой плотности ("плохой"
+# холестерол)
+# adiposity --- BAI, индекс массы тела,
+# оценивающий количество жировых отложений на
+# основе анализа пропорций объема бедер по
+# отношению к росту
+# famhist --- семейная история сердечных
+# заболеваний, фактор с двумя уровнями (Absent,
+# Present)
+# typea --- поведение типа А (враждебность,
+# нетерпение, сложность в выражении эмоций,
+# перфекционизм и жажда власти)
+# obesity --- степень ожирения
+# alcohol --- употребление алкоголя
+# age --- возраст начала заболевания коронарных сосудов
+# chd --- коронарная болезнь сердца (0 - нет, 1 -
+# есть)
 
 
-# Задача: -------------------------------------------------
-
+# Задача: ----------------------------------------
 # Давайте проанализируем, от каких факторов
 # зависит артериальное давление (sbp). Возьмите
 # данные только о здоровых мужчинах (у которых не
@@ -221,7 +229,7 @@ gg_predictions
 # Точки исходных наблюдений добавлять нет смысла, поскольку, у большинства людей в нашей выборке значения других предикторов --- не средние.
 # Возможный вариант - добавить гребенку, изображающую исходные значения на осях X и Y.
 gg_predictions +
-  geom_rug(data = pressure, aes(x = alcohol, y = sbp))
+  geom_rug(data = pressure, aes(x = alcohol, y = sbp), sides = "b")
 
 
 #### ВАРИАНТ 2. Анализ, без взаимодействия факторов с подбором оптимальной модели ###############
@@ -309,9 +317,9 @@ gg_resid
 # В модели:
 gg_resid + aes(x = adiposity)
 # Подозрительно
-gg_resid + aes(x = adiposity) + geom_smooth()
+gg_resid + aes(x = adiposity) + geom_smooth(method = "lm")
 # кажется, что могли и не удалять
-gg_resid + aes(x = ldl_l)
+gg_resid + aes(x = ldl_l) + geom_smooth(method = "lm")
 gg_resid + aes(x = tobacco_l)
 gg_resid + aes(x = typea)
 gg_resid + aes(x = obesity_l)

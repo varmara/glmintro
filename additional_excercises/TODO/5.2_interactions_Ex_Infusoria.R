@@ -21,22 +21,25 @@
 # Зависит ли диаметр клеток от того добавлена ли глюкоза?
 # На сколько изменится диаметр клетки если добавить глюкозу?
 
+library(readxl)
+library(car)
+library(ggplot2)
+
 # Читаем данные ####
 
 inf <- read_excel("data/hellung.xls")
 
-#Вводим удобное обозначение факторов##########
+# Вводим удобное обозначение факторов ##########
 
-inf$Gluc [inf$glucose == 1] <- "Yes"
-inf$Gluc [inf$glucose == 2] <- "No"
+inf$glucose_f <- factor(inf$glucose, levels = c(1, 2), labels = c("Yes", "No"))
 
-inf$Gluc <- factor(inf$Gluc)
 
-library(car)
-scatterplot.matrix(inf[, -c(4)])
+scatterplotMatrix(inf[, -c(1, 4)])
 
-# Строим модель####
-M1 <- lm(diameter ~ conc + Gluc, data = inf)
+ggplot(inf, aes(x = log(conc), y = diameter, colour = glucose_f)) + geom_point()
+
+# Строим модель ####
+M1 <- lm(diameter ~ log(conc)*glucose_f, data = inf)
 
 summary(M1)
 
@@ -44,15 +47,14 @@ anova(M1)
 
 
 #Проверяем условия применимости#####
+
 library(ggplot2)
 M1_diag <- fortify(M1)
 
 ggplot(M1_diag, aes(x = .fitted, y = .stdresid)) + geom_point() + geom_smooth()
 
-ggplot(M1_diag, aes(x = Gluc, y = .stdresid)) + geom_boxplot()
+ggplot(M1_diag, aes(x = glucose_f, y = .stdresid)) + geom_boxplot()
 
 
-ggplot(M1_diag, aes(x = conc, y = .stdresid)) + geom_point() + geom_smooth()
-
-# Нужна трансформация данных
+ggplot(M1_diag, aes(x = log(inf$conc), y = .stdresid)) + geom_point() + geom_smooth()
 

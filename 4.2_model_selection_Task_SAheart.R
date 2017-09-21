@@ -25,19 +25,28 @@
 # 430–436.
 
 # Переменные:
-# sbp --- systolic blood pressure#
-# tobacco --- cumulative tobacco (kg)
-# ldl --- low density lipoprotein cholesterol
-# adiposity --- a numeric vector
-# famhist ---  family history of heart disease, a factor with levels Absent Present
-# typea --- type-A behavior
-# obesity --- a numeric vector
-# alcohol --- current alcohol consumption
-# age --- age at onset
-# chd --- coronary heart disease
+# sbp --- систолическое давление
+# tobacco --- кумулятивное количество табака (кг)
+# ldl --- холестерол низкой плотности ("плохой"
+# холестерол)
+# adiposity --- BAI, индекс массы тела,
+# оценивающий количество жировых отложений на
+# основе анализа пропорций объема бедер по
+# отношению к росту
+# famhist --- семейная история сердечных
+# заболеваний, фактор с двумя уровнями (Absent,
+# Present)
+# typea --- поведение типа А (враждебность,
+# нетерпение, сложность в выражении эмоций,
+# перфекционизм и жажда власти)
+# obesity --- степень ожирения
+# alcohol --- употребление алкоголя
+# age --- возраст начала заболевания коронарных сосудов
+# chd --- коронарная болезнь сердца (0 - нет, 1 -
+# есть)
 
 
-# Задача: -------------------------------------------------
+# Задача: ----------------------------------------
 
 # Давайте проанализируем, от каких факторов
 # зависит артериальное давление (sbp). Возьмите
@@ -220,6 +229,10 @@ gg_predictions
 # Возможный вариант - добавить гребенку, изображающую исходные значения на осях X и Y.
 gg_predictions +
   geom_rug(data = pressure, aes(x = alcohol, y = sbp))
+
+gg_predictions +
+  geom_rug(data = pressure, aes(x = alcohol, y = sbp),
+           sides = "b")
 
 #### ВАРИАНТ 2. Подбор оптимальной модели ########
 

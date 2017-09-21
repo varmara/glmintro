@@ -160,8 +160,8 @@ MyData$lwr <- MyData$fit - 1.96 * MyData$SE
 Pl_predict <- ggplot(MyData, aes(x = YRISOL, y = fit)) +
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr)) +
   geom_line() +
-  xlab("Bird abundance") +
-  ylab("Year of forest isolation")
+  ylab("Bird abundance") +
+  xlab("Year of forest isolation")
 
 Pl_predict
 # Нужно помнить, что этот  график --- это
@@ -188,7 +188,7 @@ Pl_predict +
 
 # Возможный вариант - добавить гребенку, изображающую исходные значения на осях X и Y.
 Pl_predict +
-  geom_rug(data = bird, aes(x = YRISOL, y = ABUND))
+  geom_rug(data = bird, aes(x = YRISOL, y = ABUND), sides = "b")
 
 
 #### ВАРИАНТ 2. Анализ, без взаимодействия факторов с подбором оптимальной модели ###############
@@ -226,8 +226,8 @@ drop1(GLM4, test = "Chisq")
 # Способ 3. Информационные критерии (Один из)
 AIC(GLM2, GLM3, GLM4)
 
-# Финальная модель GLM3
-# ABUND ~ YRISOL + DIST + LDIST + ALT
+# Финальная модель GLM4
+# ABUND ~ YRISOL + DIST + ALT
 
 BIC(GLM2, GLM3, GLM4)
 # финальная модель GLM4
@@ -316,8 +316,8 @@ MyData$lwr <- MyData$fit - 1.96 * MyData$SE
 Pl_predict <- ggplot(MyData, aes(x = YRISOL, y = fit)) +
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr)) +
   geom_line() +
-  xlab("Bird abundance") +
-  ylab("Year of forest isolation")
+  ylab("Bird abundance") +
+  xlab("Year of forest isolation")
 
 Pl_predict
 # Нужно помнить, что этот  график --- это
@@ -336,7 +336,7 @@ Pl_predict +
 
 # Возможный вариант - добавить гребенку, изображающую исходные значения на осях X и Y.
 Pl_predict +
-  geom_rug(data = bird, aes(x = YRISOL, y = ABUND))
+  geom_rug(data = bird, aes(x = YRISOL, y = ABUND), sides = "b")
 
 # Постройте самостоятельно график, отражающий связь с двумя предикторами
 
