@@ -499,7 +499,7 @@ gg_dot + aes(x = bwt)
 ### Проверка на колинеарность
 
 ```{r}
-wt_mod_1 <- lm(bwt ~ age+smoke, data = wt)
+wt_mod_1 <- lm(bwt ~ age + smoke, data = wt)
 vif(wt_mod_1)
 ```
 
@@ -512,7 +512,7 @@ vif(wt_mod_1)
 Подберем полную модель.
 
 ```{r}
-wt_mod_2 <- lm(bwt ~ age*smoke, data = wt)
+wt_mod_2 <- lm(bwt ~ age * smoke, data = wt)
 drop1(wt_mod_2, test = "F")
 ```
 
