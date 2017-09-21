@@ -148,16 +148,20 @@ title: Презентации и данные
 ### Взаимодействие дискретного и непрерывного предикторов
 
 <!-- - Презентация [5.2_categorical-continuous_interaction.html](5.2_categorical-continuous_interaction.html) -->
-- Код [5.2_categorical-continuous_interaction_code.R](5.2_categorical-continuous_interaction_code.R)
+<!-- - Код [5.2_categorical-continuous_interaction_code.R](5.2_categorical-continuous_interaction_code.R) -->
 - Данные
     + [Puromycin.xlsx](data/Puromycin.xlsx)
-    + [nitrofen.xlsx](data/nitrofen.xlsx)
-    + [fev.xls](data/fev.xls)
+    + [birthwt.csv](data/birthwt.csv)
     + [cats.xlsx](data/cats.xlsx)
+    + [nitrofen.xlsx](data/nitrofen.xlsx)
+    + [iris.xlsx](data/iris.xlsx)
+    <!-- + [fev.xls](data/fev.xls) -->
 - Упражнения (разбор кода)
-    + [5.2_interactions_Ex_fev.R](5.2_interactions_Ex_fev.R)
-- Упражнения (написание кода)
     + [5.2_interactions_Task_cats.R](5.2_interactions_Task_cats.R)
+    + [5.2_interactions_Ex_nitrofen.R](5.2_interactions_Ex_nitrofen.R)
+    <!-- + [5.2_interactions_Ex_fev.R](5.2_interactions_Ex_fev.R) -->
+- Упражнения (написание кода)
+
 
 ## День 6
 
