@@ -77,8 +77,77 @@ gg_1 %+% df4 + aes(colour = Group) + ggtitle("Different intercepts\nDifferent sl
   nrow = 1)
 ```
 
+>- Как эти изменения закодировать в уравнении линейной модели?
 
-# ANCOVA на примере данных об активности пуромицина
+## Похожий интерсепт, похожий угол наклона
+
+Если зависимости для обеих групп выглядят одинаково, то мы можем пользоваться общей линейной регрессией, не учитывать группу
+
+$Y = b_0 + b_1X$
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center',fig.width=5, fig.height=3}
+grid.arrange(
+gg_1 + ggtitle("One intercept\nOne slope"),
+gg_1 + aes(colour = Group) + ggtitle("Similar intercepts \nSimilar slopes"),
+nrow = 1)
+```
+
+## Разный интерсепт, похожий угол наклона
+
+$Y = b_0 + b_1X + b_2 Group2$
+
+$Group2 = 1$ если наблюдение из группы 2, и $Group2 = 0$ в остальных случаях
+
+Уравнение для группы 1: $Y = b_0 + b_1X$
+
+Уравнение для группы 2: $Y = (b_0 + b_2) + b_1X$
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center',fig.width=3, fig.height=3}
+gg_1 %+% df2 + aes(colour = Group) + ggtitle("Different intercepts\nSimilar slopes")
+```
+
+## Похожий интерсепт, разный угол наклона
+
+$Y = b_0 + b_1X + b_2X Group2$
+
+$Group2 = 1$ если наблюдение из группы 2, и $Group2 = 0$ в остальных случаях
+
+Уравнение для группы 1: $Y = b_0 + b_1X$
+
+Уравнение для группы 2: $Y = b_0 + (b_1 + b_2)X$
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center',fig.width=3, fig.height=3}
+gg_1 %+% df3 + aes(colour = Group) + ggtitle("Similar intercepts\nDifferent slopes")
+```
+
+## Разный интерсепт и разный угол наклона
+
+$Y = b_0 + b_1X + b_2 Group2 + b_3X Group2$
+
+$Group2 = 1$ если наблюдение из группы 2, и $Group2 = 0$ в остальных случаях
+
+Уравнение для группы 1: $Y = b_0 + b_1X$
+
+Уравнение для группы 2: $Y = (b_0 + b_2) + (b_1 + b_3)X$
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center',fig.width=3, fig.height=3}
+gg_1 %+% df4 + aes(colour = Group) + ggtitle("Different intercepts\nDifferent slopes")
+```
+
+## Физический смысл взаимодействия факторов
+
+Не называйте взаимодействие факторов "корреляцией" или "связью"!
+
+Взаимодействие факторов означает, что для разных значений одного из факторов зависимость от другого фактора выглядит по-разному.
+
+Т.е. в данном случае можно сказать: "Для группы 1 и группы 2 зависимость Y от Х выглядит по-разному"
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center',fig.width=6, fig.height=3}
+grid.arrange(
+  gg_1 %+% df3 + aes(colour = Group) + ggtitle("Similar intercepts\nDifferent slopes"),
+  gg_1 %+% df4 + aes(colour = Group) + ggtitle("Different intercepts\nDifferent slopes"),
+  nrow = 1)
+```
 
 ## Пример: Пуромицин
 
@@ -101,7 +170,14 @@ head(Puromycin)
 sapply(Puromycin, class)
 colSums(is.na(Puromycin))
 nrow(Puromycin)
-table(Puromycin$state)
+```
+
+## Знакомимся с данными
+
+```{r}
+table(Puromycin$state, Puromycin$conc)
+library(ggplot2)
+ggplot(Puromycin, aes(x = state, y = conc)) + geom_boxplot()
 ```
 
 ## Задание
@@ -122,7 +198,6 @@ ggplot(Puromycin, aes(x = log(conc), y = rate, colour = state)) +
 ```
 
 ```{r gg-transformation, purl=FALSE, eval=TRUE, fig.width=10, echo=FALSE}
-library(ggplot2)
 library(gridExtra)
 grid.arrange(
 ggplot(Puromycin, aes(x = conc, y = rate, colour = state)) + geom_point(),
@@ -130,15 +205,24 @@ ggplot(Puromycin, aes(x = log(conc), y = rate, colour = state)) + geom_point(),
 ncol = 2)
 ```
 
-# Анализ ковариаций по данным о пуромицине
+## Запись формулы линейной модели со взаимодействием в R
 
-## Линейная модель
+`Response ~ Continuous + Categorical + Continuous : Categorical` (полная запись)
+
+`Response ~ Continuous * Categorical`(сокращенная запись)
+
+`Continuous : Categorical` --- Кодовое обозначение взаимодействия. Добавление взаимодействия непрерывного и дискретного факторов в модель означает, что возможен разный угол наклона прямых для разных групп.
+
+## Подберем
 
 ```{r}
 Puromycin$lc <- log(Puromycin$conc)
-M1 <- lm(rate ~ lc + state, data = Puromycin)
+M1 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
+# M1 <- lm(rate ~ lc * state, data = Puromycin) # То же самое
 summary(M1)
 ```
+
+>- Взаимодействие достоверно!
 
 ## Проверяем выполнение условий применимости 
 
@@ -161,7 +245,8 @@ ggplot(M1_diag, aes(x = 1:nrow(M1_diag), y = .cooksd)) +
 ```{r purl=FALSE}
 gg_resid <- ggplot(data = M1_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
-gg_resid
+grid.arrange(gg_resid, gg_resid + geom_smooth(),
+             gg_resid + geom_smooth(method = "lm"), nrow = 1)
 ```
 
 ## Решение
@@ -171,7 +256,7 @@ gg_resid
 ```{r fig.width=10,  purl=FALSE}
 library(gridExtra)
 grid.arrange(gg_resid + aes(x = lc), 
-             gg_resid + aes(x = state), 
+             ggplot(M1_diag, aes(x = state, y = .stdresid)) + geom_boxplot(), 
              nrow = 1)
 ```
 
@@ -179,11 +264,10 @@ grid.arrange(gg_resid + aes(x = lc),
 
 ### 4) Квантильный график остатков
 ```{r fig.height=4,  purl=FALSE}
+library(car)
 qqPlot(M1)
 ```
 
-
-# График предсказаний линейной модели
 
 ## Рисуем график предсказаний
 
@@ -195,7 +279,7 @@ ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) +
   geom_smooth(method = "lm")
 ```
 
->- Здесь разный угол наклона. У нашей модели график должен быть другой, с одинаковым углом наклона
+>- Это не наша модель --- здесь разный угол наклона, а у нашей модели график должен быть другой, с одинаковым углом наклона. (По умолчанию ggplot рисует отдельные регрессии для каждого сабсета)
 
 ## Задание
 
@@ -233,28 +317,13 @@ ggplot(NewData, aes(x = conc, y = fit)) +
   geom_point(data = Puromycin, aes(x = conc, y = rate, colour = state))
 ```
 
-# Терминологический вопрос
 
-## Классический анализ ковариаций ANCOVA 
+##  Задание
 
-$Response \sim Continuous + Categorical$
-
-Требование гомогенности углов наклона (homogeneity of regression slopes) --- Нужно его протестировать, и если оно не выполняется, то это не ANCOVA
-
-```{r gg-classic-ancova, echo=FALSE, purl=FALSE}
-ggplot(NewData, aes(x = lc, y = fit)) + 
-  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = state)) +
-  geom_line(aes(colour = state)) +
-  geom_point(data = Puromycin, aes(x = lc, y = rate, colour = state))
+Запишите уравнение этой модели и уравнения для каждой группы
+```{r}
+coef(M1)
 ```
-
-##  Модель со взаимодействием дискретного и непрерывного предикторов
-
-$Response \sim Continuous + Categorical + Continuous : Categorical$ (полная запись)
-
-$Response \sim Continuous \times Categorical$ (сокращенная запись)
-
-Возможен разный угол наклона прямых для разных групп
 
 ```{r gg-not-ancova, echo=FALSE, purl=FALSE}
 ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + 
@@ -262,24 +331,18 @@ ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) +
   geom_smooth(method = "lm")
 ```
 
-#  Модель со взаимодействием дискретного и непрерывного предикторов
+## Решение
 
-##  Модель со взаимодействием дискретного и непрерывного предикторов {.smaller}
+$rate = 209.2 + 37.1 * lc - 44.6 * stateuntreated - 10.1 * lc * stateuntreated$
 
-$Response \sim Continuous + Categorical + Continuous : Categorical$
+$stateuntreated = 1$ если $state = untreated$ и ноль в остальных случаях
 
-```{r M2-interaction, R.options=list(width = 100)}
-M2 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
-coef(M2)
-```
+Уравнение для treated: $rate = 209.2 + 37.1 * lc$
 
+Уравнение для untreated: $rate = (209.2- 44.6) + (37.1 - 10.1) * lc$,  
+то есть $rate = 164.6 + 27 * lc$
 
-##  Интерпретация коэффициентов <br /> в модели со взаимодействием дискретного и непрерывного предикторов {.smaller}
-
-```{r M2-interaction, R.options=list(width = 100), purl=FALSE}
-```
-
-<br />
+##  Если у дискретного предиктора становится больше уровней... {.smaller}
 
 $$y_i = \beta_0 + \beta_1x_1 + \big(\beta_2x_2 + ... + \beta_l x_l\big) + \big(\beta_{l+1}x_{l+1} + ... + \beta_m x_m\big) + \epsilon_i$$
 
@@ -287,23 +350,14 @@ $$y_i = \beta_0 + \beta_1x_1 + \big(\beta_2x_2 + ... + \beta_l x_l\big) + \big(\
 
 - $\beta_0$ --- значение свободного члена для базового уровня дискретного фактора
 - $\beta_1$ --- коэффициент угла наклона для базового уровня дискретного фактора
+
+Поправки для свободного члена:
+
 - $\beta_2, ..., \beta_l$ --- коррекция свободного члена для других уровней (всего их $p = k - 1$)
+
+Поправки для угла наклона:
+
 - $\beta_{l+1}, ..., \beta_m$ --- коррекция коэффициентов угла наклона для других уровней (всего их $p = k - 1$)
-
-## Задание {.smaller}
-
-Глядя на коэффициенты линейной модели запишите уравнения:
-
-- общее уравнение линейной модели
-- уравнения для каждого из уровней дискретного фактора
-
-
-```{r M2-coefficients, fig.height=2, R.options=list(width = 100)}
-coef(M2)
-ggplot(Puromycin, aes(x = lc, y = rate, colour = state)) + geom_point() + geom_smooth(method = "lm")
-```
-
-## Решение {.smaller}
 
 ```{r echo=FALSE, purl=FALSE}
 lm_equation <- function(fit, strict = TRUE, rnd = 2){
@@ -328,42 +382,29 @@ lm_equation <- function(fit, strict = TRUE, rnd = 2){
 }
 ```
 
-- общее уравнение линейной модели
-
-$`r lm_equation(M2, strict = FALSE, rnd = 2)`$
-
-- уравнения для каждого из уровней дискретного фактора
-
-$rate_{treated} = 209.19 + 37.11 lc$
-
-$rate_{untreated} = 164.58 + 26.98 lc$
-
-```{r M2-coefficients, fig.height=2, R.options=list(width = 100), purl=FALSE}
-```
-
 ## Тестируем гомогенность углов наклона
 
 Это делается как обычно при выборе моделей: при помощи `anova()` или `drop1()`
 
 ```{r}
-M1 <- lm(rate ~ lc + state, data = Puromycin)
-M2 <- lm(rate ~ lc + state + lc:state, data = Puromycin)
+M2 <- lm(rate ~ lc + state, data = Puromycin)
 
 # anova(M1, M2, test="F")
-drop1(M2, test = "F")
+drop1(M1, test = "F")
 ```
 
->- Если убрать взаимодействие, то модель становится значительно хуже. Поэтому взаимодействие сохраняем. Это не ANCOVA в традиционном понимании
+>- Если убрать взаимодействие, то модель становится значительно хуже. Поэтому взаимодействие сохраняем
 
 ## Представляем результаты в виде таблицы {.smaller}
 
 ### Вариант 1. Последовательное тестирование (SS type I)
 
-Факторы тестируются в порядке включения в модель. Результат тестирования зависит от порядка включения.
+Факторы тестируются в порядке включения в модель. __Результат тестирования зависит от порядка включения__
 
 ```{r}
-anova(M2)
-anova(lm(rate ~ state + lc + state:lc, data = Puromycin))
+anova(M1)
+M3 <- lm(rate ~ state + lc + state:lc, data = Puromycin)
+anova(M3)
 ```
 
 ## Представляем результаты в виде таблицы  {.smaller}
@@ -375,55 +416,69 @@ anova(lm(rate ~ state + lc + state:lc, data = Puromycin))
 
 ```{r}
 # library(car)
-Anova(M2, type = 3) 
+Anova(M1, type = 3) 
+# Anova(M3, type = 3) # сравните
 ```
 
+# Модель со взаимодействием на примере данных о весе новорожденных
 
-# Модель со взаимодействием на примере данных о токсичности нитрофена
+## Вес новорожденных и курение
 
-## Токсичность нитрофена
+Как вес новорожденных зависит от возраста матери и того, курит ли она
 
-Нитрофен --- гербицид, тератоген, мутаген. Сейчас он не используется в США (первый пестицид, использование которого было запрещено из-за тератогенных эффектов), но все еще используется в России. Эти данные --- данные эксперимента по оценке токсичности нитрофена на дафниях _Ceriodaphnia dubia_ (Bailer, Oris 1994).
-
-50 дафний случайно разделили на 5 групп, посадили в емкости с разной концентрацией нитрофена, оценили число яиц трех последовательных генераций.
-
-- `conc` --- концентрация нитрофена
-- `total` --- суммарная плодовитость
-- `brood` --- номер выводка
-- `N` --- размер потомства в выводке
+- `age` --- возраст матери
+- `lwt` --- вес матери до беременности
+- `race` --- раса (1-белые, 2-черные, 3-другие)
+- `smoke` --- курение во время беременности (1-да,2-нет)
+- `ptl` --- число предыдущих преждевременных родов
+- `ht` --- гипертензия
+- `ui` --- гипертонус матки
+- `ftv` --- число визитов к врачу в последний триместр
+- `bwt` --- вес новорожденного, г
 
 ```{r}
-library(readxl)
-nit <- read_excel("data/nitrofen.xlsx", sheet = 1)
-head(nit)
+wt <- read.table("data/birthwt.csv", header = TRUE, sep = ";")
 ```
 
 ## Задание
 
-- Исследуйте данные о токсичности нитрофена
-- Чтобы выяснить, как численность потомства дафний зависит от 
-    + концентрации нитрофена
-    + от выводка
-    + взаимодействия концентрации нитрофена и выводка
-    + и от суммарной плодовитости дафнии
+- Исследуйте данные о весе новорожденных
+- Постройте модель зависимости веса новорожденных от возраста матери и взаимодействия
 - Проверьте условия применимости этой модели
 - Упростите модель, если это возможно
-- Напишите общее уравнение и отдельные уравнения модели для трех выводков
+- Напишите общее уравнение и отдельные уравнения модели
 - Постройте график предсказаний модели
 
 ## Решение
 
 ```{r}
-str(nit)
-colSums(is.na(nit))
-table(nit$conc, nit$brood)
+str(wt)
+colSums(is.na(wt))
+table(wt$smoke, wt$age)
+table(wt$smoke, wt$race)
+table(wt$smoke, wt$ui)
 ```
 
 ## Решение
 
+```{r}
+wt$race <- factor(wt$race)
+wt$smoke <- factor(wt$smoke)
+wt$ptl <- factor(wt$ptl)
+wt$ht <- factor(wt$ht)
+wt$ui <- factor(wt$ui)
+wt$ftv <- factor(wt$ftv)
+
+```
+
+
+## Решение
+
 ```{r fig.show='hold', fig.height=2.5}
-ggplot(nit, aes(x = total, y = 1:nrow(nit))) + geom_point()
-ggplot(nit, aes(x = N, y = 1:nrow(nit))) + geom_point()
+gg_dot <- ggplot(wt, aes(y = 1:nrow(wt))) + geom_point()
+gg_dot + aes(x = age)
+gg_dot + aes(x = lwt)
+gg_dot + aes(x = bwt)
 ```
 
 ## Решение
@@ -431,8 +486,8 @@ ggplot(nit, aes(x = N, y = 1:nrow(nit))) + geom_point()
 ### Проверка на колинеарность
 
 ```{r}
-nit_mod_1 <- lm(N ~ conc + brood + total, data = nit)
-vif(nit_mod_1)
+wt_mod_1 <- lm(bwt ~ age+smoke, data = wt)
+vif(wt_mod_1)
 ```
 
 >- Колинеарности нет
@@ -444,22 +499,25 @@ vif(nit_mod_1)
 Подберем полную модель.
 
 ```{r}
-nit_mod_2 <- lm(N ~ conc * brood + total, data = nit)
-drop1(nit_mod_2, test = "F")
+wt_mod_2 <- lm(bwt ~ age*smoke, data = wt)
+drop1(wt_mod_2, test = "F")
 ```
 
->- От исключения взаимодействия модель становится значительно хуже. Оставляем. Это не ANCOVA
+>- От исключения взаимодействия модель становится значительно хуже. Оставляем
 
 ## Решение
 
 ```{r}
 # Данные для графиков остатков
-nit_mod_2_diag <- fortify(nit_mod_2)
+wt_mod_2_diag <- fortify(wt_mod_2)
+wt_mod_2_diag <- data.frame(
+  wt_mod_2_diag, 
+  wt[, c("lwt", "race", "smoke", "ptl", "ht", "ui", "ftv")])
 ```
 ### 1) График расстояния Кука
 
 ```{r}
-ggplot(nit_mod_2_diag, aes(x = 1:nrow(nit_mod_2_diag), y = .cooksd)) +
+ggplot(wt_mod_2_diag, aes(x = 1:nrow(wt_mod_2_diag), y = .cooksd)) +
   geom_bar(stat = "identity")
 ```
 
@@ -467,14 +525,11 @@ ggplot(nit_mod_2_diag, aes(x = 1:nrow(nit_mod_2_diag), y = .cooksd)) +
 
 ### 2) График остатков от предсказанных значений
 ```{r}
-gg_resid <- ggplot(data = nit_mod_2_diag, aes(x = .fitted, y = .stdresid)) +
+gg_resid <- ggplot(data = wt_mod_2_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
 ```
 
-Откуда эти полосочки?
-
->- Размер потомства --- счетная величина, поэтому полоски --- это N = 0, 1, 2, и т.п.
 
 ## Решение
 
@@ -482,17 +537,31 @@ gg_resid
 
 ```{r fig.width=10}
 library(gridExtra)
-grid.arrange(gg_resid + aes(x = conc), 
-             gg_resid + aes(x = brood), 
-             gg_resid + aes(x = total),
+grid.arrange(gg_resid + aes(x = age), 
+             gg_resid + aes(x = lwt), 
              nrow = 1)
 ```
 
 ## Решение
 
+```{r fig.width=10}
+gg_box <- ggplot(data = wt_mod_2_diag, aes(x = smoke, y = .stdresid)) +
+  geom_boxplot() + geom_hline(yintercept = 0)
+
+grid.arrange(gg_box + aes(x = smoke), 
+             gg_box + aes(x = ftv),
+             gg_box + aes(y = race),
+             gg_box + aes(x = ht),
+             gg_box + aes(x = ui),
+             nrow = 2)
+```
+
+
+## Решение
+
 ### 4) Квантильный график остатков
 ```{r fig.height=4}
-qqPlot(nit_mod_2)
+qqPlot(wt_mod_2)
 ```
 
 ## Проверяем значимость коэффициентов {.smaller}
@@ -500,48 +569,41 @@ qqPlot(nit_mod_2)
 Подумайте, что означают эти коэффициенты
 
 ```{r}
-summary(nit_mod_2)
+summary(wt_mod_2)
 ```
 
 ## Записываем уравнение модели
 
 ```{r}
-coef(nit_mod_2)
+coef(wt_mod_2)
 ```
 
 Общее уравнение: 
 
-`r lm_equation(nit_mod_2, strict = FALSE)`
+`r lm_equation(wt_mod_2, strict = FALSE)`
 
-- Для выводка 1: $N = -6.72 + 0.03conc + 0.33total$
-- Для выводка 2: $N = 2.1 - 0.01conc + 0.33total$
-- Для выводка 3: $N = 4.61 - 0.02conc + 0.33total$
-
+- Для некурящих: $N = 2406.06 + 27.73 * age$
+- Для курящих: $N = 3204.23 - -18.84 * age$
 
 ## Таблица дисперсионного анализа {.smaller}
 
-Из-за того, что у нас есть дискретный фактор с несколькими уровнями, за его влияние отвечают сразу несколько коэффициентов. Проверить влияние фактора целиком можно при помощи дисперсионного анализа. Он работает аналогично тому, как мы это видели для простой линейной регрессии.
-
 ```{r}
-anova(nit_mod_2)
+Anova(wt_mod_2, type = 3)
 ```
 
 ## Сложные модели лучше по возможности изображать в виде графика {.smaller}
 
 ### Данные для графика
 
-У нас три переменные в модели - выводок, концентрация, и суммарная плодовитость. Мы не можем их одновременно изобразить на одном графике. Для визуализации результатов нам важнее зависимость размера потомства от концентрации, чем от суммарной плодовитости. Поэтому мы изобразим предсказанный размер потомства при разных концентрациях ниторофена и __при средней суммарной плодовитости__.
-
 ```{r}
 library(plyr)
-# ряд значений концентрации один и тот же для
-# каждого выводка, поэтому
-NewData <- expand.grid(brood = unique(nit$brood),
-                       conc = unique(nit$conc),
-  # средние значения суммарной плодовитости для каждого выводка
-                       total = mean(nit$total))
+# Диапазон возрастов разный для курящих и некурящих, поэтому
+NewData <- ddply(
+  .data = wt, .variables = .(smoke), .fun = summarise,
+  age = seq(min(age), max(age), length = 100))
+
 # предсказанные значения
-Predictions <- predict(nit_mod_2, newdata = NewData, se.fit = TRUE)
+Predictions <- predict(wt_mod_2, newdata = NewData, se.fit = TRUE)
 NewData$fit <- Predictions$fit
 # стандартные ошибки
 NewData$SE <- Predictions$se.fit
@@ -557,19 +619,19 @@ NewData$lwr <- NewData$fit - 1.96 * NewData$SE
 
 ## Рисуем график предсказаний (Вторая попытка)
 
-```{r nit-mod-2-predict, purl=FALSE}
-ggplot(NewData, aes(x = conc, y = fit)) +
-  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) +
-  geom_line(aes(colour = brood))
+```{r wt-mod-2-predict, purl=FALSE}
+ggplot(NewData, aes(x = age, y = fit)) +
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = smoke)) +
+  geom_line(aes(colour = smoke))
 ```
 
 ## На графике предсказаний можно показать исходные значения
 
-```{r nit-mod-2-predict-points, purl=FALSE}
-ggplot(NewData, aes(x = conc, y = fit)) +
-  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) +
-  geom_line(aes(colour = brood)) +
-  geom_point(data = nit, aes(x = conc, y = N, colour = brood))
+```{r wt-mod-2-predict-points, purl=FALSE}
+ggplot(NewData, aes(x = age, y = fit)) +
+  geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = smoke)) +
+  geom_line(aes(colour = smoke)) +
+  geom_point(data = wt, aes(x = age, y = bwt, colour = smoke))
 ```
 
 

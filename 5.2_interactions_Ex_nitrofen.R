@@ -24,14 +24,16 @@
 # - Напишите общее уравнение и отдельные уравнения модели для трех выводков
 # - Постройте график предсказаний модели
 
+library(ggplot2)
 library(readxl)
+library(car)
+
 nit <- read_excel("data/nitrofen.xlsx", sheet = 1)
 head(nit)
 
 str(nit)
 colSums(is.na(nit))
 table(nit$conc, nit$brood)
-
 
 ggplot(nit, aes(x = total, y = 1:nrow(nit))) + geom_point()
 ggplot(nit, aes(x = N, y = 1:nrow(nit))) + geom_point()
@@ -59,8 +61,10 @@ ggplot(nit_mod_2_diag, aes(x = 1:nrow(nit_mod_2_diag), y = .cooksd)) +
 gg_resid <- ggplot(data = nit_mod_2_diag, aes(x = .fitted, y = .stdresid)) +
   geom_point() + geom_hline(yintercept = 0)
 gg_resid
-# Откуда эти полосочки?
-# - Размер потомства --- счетная величина, поэтому полоски --- это N = 0, 1, 2, и т.п.
+
+### Подумайте, что не так с остатками на этом графике ###
+# Две вещи
+
 
 ### 3) Графики остатков от предикторов в модели и не в модели
 library(gridExtra)
@@ -81,17 +85,17 @@ summary(nit_mod_2)
 coef(nit_mod_2)
 
 # Общее уравнение:
-# -6.71543775 + 0.02769918 * conc +
-# + 8.81732690 * if_brood2 + 11.32898635 * if_brood3 +
-# + 0.33333333 * total - 0.03718043 * conc* if_brood2 -
-# - 0.04591711  * conc* if_brood3
+# -6.7 + 0.03 * conc +
+# + 8.8 * if_brood2 + 11.3 * if_brood3 +
+# + 0.3 * total - 0.04 * conc* if_brood2 -
+# - 0.05  * conc* if_brood3
 
 # - Для выводка 1:
-# N = -6.72 + 0.03conc + 0.33total
+# N = -6.7 + 0.03conc + 0.3total
 # - Для выводка 2:
-# N = 2.1 - 0.01conc + 0.33total
+# N = 2.1 - 0.01conc + 0.3total
 # - Для выводка 3:
-# N = 4.61 - 0.02conc + 0.33total
+# N = 4.6 - 0.02conc + 0.3total
 
 
 ## Таблица дисперсионного анализа
@@ -128,6 +132,5 @@ ggplot(NewData, aes(x = conc, y = fit)) +
   geom_ribbon(alpha = 0.2, aes(ymin = lwr, ymax = upr, group = brood)) +
   geom_line(aes(colour = brood)) +
   geom_point(data = nit, aes(x = conc, y = N, colour = brood))
-
 
 
