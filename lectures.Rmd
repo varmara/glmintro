@@ -131,7 +131,7 @@ title: Презентации и данные
 
 ### Дискретные предикторы в регрессионных моделях
 
-<!-- - Презентация [5.1_categorical-no_interactions.html](5.1_categorical-no_interactions.html) -->
+- Презентация [5.1_categorical-no_interactions.html](5.1_categorical-no_interactions.html)
 - Код [5.1_categorical-no_interactions_code.R](5.1_categorical-no_interactions_code.R)
 - Данные
     + [vitcap2.csv](data/vitcap2.csv)
