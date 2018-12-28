@@ -333,15 +333,17 @@ $y _i = \beta _0 + \epsilon _i$
 
 ### Полная модель 
 
-$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + \beta _p x _{ip} + \epsilon _i$  
-$df _{reduced, full} = p$  
-$df _{error, full} = n - p - 1$
+$y _i = \beta _0 + \beta _1 x _{1\ i} + ... + \beta _k x _{k\ i} + \beta _{l} x _{l\ i} + \epsilon _i$  
+$p = l + 1$ -- число параметров
+$df _{reduced, full} = p - 1$  
+$df _{error, full} = n - p$
 
-### Уменьшеная модель  (без фактора $\beta _p x _{ip}$)
+### Уменьшеная модель  (без $\beta _l x _{l\ i}$)
 
-$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + \epsilon _i$  
-$df _{reduced, reduced} = k$  
-$df _{error, reduced} = n - k - 1$
+$y _i = \beta _0 + \beta _1 x _{1\ i} + ... + \beta _k x _{k\ i} + \epsilon _i$  
+$p = k + 1 = l$ -- число параметров
+$df _{reduced, reduced} = (p - 1) - 1$  
+$df _{error, reduced} = n - (p - 1)$
 
 ### Как оценить насколько больше изменчивости объясняет полная модель, чем уменьшенная модель?
 
@@ -353,15 +355,17 @@ $df _{error, reduced} = n - k - 1$
 
 ### Полная модель 
 
-$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + \beta _p x _{ip} + \epsilon _i$  
-$df _{reduced, full} = p$  
-$df _{error, full} = n - p - 1$
+$y _i = \beta _0 + \beta _1 x _{1\ i} + ... + \beta _k x _{k\ i} + \beta _{l} x _{l\ i} + \epsilon _i$  
+$p = l + 1$ -- число параметров
+$df _{reduced, full} = p - 1$  
+$df _{error, full} = n - p$
 
-### Уменьшеная модель  (без фактора $\beta _p x _{ip}$)
+### Уменьшеная модель  (без $\beta _l x _{l\ i}$)
 
-$y _i = \beta _0 + \beta _1 x _{i1} + ... + \beta _k x _{ik} + \epsilon _i$  
-$df _{reduced, reduced} = k$  
-$df _{error, reduced} = n - k - 1$
+$y _i = \beta _0 + \beta _1 x _{1\ i} + ... + \beta _k x _{k\ i} + \epsilon _i$  
+$p = k + 1 = l$ -- число параметров
+$df _{reduced, reduced} = (p - 1) - 1$  
+$df _{error, reduced} = n - (p - 1)$
 
 ### Частный F-критерий - оценивает выигрыш объясненной дисперсии от включения фактора в модель
 
@@ -628,11 +632,11 @@ par(op)
 
 ## Выводим формулу правдоподобия для линейной модели с нормальным распределением ошибок
 
-$y_i = \beta_0 + \beta_1x_1 + ... + \beta_kx_k + \epsilon_i$
+$y_i = \beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i} + \epsilon_i$
 
 ## Выводим формулу правдоподобия для линейной модели с нормальным распределением ошибок
 
-$y_i = \beta_0 + \beta_1x_1 + ... + \beta_kx_k + \epsilon_i$
+$y_i = \beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i} + \epsilon_i$
 
 Пусть в нашей модели остатки нормально распределены ($\epsilon_i \sim N(0, \sigma^2)$) и их значения независимы друг от друга:
 
@@ -640,19 +644,7 @@ $N(\epsilon_i; 0, \sigma^2) = \frac {1} { \sqrt {2\pi\sigma^2} } exp (-\frac {1}
 
 ## Выводим формулу правдоподобия для линейной модели с нормальным распределением ошибок
 
-$y_i = \beta_0 + \beta_1x_1 + ... + \beta_kx_k + \epsilon_i$
-
-Пусть в нашей модели остатки нормально распределены ($\epsilon_i \sim N(0, \sigma^2)$) и их значения независимы друг от друга:
-
-$N(\epsilon_i; 0, \sigma^2) = \frac {1} { \sqrt {2\pi\sigma^2} } exp (-\frac {1} {2 \sigma^2} \epsilon_i^2)$
-
-Функцию правдоподобия (likelihood, вероятность получения нашего набора данных) можно записать как произведение вероятностей:
-
-$L(\epsilon_i|\mathbf{y}, \mathbf{x}) = \Pi^n _{n = 1} N(\epsilon_i, \sigma^2) = \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2)$
-
-## Выводим формулу правдоподобия для линейной модели с нормальным распределением ошибок
-
-$y_i = \beta_0 + \beta_1x_1 + ... + \beta_kx_k + \epsilon_i$
+$y_i = \beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i} + \epsilon_i$
 
 Пусть в нашей модели остатки нормально распределены ($\epsilon_i \sim N(0, \sigma^2)$) и их значения независимы друг от друга:
 
@@ -662,23 +654,36 @@ $N(\epsilon_i; 0, \sigma^2) = \frac {1} { \sqrt {2\pi\sigma^2} } exp (-\frac {1}
 
 $L(\epsilon_i|\mathbf{y}, \mathbf{x}) = \Pi^n _{n = 1} N(\epsilon_i, \sigma^2) = \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2)$
 
-Поскольку $\epsilon_i = y_i - (\beta_0 + \beta_1x_1 + ... + \beta_kx_k)$
+## Выводим формулу правдоподобия для линейной модели с нормальным распределением ошибок
+
+$y_i = \beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i} + \epsilon_i$
+
+Пусть в нашей модели остатки нормально распределены ($\epsilon_i \sim N(0, \sigma^2)$) и их значения независимы друг от друга:
+
+$N(\epsilon_i; 0, \sigma^2) = \frac {1} { \sqrt {2\pi\sigma^2} } exp (-\frac {1} {2 \sigma^2} \epsilon_i^2)$
+
+Функцию правдоподобия (likelihood, вероятность получения нашего набора данных) можно записать как произведение вероятностей:
+
+$L(\epsilon_i|\mathbf{y}, \mathbf{x}) = \Pi^n _{n = 1} N(\epsilon_i, \sigma^2) = \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2)$
+
+Поскольку $\epsilon_i = y_i - (\beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i})$
 
 то функцию правдоподобия можно переписать так:
 
-$L(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) = \frac {1} {\sqrt{(2\pi\sigma^2)^n}}exp(- \frac {1} {2\sigma^2} \sum (y_i - (\beta_0 + \beta_1x_1 + ... + \beta_kx_k))^2)$
+$L(\beta_1...\beta_{p - 1}, \sigma^2| \mathbf{y}, \mathbf{x}) = \frac {1} {\sqrt{(2\pi\sigma^2)^n}}exp(- \frac {1} {2\sigma^2} \sum (y_i - (\beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i}))^2)$
 
 ## Подбор параметров модели методом максимального правдоподобия
 
 Чтобы найти параметры модели
 
-$$y_i = \beta_0 + \beta_1x_1 + ... + \beta_kx_k + \epsilon_i$$
+$y_i = \beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i} + \epsilon_i$
 
-нужно найти такое сочетание параметров  $\beta_0$, $\beta_1$, ... $\beta_k$, и $\sigma^2$, при котором функция правдоподобия будет иметь максимум:
+
+нужно найти такое сочетание параметров  $\beta_0$, $\beta_1$, ... $\beta_{p - 1}$, и $\sigma^2$, при котором функция правдоподобия будет иметь максимум:
 
 $\begin{array}{l}
-L(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) &= \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2) = \\
-&= \frac {1} {\sqrt{(2\pi\sigma^2)^n}}exp(- \frac {1} {2\sigma^2} \sum (y_i - (\beta_0 + \beta_1x_1 + ... ...\beta_kx_k))^2)
+L(\beta_1...\beta_{p - 1}, \sigma^2| \mathbf{y}, \mathbf{x}) &= \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2) = \\
+&= \frac {1} {\sqrt{(2\pi\sigma^2)^n}}exp(- \frac {1} {2\sigma^2} \sum (y_i - (\beta_0 + \beta_1x_{1i} + ... ...\beta_{p - 1}x_{p - 1\ i}))^2)
 \end{array}$
 
 
@@ -689,17 +694,17 @@ L(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) &= \frac {1} {\sqrt{(2\pi
 Если функция правдоподобия
 
 $\begin{array}{l}
-L(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) &= \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2) = \\
-&= \frac {1} {\sqrt{(2\pi\sigma^2)^n}}exp(- \frac {1} {2\sigma^2} \sum (y_i - (\beta_0 + \beta_1x_1 + ... + \beta_kx_k))^2)
+L(\beta_1...\beta_{p - 1}, \sigma^2| \mathbf{y}, \mathbf{x}) &= \frac {1} {\sqrt{(2\pi\sigma^2)^n}} exp(- \frac {1} {2\sigma^2} \sum {\epsilon_i}^2) = \\
+&= \frac {1} {\sqrt{(2\pi\sigma^2)^n}}exp(- \frac {1} {2\sigma^2} \sum (y_i - (\beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i}))^2)
 \end{array}$
 
 то логарифм правдоподобия
 
 $\begin{array}{l}
-logLik(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) &= & \\
-ln L(\beta_1...\beta_k, \sigma^2| \mathbf{y}, \mathbf{x}) &= &- \frac{n}{2} (ln2\pi + ln\sigma^2) - \frac{1}{2\sigma^2}(\sum \epsilon^2_i) = \\
+logLik(\beta_1...\beta_{p - 1}, \sigma^2| \mathbf{y}, \mathbf{x}) &= & \\
+ln L(\beta_1...\beta_{p - 1}, \sigma^2| \mathbf{y}, \mathbf{x}) &= &- \frac{n}{2} (ln2\pi + ln\sigma^2) - \frac{1}{2\sigma^2}(\sum \epsilon^2_i) = \\
 &= &- \frac{n}{2} (ln2\pi + ln\sigma^2) - \\
-& &- \frac{1}{2\sigma^2}(\sum (y_i - (\beta_0 + \beta_1x_1 + ... + \beta_kx_k))^2)
+& &- \frac{1}{2\sigma^2}(\sum (y_i - (\beta_0 + \beta_1x_{1i} + ... + \beta_{p - 1}x_{p - 1\ i}))^2)
 \end{array}$
 
 Чем больше логарифм правдоподобия тем лучше модель
@@ -727,7 +732,7 @@ coefficients(Mod_glm)
 
 ## Логарифм правдоподобия
 
-$LogLik$ для модели можно найти с помощью функции `logLic()`
+$LogLik$ для модели можно найти с помощью функции `logLik()`
 
 ```{r}
 logLik(Mod_glm)

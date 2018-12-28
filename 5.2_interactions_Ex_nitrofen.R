@@ -134,3 +134,49 @@ ggplot(NewData, aes(x = conc, y = fit)) +
   geom_point(data = nit, aes(x = conc, y = N, colour = brood))
 
 
+
+## Два способа решения проблем с моделью
+
+# 1. Неправильный: провести логарифмирование зависимой переменной и построить модель для логарифмированных величин.
+# 2. Правильный: построить модель, основанную на распределении Пуассона.
+
+## Модель, основанная на распределении Пуассона
+
+M2 <- lm(N ~ conc * brood + total, data = nit,
+         family = "poisson")
+library(car)
+Anova(M2)
+
+## Диагностика модели
+
+# Данные для графиков остатков
+M2_diag <- data.frame(nit,
+                      .fitted = predict(M2, type = "response"),
+                      .pears_resid = residuals(M2, type = "pearson"))
+# Графики остатков от предсказанных значений и от предикторов в модели и не в модели
+gg_resid <- ggplot(data = M2_diag, aes(x = .fitted, y = .pears_resid)) +
+  geom_point() + geom_hline(yintercept = 0)
+library(gridExtra)
+grid.arrange(gg_resid, gg_resid + aes(x = conc),
+             gg_resid + aes(x = brood), gg_resid + aes(x = total),
+             nrow = 2)
+
+## Избыточность дисперсии (Overdispersion)
+Resid_M2 <- resid(M2, type = "pearson") # Пирсоновские остатки
+N <- nrow(juv_ad) # Объем выборки
+p <- length(coef(M2))   # Число параметров в модели
+df <- (N - p) # число степенейсвободы
+fi <- sum(Resid_M2^2) /df  #Величина fi показывает во сколько раз в среднем sigma > mu для данной модели
+fi
+
+
+## Квази-пуассоновская модель
+
+M3 <- glm(N ~ conc * brood + total, data = nit, family = "quasipoisson")
+summary(M3)
+Anova(M3)
+
+
+library(MASS)
+M4 <- glm.nb(N ~ conc * brood + total, data = nit, link = "log")
+Anova(M4)
