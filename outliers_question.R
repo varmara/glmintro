@@ -14,6 +14,8 @@ x_34 <- c(0, x_wo)
 frame_wo <- data.frame(y_mix, x_wo)
 frame_w <- data.frame(y_mix1, y_mix2, y_mix3, y_mix4, x_12, x_34) 
 
+library(ggplot2)
+
 gg_wo <- ggplot(frame_wo, aes(x = x_wo)) + geom_point() + aes(y = y_mix) + scale_y_continuous(limits=c(40,180)) + scale_x_continuous(limits=c(-1,21))
 
 gg_w1 <- ggplot(frame_w, aes(x = x_12)) + geom_point() + aes(y = y_mix1) + scale_y_continuous(limits=c(40,180)) + scale_x_continuous(limits=c(-1,21))
